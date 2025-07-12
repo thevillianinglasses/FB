@@ -7,7 +7,7 @@ import CancelledPage from './CancelledPage';
 import AppointmentSchedulingPage from './AppointmentSchedulingPage';
 import FinalBillingPage from './FinalBillingPage';
 import ProceduresServicesPage from './ProceduresServicesPage';
-import { AppProvider } from './AppContext'; // Import AppProvider
+import { AppProvider } from './AppContext';
 
 const tabs = [
   { name: 'New OPD', component: <NewOPDPage /> },
