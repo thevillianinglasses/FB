@@ -36,10 +36,10 @@ function App() {
     <AppProvider>
       <div className="min-h-screen bg-gray-100">
         {/* Header */}
-        <header className="bg-cornflower-blue text-charcoal-grey p-4 shadow-md">
+        <header className="bg-white text-charcoal-grey p-4 shadow-md">
           <div className="container mx-auto flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">Unicare Polyclinic</h1>
+              <h1 className="text-3xl font-bold text-cornflower-blue">Unicare Polyclinic</h1>
               <p className="text-sm text-coral-red">care crafted for you</p>
             </div>
             <button 
@@ -61,7 +61,7 @@ function App() {
                 className={`py-4 px-6 block hover:text-cornflower-blue focus:outline-none ${
                   activeTab === tab.name
                     ? 'border-b-2 font-medium border-cornflower-blue text-cornflower-blue'
-                    : 'text-charcoal-grey hover:text-opacity-80'
+                    : 'text-charcoal-grey'
                 }`}
               >
                 {tab.name}
