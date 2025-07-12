@@ -39,8 +39,8 @@ function App() {
         <header className="bg-white text-charcoal-grey p-4 shadow-md">
           <div className="container mx-auto flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-cornflower-blue">Unicare Polyclinic</h1>
-              <p className="text-sm text-coral-red">care crafted for you</p>
+              <h1 className="text-3xl font-bold text-charcoal-grey">Unicare Polyclinic</h1>
+              <p className="text-sm text-coral-red italic">care crafted for you</p>
             </div>
             <button 
               onClick={() => setIsLoggedIn(false)} 
@@ -52,16 +52,16 @@ function App() {
         </header>
 
         {/* Tab Navigation */}
-        <nav className="bg-white shadow-sm">
+        <nav className="bg-charcoal-grey shadow-sm">
           <div className="container mx-auto flex">
             {tabs.map((tab) => (
               <button
                 key={tab.name}
                 onClick={() => setActiveTab(tab.name)}
-                className={`py-4 px-6 block hover:text-cornflower-blue focus:outline-none ${
+                className={`py-4 px-6 block focus:outline-none ${
                   activeTab === tab.name
-                    ? 'border-b-2 font-medium border-cornflower-blue text-cornflower-blue'
-                    : 'text-charcoal-grey'
+                    ? 'text-cornflower-blue border-b-2 border-coral-red'
+                    : 'text-white hover:text-coral-red'
                 }`}
               >
                 {tab.name}

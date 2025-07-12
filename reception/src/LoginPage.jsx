@@ -28,7 +28,7 @@ function LoginPage({ onLoginSuccess }) { // Added onLoginSuccess prop
       <div className="bg-white shadow-md rounded-lg p-8 max-w-md w-full">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-charcoal-grey">Unicare Polyclinic</h1>
-          <p className="text-coral-red mt-1">care crafted for you</p>
+          <p className="text-coral-red mt-1 italic">care crafted for you</p>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -40,7 +40,7 @@ function LoginPage({ onLoginSuccess }) { // Added onLoginSuccess prop
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-charcoal-grey leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-cornflower-blue rounded w-full py-2 px-3 text-charcoal-grey leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Username"
             />
           </div>
@@ -53,7 +53,7 @@ function LoginPage({ onLoginSuccess }) { // Added onLoginSuccess prop
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-charcoal-grey mb-3 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow appearance-none border border-cornflower-blue rounded w-full py-2 px-3 text-charcoal-grey mb-3 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="******************"
             />
           </div>
@@ -61,7 +61,7 @@ function LoginPage({ onLoginSuccess }) { // Added onLoginSuccess prop
           <div className="flex items-center justify-between">
             <button
               type="submit"
-              className="bg-charcoal-grey hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              className="bg-cornflower-blue hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
             >
               Sign In
             </button>
