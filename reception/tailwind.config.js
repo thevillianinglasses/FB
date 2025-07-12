@@ -9,7 +9,7 @@ export default {
       colors: {
         'cornflower-blue': '#6495ED',
         'charcoal-grey': '#36454F',
-        'coral-red': '#FF7F50',
+        'coral-red': '#FF4040',
       }
     },
   },
