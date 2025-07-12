@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './index.css'; // Main CSS with Tailwind directives
 import LoginPage from './LoginPage';
 import NewOPDPage from './NewOPDPage';
 import PatientLogPage from './PatientLogPage';
