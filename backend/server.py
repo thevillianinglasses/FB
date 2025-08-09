@@ -444,3 +444,394 @@ async def add_doctor(doctor: Doctor, current_user: dict = Depends(get_current_us
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
+
+# ===================
+# LABORATORY APIS
+# ===================
+
+@app.get("/api/lab/tests", response_model=List[LabTest])
+async def get_lab_tests(current_user: dict = Depends(get_current_user)):
+    if not has_lab_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        tests_cursor = database.lab_tests.find({})
+        tests = []
+        async for test in tests_cursor:
+            tests.append(LabTest(**test))
+        return tests
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching lab tests: {str(e)}")
+
+@app.post("/api/lab/tests", response_model=LabTest)
+async def add_lab_test(test: LabTest, current_user: dict = Depends(get_current_user)):
+    if not has_lab_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        test_dict = test.dict()
+        test_dict["created_at"] = datetime.utcnow()
+        result = await database.lab_tests.insert_one(test_dict)
+        return LabTest(**test_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding lab test: {str(e)}")
+
+@app.get("/api/lab/orders", response_model=List[LabOrder])
+async def get_lab_orders(current_user: dict = Depends(get_current_user)):
+    if not has_lab_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        orders_cursor = database.lab_orders.find({}).sort("created_at", -1)
+        orders = []
+        async for order in orders_cursor:
+            orders.append(LabOrder(**order))
+        return orders
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching lab orders: {str(e)}")
+
+@app.post("/api/lab/orders", response_model=LabOrder)
+async def create_lab_order(order: LabOrder, current_user: dict = Depends(get_current_user)):
+    if not has_lab_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Calculate total amount
+        total_amount = 0.0
+        for test_id in order.tests:
+            test = await database.lab_tests.find_one({"id": test_id})
+            if test:
+                total_amount += test.get("price", 0.0)
+        
+        order_dict = order.dict()
+        order_dict["total_amount"] = total_amount
+        order_dict["created_at"] = datetime.utcnow()
+        order_dict["updated_at"] = datetime.utcnow()
+        
+        result = await database.lab_orders.insert_one(order_dict)
+        return LabOrder(**order_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating lab order: {str(e)}")
+
+@app.put("/api/lab/orders/{order_id}/status")
+async def update_lab_order_status(order_id: str, status: TestStatus, current_user: dict = Depends(get_current_user)):
+    if not has_lab_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        update_data = {"status": status, "updated_at": datetime.utcnow()}
+        
+        if status == TestStatus.COLLECTED:
+            update_data["sample_collected_at"] = datetime.utcnow()
+        elif status == TestStatus.REPORTED:
+            update_data["reported_at"] = datetime.utcnow()
+        
+        result = await database.lab_orders.update_one(
+            {"id": order_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Lab order not found")
+        
+        return {"message": f"Lab order status updated to {status}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating lab order status: {str(e)}")
+
+@app.get("/api/lab/results", response_model=List[LabResult])
+async def get_lab_results(current_user: dict = Depends(get_current_user)):
+    if not has_lab_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        results_cursor = database.lab_results.find({}).sort("created_at", -1)
+        results = []
+        async for result in results_cursor:
+            results.append(LabResult(**result))
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching lab results: {str(e)}")
+
+@app.post("/api/lab/results", response_model=LabResult)
+async def add_lab_result(result: LabResult, current_user: dict = Depends(get_current_user)):
+    if not has_lab_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        result_dict = result.dict()
+        result_dict["validated_by"] = current_user["username"]
+        result_dict["validated_at"] = datetime.utcnow()
+        result_dict["created_at"] = datetime.utcnow()
+        
+        result_doc = await database.lab_results.insert_one(result_dict)
+        return LabResult(**result_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding lab result: {str(e)}")
+
+# ===================
+# PHARMACY APIS
+# ===================
+
+@app.get("/api/pharmacy/medications", response_model=List[Medication])
+async def get_medications(current_user: dict = Depends(get_current_user)):
+    if not has_pharmacy_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        meds_cursor = database.medications.find({})
+        medications = []
+        async for med in meds_cursor:
+            medications.append(Medication(**med))
+        return medications
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching medications: {str(e)}")
+
+@app.post("/api/pharmacy/medications", response_model=Medication)
+async def add_medication(medication: Medication, current_user: dict = Depends(get_current_user)):
+    if not has_pharmacy_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        med_dict = medication.dict()
+        med_dict["created_at"] = datetime.utcnow()
+        med_dict["updated_at"] = datetime.utcnow()
+        
+        result = await database.medications.insert_one(med_dict)
+        return Medication(**med_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding medication: {str(e)}")
+
+@app.put("/api/pharmacy/medications/{med_id}/stock")
+async def update_medication_stock(med_id: str, quantity: int, current_user: dict = Depends(get_current_user)):
+    if not has_pharmacy_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        result = await database.medications.update_one(
+            {"id": med_id},
+            {"$set": {"stock_quantity": quantity, "updated_at": datetime.utcnow()}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Medication not found")
+        
+        return {"message": "Stock updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating stock: {str(e)}")
+
+@app.get("/api/pharmacy/prescriptions", response_model=List[Prescription])
+async def get_prescriptions(current_user: dict = Depends(get_current_user)):
+    if not has_pharmacy_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        prescriptions_cursor = database.prescriptions.find({}).sort("prescribed_date", -1)
+        prescriptions = []
+        async for prescription in prescriptions_cursor:
+            prescriptions.append(Prescription(**prescription))
+        return prescriptions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching prescriptions: {str(e)}")
+
+@app.post("/api/pharmacy/prescriptions", response_model=Prescription)
+async def create_prescription(prescription: Prescription, current_user: dict = Depends(get_current_user)):
+    if not has_doctor_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Calculate total amount
+        total_amount = 0.0
+        for med_item in prescription.medications:
+            medication = await database.medications.find_one({"id": med_item.get("medication_id")})
+            if medication:
+                quantity = med_item.get("quantity", 1)
+                total_amount += medication.get("selling_price", 0.0) * quantity
+        
+        prescription_dict = prescription.dict()
+        prescription_dict["total_amount"] = total_amount
+        prescription_dict["prescribed_date"] = datetime.utcnow()
+        prescription_dict["created_at"] = datetime.utcnow()
+        prescription_dict["updated_at"] = datetime.utcnow()
+        
+        result = await database.prescriptions.insert_one(prescription_dict)
+        return Prescription(**prescription_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating prescription: {str(e)}")
+
+@app.put("/api/pharmacy/prescriptions/{prescription_id}/dispense")
+async def dispense_prescription(prescription_id: str, current_user: dict = Depends(get_current_user)):
+    if not has_pharmacy_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Update prescription status
+        result = await database.prescriptions.update_one(
+            {"id": prescription_id},
+            {"$set": {
+                "status": PrescriptionStatus.DISPENSED,
+                "dispensed_date": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Prescription not found")
+        
+        # TODO: Update medication stock quantities
+        
+        return {"message": "Prescription dispensed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error dispensing prescription: {str(e)}")
+
+# ===================
+# NURSING APIS
+# ===================
+
+@app.get("/api/nursing/vitals", response_model=List[VitalSigns])
+async def get_vitals(current_user: dict = Depends(get_current_user)):
+    if not has_nursing_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        vitals_cursor = database.vital_signs.find({}).sort("recorded_at", -1)
+        vitals = []
+        async for vital in vitals_cursor:
+            vitals.append(VitalSigns(**vital))
+        return vitals
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching vitals: {str(e)}")
+
+@app.post("/api/nursing/vitals", response_model=VitalSigns)
+async def record_vitals(vitals: VitalSigns, current_user: dict = Depends(get_current_user)):
+    if not has_nursing_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        vitals_dict = vitals.dict()
+        vitals_dict["recorded_by"] = current_user["username"]
+        vitals_dict["recorded_at"] = datetime.utcnow()
+        
+        result = await database.vital_signs.insert_one(vitals_dict)
+        return VitalSigns(**vitals_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recording vitals: {str(e)}")
+
+@app.get("/api/nursing/procedures", response_model=List[NursingProcedure])
+async def get_nursing_procedures(current_user: dict = Depends(get_current_user)):
+    if not has_nursing_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        procedures_cursor = database.nursing_procedures.find({}).sort("performed_at", -1)
+        procedures = []
+        async for procedure in procedures_cursor:
+            procedures.append(NursingProcedure(**procedure))
+        return procedures
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching procedures: {str(e)}")
+
+@app.post("/api/nursing/procedures", response_model=NursingProcedure)
+async def record_nursing_procedure(procedure: NursingProcedure, current_user: dict = Depends(get_current_user)):
+    if not has_nursing_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        procedure_dict = procedure.dict()
+        procedure_dict["performed_by"] = current_user["username"]
+        procedure_dict["performed_at"] = datetime.utcnow()
+        
+        result = await database.nursing_procedures.insert_one(procedure_dict)
+        return NursingProcedure(**procedure_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recording procedure: {str(e)}")
+
+# ===================
+# DOCTOR/EMR APIS
+# ===================
+
+@app.get("/api/emr/consultations", response_model=List[Consultation])
+async def get_consultations(current_user: dict = Depends(get_current_user)):
+    if not has_doctor_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        consultations_cursor = database.consultations.find({}).sort("consultation_date", -1)
+        consultations = []
+        async for consultation in consultations_cursor:
+            consultations.append(Consultation(**consultation))
+        return consultations
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching consultations: {str(e)}")
+
+@app.post("/api/emr/consultations", response_model=Consultation)
+async def create_consultation(consultation: Consultation, current_user: dict = Depends(get_current_user)):
+    if not has_doctor_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        consultation_dict = consultation.dict()
+        consultation_dict["consultation_date"] = datetime.utcnow()
+        consultation_dict["created_at"] = datetime.utcnow()
+        
+        result = await database.consultations.insert_one(consultation_dict)
+        return Consultation(**consultation_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating consultation: {str(e)}")
+
+# ===================
+# BILLING APIS
+# ===================
+
+@app.get("/api/billing/bills", response_model=List[Bill])
+async def get_bills(current_user: dict = Depends(get_current_user)):
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        bills_cursor = database.bills.find({}).sort("created_at", -1)
+        bills = []
+        async for bill in bills_cursor:
+            bills.append(Bill(**bill))
+        return bills
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching bills: {str(e)}")
+
+@app.post("/api/billing/bills", response_model=Bill)
+async def create_bill(bill: Bill, current_user: dict = Depends(get_current_user)):
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        bill_number = await get_next_bill_number()
+        
+        bill_dict = bill.dict()
+        bill_dict["bill_number"] = bill_number
+        bill_dict["created_at"] = datetime.utcnow()
+        bill_dict["updated_at"] = datetime.utcnow()
+        
+        result = await database.bills.insert_one(bill_dict)
+        return Bill(**bill_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating bill: {str(e)}")
+
+@app.get("/api/patients/{patient_id}/vitals", response_model=List[VitalSigns])
+async def get_patient_vitals(patient_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        vitals_cursor = database.vital_signs.find({"patient_id": patient_id}).sort("recorded_at", -1)
+        vitals = []
+        async for vital in vitals_cursor:
+            vitals.append(VitalSigns(**vital))
+        return vitals
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching patient vitals: {str(e)}")
+
+@app.get("/api/patients/{patient_id}/consultations", response_model=List[Consultation])
+async def get_patient_consultations(patient_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        consultations_cursor = database.consultations.find({"patient_id": patient_id}).sort("consultation_date", -1)
+        consultations = []
+        async for consultation in consultations_cursor:
+            consultations.append(Consultation(**consultation))
+        return consultations
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching patient consultations: {str(e)}")
