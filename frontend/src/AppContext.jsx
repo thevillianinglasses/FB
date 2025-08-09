@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { patientsAPI, doctorsAPI, authAPI } from './api';
+import { patientsAPI, doctorsAPI, authAPI, usersAPI, labAPI, pharmacyAPI, nursingAPI, emrAPI } from './api';
 
 const AppContext = createContext();
 
@@ -8,21 +8,42 @@ export const useAppContext = () => useContext(AppContext);
 export const AppProvider = ({ children }) => {
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [labTests, setLabTests] = useState([]);
+  const [medications, setMedications] = useState([]);
   const [patientForEditing, setPatientForEditing] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // Only load data if user is authenticated
+  // Only load data if user is authenticated and based on their role
   const loadInitialData = async () => {
     if (!authAPI.isAuthenticated()) {
       return; // Don't load data if not authenticated
     }
     
+    const userRole = localStorage.getItem('userRole');
+    
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Load basic data that all roles need
       await Promise.all([loadDoctors(), loadPatients()]);
+      
+      // Load role-specific data
+      if (userRole === 'admin') {
+        await loadUsers();
+      }
+      
+      if (userRole === 'laboratory' || userRole === 'admin') {
+        await loadLabTests();
+      }
+      
+      if (userRole === 'pharmacy' || userRole === 'doctor' || userRole === 'admin') {
+        await loadMedications();
+      }
+      
       setIsDataLoaded(true);
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -38,7 +59,6 @@ export const AppProvider = ({ children }) => {
       setDoctors(doctorsData);
     } catch (error) {
       console.error('Error loading doctors:', error);
-      // Don't set error state here since this might be called before auth
       if (error.response?.status !== 403 && error.response?.status !== 401) {
         throw error;
       }
@@ -51,7 +71,42 @@ export const AppProvider = ({ children }) => {
       setPatients(patientsData);
     } catch (error) {
       console.error('Error loading patients:', error);
-      // Don't set error state here since this might be called before auth
+      if (error.response?.status !== 403 && error.response?.status !== 401) {
+        throw error;
+      }
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const usersData = await usersAPI.getAll();
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      if (error.response?.status !== 403 && error.response?.status !== 401) {
+        throw error;
+      }
+    }
+  };
+
+  const loadLabTests = async () => {
+    try {
+      const testsData = await labAPI.getTests();
+      setLabTests(testsData);
+    } catch (error) {
+      console.error('Error loading lab tests:', error);
+      if (error.response?.status !== 403 && error.response?.status !== 401) {
+        throw error;
+      }
+    }
+  };
+
+  const loadMedications = async () => {
+    try {
+      const medicationsData = await pharmacyAPI.getMedications();
+      setMedications(medicationsData);
+    } catch (error) {
+      console.error('Error loading medications:', error);
       if (error.response?.status !== 403 && error.response?.status !== 401) {
         throw error;
       }
@@ -123,6 +178,22 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Function to add a new user (admin only)
+  const addUser = async (userData) => {
+    try {
+      setIsLoading(true);
+      const newUser = await usersAPI.create(userData);
+      setUsers(prevUsers => [...prevUsers, newUser]);
+      return newUser;
+    } catch (error) {
+      console.error('Error adding user:', error);
+      setError('Failed to add user');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Clear error function
   const clearError = () => {
     setError(null);
@@ -131,6 +202,9 @@ export const AppProvider = ({ children }) => {
   const contextValue = {
     patients,
     doctors,
+    users,
+    labTests,
+    medications,
     patientForEditing,
     setPatientForEditing,
     isLoading,
@@ -140,8 +214,12 @@ export const AppProvider = ({ children }) => {
     updatePatient,
     deletePatient,
     addDoctor,
+    addUser,
     loadPatients,
     loadDoctors,
+    loadUsers,
+    loadLabTests,
+    loadMedications,
     loadInitialData,
     clearError
   };
