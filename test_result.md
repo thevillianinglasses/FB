@@ -208,8 +208,10 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
-  run_ui: false
+  test_sequence: 2
+  run_ui: true
+  frontend_tested: true
+  deployment_ready: true
 
 test_plan:
   current_focus:
