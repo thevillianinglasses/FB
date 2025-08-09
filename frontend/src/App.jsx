@@ -23,22 +23,30 @@ const tabs = [
 function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState(tabs[0].name);
-  const { setPatientForEditing, error, clearError } = useAppContext();
+  const { setPatientForEditing, error, clearError, loadInitialData } = useAppContext();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Check if user is already authenticated on app load
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const isAuthenticated = authAPI.isAuthenticated();
       setIsLoggedIn(isAuthenticated);
+      
+      // Load data if already authenticated
+      if (isAuthenticated) {
+        await loadInitialData();
+      }
+      
       setIsCheckingAuth(false);
     };
     
     checkAuth();
-  }, []);
+  }, [loadInitialData]);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = async () => {
     setIsLoggedIn(true);
+    // Load initial data after successful login
+    await loadInitialData();
   };
 
   const handleLogout = () => {
