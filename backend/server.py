@@ -262,7 +262,7 @@ async def get_patient(patient_id: str, current_user: str = Depends(verify_token)
 @app.put("/api/patients/{patient_id}", response_model=Patient)
 async def update_patient(patient_id: str, patient: Patient, current_user: str = Depends(verify_token)):
     try:
-        patient_dict = patient.dict()
+        patient_dict = patient.dict(exclude_unset=True)
         patient_dict["updated_at"] = datetime.utcnow()
         
         result = await database.patients.update_one(
@@ -274,8 +274,11 @@ async def update_patient(patient_id: str, patient: Patient, current_user: str = 
             raise HTTPException(status_code=404, detail="Patient not found")
         
         updated_patient = await database.patients.find_one({"id": patient_id})
-        updated_patient['_id'] = str(updated_patient['_id']) if '_id' in updated_patient else updated_patient.get('id', '')
-        return Patient(**updated_patient)
+        if updated_patient:
+            updated_patient['_id'] = str(updated_patient['_id']) if '_id' in updated_patient else updated_patient.get('id', '')
+            return Patient(**updated_patient)
+        else:
+            raise HTTPException(status_code=404, detail="Patient not found after update")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating patient: {str(e)}")
 
