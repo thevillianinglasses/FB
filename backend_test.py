@@ -87,10 +87,15 @@ class UnicareEHRTester:
         )
         return success
 
-    def test_login(self, username="admin", password="admin_007"):
+    def test_login(self, username=None, password=None, role="admin"):
         """Test login and get token"""
+        if username is None:
+            creds = self.test_accounts[role]
+            username = creds["username"]
+            password = creds["password"]
+            
         success, response = self.run_test(
-            "Login",
+            f"Login as {role} ({username})",
             "POST",
             "api/auth/login",
             200,
@@ -98,7 +103,9 @@ class UnicareEHRTester:
         )
         if success and 'access_token' in response:
             self.token = response['access_token']
+            self.current_user_role = response.get('user_role', role)
             print(f"   Token obtained: {self.token[:20]}...")
+            print(f"   User role: {self.current_user_role}")
             return True
         return False
 
