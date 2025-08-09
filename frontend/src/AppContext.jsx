@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { patientsAPI, doctorsAPI } from './api';
+import { patientsAPI, doctorsAPI, authAPI } from './api';
 
 const AppContext = createContext();
 
@@ -11,36 +11,50 @@ export const AppProvider = ({ children }) => {
   const [patientForEditing, setPatientForEditing] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // Load initial data
-  useEffect(() => {
-    loadDoctors();
-    loadPatients();
-  }, []);
-
-  const loadDoctors = async () => {
+  // Only load data if user is authenticated
+  const loadInitialData = async () => {
+    if (!authAPI.isAuthenticated()) {
+      return; // Don't load data if not authenticated
+    }
+    
     try {
       setIsLoading(true);
-      const doctorsData = await doctorsAPI.getAll();
-      setDoctors(doctorsData);
+      setError(null);
+      await Promise.all([loadDoctors(), loadPatients()]);
+      setIsDataLoaded(true);
     } catch (error) {
-      console.error('Error loading doctors:', error);
-      setError('Failed to load doctors');
+      console.error('Error loading initial data:', error);
+      setError('Failed to load initial data');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const loadDoctors = async () => {
+    try {
+      const doctorsData = await doctorsAPI.getAll();
+      setDoctors(doctorsData);
+    } catch (error) {
+      console.error('Error loading doctors:', error);
+      // Don't set error state here since this might be called before auth
+      if (error.response?.status !== 403 && error.response?.status !== 401) {
+        throw error;
+      }
+    }
+  };
+
   const loadPatients = async () => {
     try {
-      setIsLoading(true);
       const patientsData = await patientsAPI.getAll();
       setPatients(patientsData);
     } catch (error) {
       console.error('Error loading patients:', error);
-      setError('Failed to load patients');
-    } finally {
-      setIsLoading(false);
+      // Don't set error state here since this might be called before auth
+      if (error.response?.status !== 403 && error.response?.status !== 401) {
+        throw error;
+      }
     }
   };
 
@@ -121,12 +135,14 @@ export const AppProvider = ({ children }) => {
     setPatientForEditing,
     isLoading,
     error,
+    isDataLoaded,
     addPatient,
     updatePatient,
     deletePatient,
     addDoctor,
     loadPatients,
     loadDoctors,
+    loadInitialData,
     clearError
   };
 
