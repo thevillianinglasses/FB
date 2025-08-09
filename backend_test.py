@@ -10,6 +10,17 @@ class UnicareEHRTester:
         self.tests_run = 0
         self.tests_passed = 0
         self.patient_id = None
+        self.current_user_role = None
+        
+        # Test accounts as specified in the review request
+        self.test_accounts = {
+            "admin": {"username": "admin", "password": "admin_007"},
+            "reception": {"username": "reception1", "password": "reception123"},
+            "laboratory": {"username": "lab1", "password": "lab123"},
+            "pharmacy": {"username": "pharmacy1", "password": "pharmacy123"},
+            "nursing": {"username": "nurse1", "password": "nurse123"},
+            "doctor": {"username": "doctor1", "password": "doctor123"}
+        }
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
