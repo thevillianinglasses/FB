@@ -537,24 +537,35 @@ class UnicareEHRTester:
         return successful_access == len(roles_to_test)
 
 def main():
-    print("🏥 Starting Unicare EHR Backend API Tests")
-    print("=" * 50)
+    print("🏥 Starting Comprehensive Unicare EHR Backend API Tests")
+    print("=" * 60)
     
     # Initialize tester
     tester = UnicareEHRTester()
     
-    # Run all tests
+    # Run comprehensive tests
     tests = [
+        # Basic connectivity and auth tests
         tester.test_health_check,
         tester.test_invalid_login,
-        tester.test_login,
+        tester.test_login,  # Login as admin
+        
+        # User management tests
+        tester.test_create_test_users,
+        tester.test_role_based_login,
+        
+        # Role-specific API tests
+        tester.test_admin_apis,
+        tester.test_reception_apis,
+        tester.test_laboratory_apis,
+        tester.test_pharmacy_apis,
+        tester.test_nursing_apis,
+        tester.test_doctor_apis,
+        
+        # Security and integration tests
+        tester.test_role_based_access_control,
+        tester.test_cross_module_integration,
         tester.test_unauthorized_access,
-        tester.test_get_doctors,
-        tester.test_create_patient,
-        tester.test_get_patients,
-        tester.test_get_patient_by_id,
-        tester.test_update_patient,
-        tester.test_delete_patient,
     ]
     
     for test in tests:
@@ -562,9 +573,11 @@ def main():
             test()
         except Exception as e:
             print(f"❌ Test failed with exception: {str(e)}")
+            import traceback
+            traceback.print_exc()
     
     # Print final results
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print(f"📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
     
     if tester.tests_passed == tester.tests_run:
