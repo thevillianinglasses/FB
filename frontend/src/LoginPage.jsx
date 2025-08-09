@@ -1,25 +1,32 @@
 import React, { useState } from 'react';
+import { authAPI } from './api';
 
-// Placeholder for actual navigation function after login
-// In a real app, this would come from a routing library or App.js props
-const navigateToMainApp = () => {
-  console.log("Login successful, navigating to main app...");
-  // This will be replaced by actual navigation logic
-};
-
-function LoginPage({ onLoginSuccess }) { // Added onLoginSuccess prop
+function LoginPage({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin123') {
-      setError('');
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      await authAPI.login(username, password);
       console.log('Login successful');
-      onLoginSuccess(); // Call the callback on successful login
-    } else {
-      setError('Invalid username or password');
+      onLoginSuccess();
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error.response?.status === 401) {
+        setError('Invalid username or password');
+      } else if (error.response?.data?.detail) {
+        setError(error.response.data.detail);
+      } else {
+        setError('Login failed. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -42,6 +49,8 @@ function LoginPage({ onLoginSuccess }) { // Added onLoginSuccess prop
               onChange={(e) => setUsername(e.target.value)}
               className="shadow appearance-none border border-cornflower-blue rounded w-full py-2 px-3 text-charcoal-grey leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Username"
+              disabled={isLoading}
+              required
             />
           </div>
           <div className="mb-6">
@@ -55,18 +64,26 @@ function LoginPage({ onLoginSuccess }) { // Added onLoginSuccess prop
               onChange={(e) => setPassword(e.target.value)}
               className="shadow appearance-none border border-cornflower-blue rounded w-full py-2 px-3 text-charcoal-grey mb-3 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="******************"
+              disabled={isLoading}
+              required
             />
           </div>
           {error && <p className="text-coral-red text-xs italic mb-4">{error}</p>}
           <div className="flex items-center justify-between">
             <button
               type="submit"
-              className="bg-cornflower-blue hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              disabled={isLoading}
+              className="bg-cornflower-blue hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full disabled:opacity-50"
             >
-              Sign In
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
           </div>
         </form>
+        <div className="mt-4 text-center">
+          <p className="text-xs text-gray-500">
+            Default credentials: admin / admin_007
+          </p>
+        </div>
       </div>
     </div>
   );
