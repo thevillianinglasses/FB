@@ -10,9 +10,6 @@ const api = axios.create({
   },
 });
 
-// Token management
-let authToken = localStorage.getItem('authToken');
-
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
@@ -33,7 +30,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
-      // Redirect to login or trigger re-authentication
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
       window.location.reload();
     }
     return Promise.reject(error);
@@ -46,18 +44,36 @@ export const authAPI = {
     const response = await api.post('/api/auth/login', { username, password });
     if (response.data.access_token) {
       localStorage.setItem('authToken', response.data.access_token);
-      authToken = response.data.access_token;
     }
     return response.data;
   },
   
   logout: () => {
     localStorage.removeItem('authToken');
-    authToken = null;
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
   },
   
   isAuthenticated: () => {
     return !!localStorage.getItem('authToken');
+  }
+};
+
+// Users API (Admin only)
+export const usersAPI = {
+  getAll: async () => {
+    const response = await api.get('/api/users');
+    return response.data;
+  },
+  
+  create: async (userData) => {
+    const response = await api.post('/api/users', userData);
+    return response.data;
+  },
+  
+  updateStatus: async (userId, status) => {
+    const response = await api.put(`/api/users/${userId}/status?status=${status}`);
+    return response.data;
   }
 };
 
@@ -86,6 +102,16 @@ export const patientsAPI = {
   delete: async (id) => {
     const response = await api.delete(`/api/patients/${id}`);
     return response.data;
+  },
+  
+  getVitals: async (patientId) => {
+    const response = await api.get(`/api/patients/${patientId}/vitals`);
+    return response.data;
+  },
+  
+  getConsultations: async (patientId) => {
+    const response = await api.get(`/api/patients/${patientId}/consultations`);
+    return response.data;
   }
 };
 
@@ -98,6 +124,126 @@ export const doctorsAPI = {
   
   create: async (doctorData) => {
     const response = await api.post('/api/doctors', doctorData);
+    return response.data;
+  }
+};
+
+// Laboratory API
+export const labAPI = {
+  getTests: async () => {
+    const response = await api.get('/api/lab/tests');
+    return response.data;
+  },
+  
+  addTest: async (testData) => {
+    const response = await api.post('/api/lab/tests', testData);
+    return response.data;
+  },
+  
+  getOrders: async () => {
+    const response = await api.get('/api/lab/orders');
+    return response.data;
+  },
+  
+  createOrder: async (orderData) => {
+    const response = await api.post('/api/lab/orders', orderData);
+    return response.data;
+  },
+  
+  updateOrderStatus: async (orderId, status) => {
+    const response = await api.put(`/api/lab/orders/${orderId}/status?status=${status}`);
+    return response.data;
+  },
+  
+  getResults: async () => {
+    const response = await api.get('/api/lab/results');
+    return response.data;
+  },
+  
+  addResult: async (resultData) => {
+    const response = await api.post('/api/lab/results', resultData);
+    return response.data;
+  }
+};
+
+// Pharmacy API
+export const pharmacyAPI = {
+  getMedications: async () => {
+    const response = await api.get('/api/pharmacy/medications');
+    return response.data;
+  },
+  
+  addMedication: async (medicationData) => {
+    const response = await api.post('/api/pharmacy/medications', medicationData);
+    return response.data;
+  },
+  
+  updateStock: async (medId, quantity) => {
+    const response = await api.put(`/api/pharmacy/medications/${medId}/stock?quantity=${quantity}`);
+    return response.data;
+  },
+  
+  getPrescriptions: async () => {
+    const response = await api.get('/api/pharmacy/prescriptions');
+    return response.data;
+  },
+  
+  createPrescription: async (prescriptionData) => {
+    const response = await api.post('/api/pharmacy/prescriptions', prescriptionData);
+    return response.data;
+  },
+  
+  dispensePrescription: async (prescriptionId) => {
+    const response = await api.put(`/api/pharmacy/prescriptions/${prescriptionId}/dispense`);
+    return response.data;
+  }
+};
+
+// Nursing API
+export const nursingAPI = {
+  getVitals: async () => {
+    const response = await api.get('/api/nursing/vitals');
+    return response.data;
+  },
+  
+  recordVitals: async (vitalsData) => {
+    const response = await api.post('/api/nursing/vitals', vitalsData);
+    return response.data;
+  },
+  
+  getProcedures: async () => {
+    const response = await api.get('/api/nursing/procedures');
+    return response.data;
+  },
+  
+  recordProcedure: async (procedureData) => {
+    const response = await api.post('/api/nursing/procedures', procedureData);
+    return response.data;
+  }
+};
+
+// EMR/Doctor API
+export const emrAPI = {
+  getConsultations: async () => {
+    const response = await api.get('/api/emr/consultations');
+    return response.data;
+  },
+  
+  createConsultation: async (consultationData) => {
+    const response = await api.post('/api/emr/consultations', consultationData);
+    return response.data;
+  }
+};
+
+// Billing API
+export const billingAPI = {
+  getBills: async () => {
+    const response = await api.get('/api/billing/bills');
+    return response.data;
+  },
+  
+  createBill: async (billData) => {
+    const response = await api.post('/api/billing/bills', billData);
     return response.data;
   }
 };

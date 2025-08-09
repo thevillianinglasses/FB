@@ -2,38 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { AppProvider, useAppContext } from './AppContext';
 import { authAPI } from './api';
 import LoginPage from './LoginPage';
-import NewOPDPage from './NewOPDPage';
-import PatientLogPage from './PatientLogPage';
-import AllPatientsPage from './AllPatientsPage';
-import CancelledPage from './CancelledPage';
-import AppointmentSchedulingPage from './AppointmentSchedulingPage';
-import FinalBillingPage from './FinalBillingPage';
-import ProceduresServicesPage from './ProceduresServicesPage';
 
-const tabs = [
-  { name: 'New OPD', component: <NewOPDPage /> },
-  { name: 'Patient Log', component: <PatientLogPage /> },
-  { name: 'All Patients', component: <AllPatientsPage /> },
-  { name: 'Cancelled', component: <CancelledPage /> },
-  { name: 'Appointment Scheduling', component: <AppointmentSchedulingPage /> },
-  { name: 'Final Billing', component: <FinalBillingPage /> },
-  { name: 'Procedures & Services', component: <ProceduresServicesPage /> },
-];
+// Import all module components
+import ReceptionDashboard from './components/ReceptionDashboard';
+import LaboratoryDashboard from './components/LaboratoryDashboard';
+import PharmacyDashboard from './components/PharmacyDashboard';
+import NursingDashboard from './components/NursingDashboard';
+import DoctorDashboard from './components/DoctorDashboard';
+import AdminDashboard from './components/AdminDashboard';
 
 function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState(tabs[0].name);
-  const { setPatientForEditing, error, clearError, loadInitialData } = useAppContext();
+  const [userRole, setUserRole] = useState('');
+  const [userName, setUserName] = useState('');
+  const { error, clearError, loadInitialData } = useAppContext();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Check if user is already authenticated on app load
   useEffect(() => {
     const checkAuth = async () => {
       const isAuthenticated = authAPI.isAuthenticated();
+      const storedRole = localStorage.getItem('userRole');
+      const storedName = localStorage.getItem('userName');
+      
       setIsLoggedIn(isAuthenticated);
+      setUserRole(storedRole || '');
+      setUserName(storedName || '');
       
       // Load data if already authenticated
-      if (isAuthenticated) {
+      if (isAuthenticated && loadInitialData) {
         await loadInitialData();
       }
       
@@ -43,22 +40,26 @@ function AppContent() {
     checkAuth();
   }, [loadInitialData]);
 
-  const handleLoginSuccess = async () => {
+  const handleLoginSuccess = async (role, name) => {
     setIsLoggedIn(true);
+    setUserRole(role);
+    setUserName(name);
+    localStorage.setItem('userRole', role);
+    localStorage.setItem('userName', name);
+    
     // Load initial data after successful login
-    await loadInitialData();
+    if (loadInitialData) {
+      await loadInitialData();
+    }
   };
 
   const handleLogout = () => {
     authAPI.logout();
-    if (setPatientForEditing) setPatientForEditing(null);
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
     setIsLoggedIn(false);
-    setActiveTab(tabs[0].name);
-  };
-
-  const handleEditPatientRequest = (patientToEdit) => {
-    setPatientForEditing(patientToEdit);
-    setActiveTab('New OPD');
+    setUserRole('');
+    setUserName('');
   };
 
   // Show loading while checking authentication
@@ -76,6 +77,39 @@ function AppContent() {
   if (!isLoggedIn) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
+
+  // Role-based dashboard rendering
+  const renderDashboard = () => {
+    switch (userRole) {
+      case 'admin':
+        return <AdminDashboard onLogout={handleLogout} userName={userName} />;
+      case 'reception':
+        return <ReceptionDashboard onLogout={handleLogout} userName={userName} />;
+      case 'laboratory':
+        return <LaboratoryDashboard onLogout={handleLogout} userName={userName} />;
+      case 'pharmacy':
+        return <PharmacyDashboard onLogout={handleLogout} userName={userName} />;
+      case 'nursing':
+        return <NursingDashboard onLogout={handleLogout} userName={userName} />;
+      case 'doctor':
+        return <DoctorDashboard onLogout={handleLogout} userName={userName} />;
+      default:
+        return (
+          <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-charcoal-grey mb-4">Access Denied</h2>
+              <p className="text-gray-600 mb-4">Invalid user role: {userRole}</p>
+              <button
+                onClick={handleLogout}
+                className="bg-coral-red hover:bg-opacity-80 text-white font-semibold py-2 px-4 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -96,57 +130,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="bg-white text-charcoal-grey p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-charcoal-grey">Unicare Polyclinic</h1>
-            <p className="text-sm text-coral-red italic">care crafted for you</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="bg-coral-red hover:bg-opacity-80 text-white font-semibold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {/* Tab Navigation */}
-      <nav className="bg-charcoal-grey shadow-sm">
-        <div className="container mx-auto flex">
-          {tabs.map((tab) => (
-            <button
-              key={tab.name}
-              onClick={() => {
-                if (activeTab === 'New OPD' && setPatientForEditing) {
-                  setPatientForEditing(null);
-                }
-                setActiveTab(tab.name);
-                if (clearError) clearError();
-              }}
-              className={`py-4 px-6 block focus:outline-none ${
-                activeTab === tab.name
-                  ? 'text-cornflower-blue border-b-2 border-coral-red'
-                  : 'text-white hover:text-coral-red'
-              }`}
-            >
-              {tab.name}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {/* Active Tab Content */}
-      <main className="container mx-auto p-4">
-        {activeTab === 'New OPD' && <NewOPDPage />}
-        {activeTab === 'Patient Log' && <PatientLogPage />}
-        {activeTab === 'All Patients' && <AllPatientsPage onEditPatient={handleEditPatientRequest} />}
-        {activeTab === 'Cancelled' && <CancelledPage />}
-        {activeTab === 'Appointment Scheduling' && <AppointmentSchedulingPage />}
-        {activeTab === 'Final Billing' && <FinalBillingPage />}
-        {activeTab === 'Procedures & Services' && <ProceduresServicesPage />}
-      </main>
+      {renderDashboard()}
     </div>
   );
 }
