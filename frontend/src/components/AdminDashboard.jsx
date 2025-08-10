@@ -26,13 +26,12 @@ function AdminDashboard({ onLogout, userName }) {
   ];
 
   useEffect(() => {
-    // Use context users data when available
-    if (contextUsers && contextUsers.length > 0) {
-      setUsers(contextUsers);
-    } else if (activeTab === 'users') {
+    // Only load users once when the component mounts or activeTab changes to users
+    if (activeTab === 'users' && !loadedOnce) {
       loadUsers();
+      setLoadedOnce(true);
     }
-  }, [activeTab, contextUsers]);
+  }, [activeTab, loadedOnce]);
 
   const loadUsers = async () => {
     try {
