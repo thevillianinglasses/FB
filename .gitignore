@@ -1,1 +1,71 @@
-.vscode/settings.json
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+
+# Logs
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# Runtime data
+pids/
+logs/
+results/
+coverage/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+*.tgz
+*.tar.gz
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Package manager files
+package-lock.json
+yarn.lock
+yarn-error.log
+
+# Python virtual environment
+venv/
+env/
+.venv/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
