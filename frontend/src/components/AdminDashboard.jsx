@@ -93,15 +93,23 @@ function AdminDashboard({ onLogout, userName }) {
   };
 
   const handleStatusChange = async (userId, status) => {
+    if (isLoading) return; // Prevent multiple simultaneous calls
+    
     try {
+      setIsLoading(true);
+      console.log(`🔄 Updating user ${userId} status to ${status}`);
+      
       await usersAPI.updateStatus(userId, status);
-      loadUsers();
-      // Also refresh context users
-      if (contextLoadUsers) {
-        await contextLoadUsers();
-      }
+      console.log('✅ User status updated successfully');
+      
+      // Reload users to reflect changes
+      await loadUsers();
+      
     } catch (error) {
-      console.error('Error updating user status:', error);
+      console.error('❌ Error updating user status:', error);
+      alert(`Failed to update user status: ${error.message || 'Please try again'}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
