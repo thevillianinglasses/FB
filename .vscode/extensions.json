@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "bradlc.vscode-tailwindcss"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-eslint",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}

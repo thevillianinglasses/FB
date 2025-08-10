@@ -34,8 +34,7 @@ build/
 *.tgz
 *.tar.gz
 
-# IDE files
-.vscode/
+# IDE files - excluding vscode settings for development
 .idea/
 *.swp
 *.swo
