@@ -34,12 +34,17 @@ function AdminDashboard({ onLogout, userName }) {
   }, [activeTab, loadedOnce]);
 
   const loadUsers = async () => {
+    if (isLoading) return; // Prevent multiple simultaneous calls
+    
     try {
       setIsLoading(true);
+      console.log('🔄 Loading users for admin dashboard...');
       const usersData = await usersAPI.getAll();
       setUsers(usersData);
+      console.log('✅ Users loaded successfully:', usersData.length);
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('❌ Error loading users:', error);
+      alert(`Failed to load users: ${error.message || 'Please try again'}`);
     } finally {
       setIsLoading(false);
     }
@@ -47,9 +52,23 @@ function AdminDashboard({ onLogout, userName }) {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    
+    if (isLoading) return; // Prevent multiple submissions
+    
     try {
       setIsLoading(true);
+      console.log('🔄 Creating new user:', newUser.username);
+      
+      // Validate required fields
+      if (!newUser.username || !newUser.password || !newUser.full_name) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
       await usersAPI.create(newUser);
+      console.log('✅ User created successfully');
+      
+      // Reset form and close modal
       setNewUser({
         username: '',
         password: '',
@@ -60,14 +79,14 @@ function AdminDashboard({ onLogout, userName }) {
         phone: ''
       });
       setShowCreateUser(false);
-      loadUsers();
-      // Also refresh context users
-      if (contextLoadUsers) {
-        await contextLoadUsers();
-      }
+      
+      // Reload users list
+      await loadUsers();
+      
     } catch (error) {
-      console.error('Error creating user:', error);
-      alert('Error creating user. Please try again.');
+      console.error('❌ Error creating user:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Please try again';
+      alert(`Error creating user: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
