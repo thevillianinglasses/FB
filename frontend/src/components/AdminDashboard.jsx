@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { usersAPI } from '../api';
-import { useAppContext } from '../AppContext';
 
 function AdminDashboard({ onLogout, userName }) {
   const [activeTab, setActiveTab] = useState('users');
-  const { users: contextUsers, loadUsers: contextLoadUsers, isLoading: contextLoading } = useAppContext();
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [loadedOnce, setLoadedOnce] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [newUser, setNewUser] = useState({
     username: '',
