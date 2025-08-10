@@ -62,6 +62,10 @@ function AdminDashboard({ onLogout, userName }) {
       });
       setShowCreateUser(false);
       loadUsers();
+      // Also refresh context users
+      if (contextLoadUsers) {
+        await contextLoadUsers();
+      }
     } catch (error) {
       console.error('Error creating user:', error);
       alert('Error creating user. Please try again.');
