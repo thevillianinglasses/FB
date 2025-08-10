@@ -84,34 +84,54 @@ export const AppProvider = ({ children }) => {
     
     const userRole = localStorage.getItem('userRole');
     
+    // Prevent multiple simultaneous loads
+    if (isLoading) {
+      return;
+    }
+    
     try {
       setIsLoading(true);
       setError(null);
       
-      // Load basic data that all roles need
-      await Promise.all([loadDoctors(), loadPatients()]);
+      console.log('Loading initial data for role:', userRole);
+      
+      // Load basic data that all roles need (sequentially to avoid overwhelming the API)
+      try {
+        await loadDoctors();
+        await loadPatients();
+      } catch (basicError) {
+        console.error('Error loading basic data:', basicError);
+        throw new Error('Failed to load doctors and patients data');
+      }
       
       // Load role-specific data
-      if (userRole === 'admin') {
-        await loadUsers();
-      }
-      
-      if (userRole === 'laboratory' || userRole === 'admin') {
-        await loadLabTests();
-      }
-      
-      if (userRole === 'pharmacy' || userRole === 'doctor' || userRole === 'admin') {
-        await loadMedications();
+      try {
+        if (userRole === 'admin') {
+          await loadUsers();
+        }
+        
+        if (userRole === 'laboratory' || userRole === 'admin') {
+          await loadLabTests();
+        }
+        
+        if (userRole === 'pharmacy' || userRole === 'doctor' || userRole === 'admin') {
+          await loadMedications();
+        }
+      } catch (roleError) {
+        console.error('Error loading role-specific data:', roleError);
+        // Don't throw here - basic data is more important
       }
       
       setIsDataLoaded(true);
+      console.log('Initial data loaded successfully');
+      
     } catch (error) {
       console.error('Error loading initial data:', error);
-      setError('Failed to load initial data');
+      setError('Failed to load initial data: ' + (error.message || 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
-  }, [loadDoctors, loadPatients, loadUsers, loadLabTests, loadMedications]);
+  }, []); // Empty dependency array to prevent recreation
 
   // Function to add a new patient
   const addPatient = async (patientData) => {
