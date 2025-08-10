@@ -78,6 +78,10 @@ function AdminDashboard({ onLogout, userName }) {
     try {
       await usersAPI.updateStatus(userId, status);
       loadUsers();
+      // Also refresh context users
+      if (contextLoadUsers) {
+        await contextLoadUsers();
+      }
     } catch (error) {
       console.error('Error updating user status:', error);
     }
