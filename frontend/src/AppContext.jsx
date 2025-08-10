@@ -16,43 +16,6 @@ export const AppProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // Only load data if user is authenticated and based on their role
-  const loadInitialData = useCallback(async () => {
-    if (!authAPI.isAuthenticated()) {
-      return; // Don't load data if not authenticated
-    }
-    
-    const userRole = localStorage.getItem('userRole');
-    
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Load basic data that all roles need
-      await Promise.all([loadDoctors(), loadPatients()]);
-      
-      // Load role-specific data
-      if (userRole === 'admin') {
-        await loadUsers();
-      }
-      
-      if (userRole === 'laboratory' || userRole === 'admin') {
-        await loadLabTests();
-      }
-      
-      if (userRole === 'pharmacy' || userRole === 'doctor' || userRole === 'admin') {
-        await loadMedications();
-      }
-      
-      setIsDataLoaded(true);
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-      setError('Failed to load initial data');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadDoctors, loadPatients, loadUsers, loadLabTests, loadMedications]); // Add all dependent functions
-
   const loadDoctors = useCallback(async () => {
     try {
       const doctorsData = await doctorsAPI.getAll();
@@ -112,6 +75,43 @@ export const AppProvider = ({ children }) => {
       }
     }
   }, []);
+
+  // Only load data if user is authenticated and based on their role
+  const loadInitialData = useCallback(async () => {
+    if (!authAPI.isAuthenticated()) {
+      return; // Don't load data if not authenticated
+    }
+    
+    const userRole = localStorage.getItem('userRole');
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Load basic data that all roles need
+      await Promise.all([loadDoctors(), loadPatients()]);
+      
+      // Load role-specific data
+      if (userRole === 'admin') {
+        await loadUsers();
+      }
+      
+      if (userRole === 'laboratory' || userRole === 'admin') {
+        await loadLabTests();
+      }
+      
+      if (userRole === 'pharmacy' || userRole === 'doctor' || userRole === 'admin') {
+        await loadMedications();
+      }
+      
+      setIsDataLoaded(true);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      setError('Failed to load initial data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [loadDoctors, loadPatients, loadUsers, loadLabTests, loadMedications]);
 
   // Function to add a new patient
   const addPatient = async (patientData) => {
