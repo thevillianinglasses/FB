@@ -1,5 +1,5 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { patientsAPI, doctorsAPI, authAPI, usersAPI, labAPI, pharmacyAPI, nursingAPI, emrAPI } from './api';
+import React, { createContext, useState, useContext } from 'react';
+import { patientsAPI, doctorsAPI, authAPI, usersAPI } from './api';
 
 const AppContext = createContext();
 
@@ -9,14 +9,12 @@ export const AppProvider = ({ children }) => {
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [users, setUsers] = useState([]);
-  const [labTests, setLabTests] = useState([]);
-  const [medications, setMedications] = useState([]);
   const [patientForEditing, setPatientForEditing] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // Simple, direct loading functions without useCallback to prevent infinite loops
+  // Simple loading functions without infinite loops
   const loadDoctors = async () => {
     try {
       const doctorsData = await doctorsAPI.getAll();
@@ -47,74 +45,6 @@ export const AppProvider = ({ children }) => {
     } catch (error) {
       console.error('Error loading users:', error);
       throw error;
-    }
-  };
-
-  const loadLabTests = async () => {
-    try {
-      const testsData = await labAPI.getTests();
-      setLabTests(testsData);
-      return testsData;
-    } catch (error) {
-      console.error('Error loading lab tests:', error);
-      throw error;
-    }
-  };
-
-  const loadMedications = async () => {
-    try {
-      const medicationsData = await pharmacyAPI.getMedications();
-      setMedications(medicationsData);
-      return medicationsData;
-    } catch (error) {
-      console.error('Error loading medications:', error);
-      throw error;
-    }
-  };
-
-  // Simplified loadInitialData - only call when explicitly needed
-  const loadInitialData = async () => {
-    console.log('🔄 Starting initial data load...');
-    
-    if (!authAPI.isAuthenticated()) {
-      console.log('❌ User not authenticated, skipping data load');
-      return;
-    }
-    
-    // Prevent multiple simultaneous loads
-    if (isLoading) {
-      console.log('⚠️ Already loading, skipping duplicate request');
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const userRole = localStorage.getItem('userRole');
-      console.log('📋 Loading data for role:', userRole);
-      
-      // Only load essential data to prevent overwhelming the API
-      await loadDoctors();
-      console.log('✅ Doctors loaded');
-      
-      await loadPatients();
-      console.log('✅ Patients loaded');
-      
-      // Load role-specific data only if needed
-      if (userRole === 'admin') {
-        await loadUsers();
-        console.log('✅ Users loaded for admin');
-      }
-      
-      setIsDataLoaded(true);
-      console.log('🎉 All initial data loaded successfully');
-      
-    } catch (error) {
-      console.error('💥 Error loading initial data:', error);
-      setError(`Failed to load data: ${error.message || 'Please refresh the page'}`);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -208,8 +138,6 @@ export const AppProvider = ({ children }) => {
     patients,
     doctors,
     users,
-    labTests,
-    medications,
     patientForEditing,
     setPatientForEditing,
     isLoading,
@@ -223,9 +151,6 @@ export const AppProvider = ({ children }) => {
     loadPatients,
     loadDoctors,
     loadUsers,
-    loadLabTests,
-    loadMedications,
-    loadInitialData,
     clearError
   };
 
