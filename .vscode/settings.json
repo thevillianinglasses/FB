@@ -1,10 +1,39 @@
 {
-    "files.exclude": {
-        "**/.git": true,
-        "**/.svn": true,
-        "**/.hg": true,
-        "**/.DS_Store": true,
-        "**/Thumbs.db": true,
-        ".mule": true
-    }
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.git": false,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/yarn.lock": true,
+    "**/package-lock.json": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "**/yarn.lock": true,
+    "**/package-lock.json": true,
+    "**/__pycache__": true
+  },
+  "eslint.enable": false,
+  "javascript.validate.enable": false,
+  "typescript.validate.enable": false,
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll": false
+  },
+  "git.ignoreLimitWarning": true,
+  "git.detectSubmodules": false,
+  "git.autofetch": false,
+  "extensions.ignoreRecommendations": true,
+  "problems.decorations.enabled": false,
+  "editor.rulers": [80, 120],
+  "workbench.colorCustomizations": {
+    "editorError.foreground": "#ff000000",
+    "editorWarning.foreground": "#ffcc0000"
+  }
 }
