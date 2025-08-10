@@ -16,76 +16,74 @@ export const AppProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  const loadDoctors = useCallback(async () => {
+  // Simple, direct loading functions without useCallback to prevent infinite loops
+  const loadDoctors = async () => {
     try {
       const doctorsData = await doctorsAPI.getAll();
       setDoctors(doctorsData);
+      return doctorsData;
     } catch (error) {
       console.error('Error loading doctors:', error);
-      if (error.response?.status !== 403 && error.response?.status !== 401) {
-        throw error;
-      }
+      throw error;
     }
-  }, []);
+  };
 
-  const loadPatients = useCallback(async () => {
+  const loadPatients = async () => {
     try {
       const patientsData = await patientsAPI.getAll();
       setPatients(patientsData);
+      return patientsData;
     } catch (error) {
       console.error('Error loading patients:', error);
-      if (error.response?.status !== 403 && error.response?.status !== 401) {
-        throw error;
-      }
+      throw error;
     }
-  }, []);
+  };
 
-  const loadUsers = useCallback(async () => {
+  const loadUsers = async () => {
     try {
       const usersData = await usersAPI.getAll();
       setUsers(usersData);
+      return usersData;
     } catch (error) {
       console.error('Error loading users:', error);
-      if (error.response?.status !== 403 && error.response?.status !== 401) {
-        throw error;
-      }
+      throw error;
     }
-  }, []);
+  };
 
-  const loadLabTests = useCallback(async () => {
+  const loadLabTests = async () => {
     try {
       const testsData = await labAPI.getTests();
       setLabTests(testsData);
+      return testsData;
     } catch (error) {
       console.error('Error loading lab tests:', error);
-      if (error.response?.status !== 403 && error.response?.status !== 401) {
-        throw error;
-      }
+      throw error;
     }
-  }, []);
+  };
 
-  const loadMedications = useCallback(async () => {
+  const loadMedications = async () => {
     try {
       const medicationsData = await pharmacyAPI.getMedications();
       setMedications(medicationsData);
+      return medicationsData;
     } catch (error) {
       console.error('Error loading medications:', error);
-      if (error.response?.status !== 403 && error.response?.status !== 401) {
-        throw error;
-      }
+      throw error;
     }
-  }, []);
+  };
 
-  // Only load data if user is authenticated and based on their role
-  const loadInitialData = useCallback(async () => {
-    if (!authAPI.isAuthenticated()) {
-      return; // Don't load data if not authenticated
-    }
+  // Simplified loadInitialData - only call when explicitly needed
+  const loadInitialData = async () => {
+    console.log('🔄 Starting initial data load...');
     
-    const userRole = localStorage.getItem('userRole');
+    if (!authAPI.isAuthenticated()) {
+      console.log('❌ User not authenticated, skipping data load');
+      return;
+    }
     
     // Prevent multiple simultaneous loads
     if (isLoading) {
+      console.log('⚠️ Already loading, skipping duplicate request');
       return;
     }
     
@@ -93,45 +91,32 @@ export const AppProvider = ({ children }) => {
       setIsLoading(true);
       setError(null);
       
-      console.log('Loading initial data for role:', userRole);
+      const userRole = localStorage.getItem('userRole');
+      console.log('📋 Loading data for role:', userRole);
       
-      // Load basic data that all roles need (sequentially to avoid overwhelming the API)
-      try {
-        await loadDoctors();
-        await loadPatients();
-      } catch (basicError) {
-        console.error('Error loading basic data:', basicError);
-        throw new Error('Failed to load doctors and patients data');
-      }
+      // Only load essential data to prevent overwhelming the API
+      await loadDoctors();
+      console.log('✅ Doctors loaded');
       
-      // Load role-specific data
-      try {
-        if (userRole === 'admin') {
-          await loadUsers();
-        }
-        
-        if (userRole === 'laboratory' || userRole === 'admin') {
-          await loadLabTests();
-        }
-        
-        if (userRole === 'pharmacy' || userRole === 'doctor' || userRole === 'admin') {
-          await loadMedications();
-        }
-      } catch (roleError) {
-        console.error('Error loading role-specific data:', roleError);
-        // Don't throw here - basic data is more important
+      await loadPatients();
+      console.log('✅ Patients loaded');
+      
+      // Load role-specific data only if needed
+      if (userRole === 'admin') {
+        await loadUsers();
+        console.log('✅ Users loaded for admin');
       }
       
       setIsDataLoaded(true);
-      console.log('Initial data loaded successfully');
+      console.log('🎉 All initial data loaded successfully');
       
     } catch (error) {
-      console.error('Error loading initial data:', error);
-      setError('Failed to load initial data: ' + (error.message || 'Unknown error'));
+      console.error('💥 Error loading initial data:', error);
+      setError(`Failed to load data: ${error.message || 'Please refresh the page'}`);
     } finally {
       setIsLoading(false);
     }
-  }, []); // Empty dependency array to prevent recreation
+  };
 
   // Function to add a new patient
   const addPatient = async (patientData) => {
