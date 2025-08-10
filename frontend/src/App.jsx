@@ -45,10 +45,8 @@ function AppContent() {
     localStorage.setItem('userRole', role);
     localStorage.setItem('userName', name);
     
-    // Load initial data after successful login
-    if (loadInitialData) {
-      await loadInitialData();
-    }
+    // Don't auto-load data here to prevent infinite loops
+    // Let individual dashboard components load their own data as needed
   };
 
   const handleLogout = () => {
