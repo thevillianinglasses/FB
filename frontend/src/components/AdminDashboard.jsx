@@ -7,7 +7,6 @@ function AdminDashboard({ onLogout, userName }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [loadedOnce, setLoadedOnce] = useState(false);
-  const [showCreateUser, setShowCreateUser] = useState(false);
   const [newUser, setNewUser] = useState({
     username: '',
     password: '',
