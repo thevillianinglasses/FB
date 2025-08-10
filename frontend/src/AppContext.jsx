@@ -17,7 +17,7 @@ export const AppProvider = ({ children }) => {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Only load data if user is authenticated and based on their role
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     if (!authAPI.isAuthenticated()) {
       return; // Don't load data if not authenticated
     }
@@ -51,7 +51,7 @@ export const AppProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Empty dependency array since it doesn't depend on any props or state
 
   const loadDoctors = async () => {
     try {
