@@ -51,7 +51,7 @@ export const AppProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Empty dependency array since it doesn't depend on any props or state
+  }, [loadDoctors, loadPatients, loadUsers, loadLabTests, loadMedications]); // Add all dependent functions
 
   const loadDoctors = useCallback(async () => {
     try {
