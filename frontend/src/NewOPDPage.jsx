@@ -10,9 +10,20 @@ function NewOPDPage() {
   const [sex, setSex] = useState('');
   const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [selectedDoctor, setSelectedDoctor] = useState('');
+  const [visitType, setVisitType] = useState('New');
+  const [chiefComplaint, setChiefComplaint] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [lastRegisteredPatient, setLastRegisteredPatient] = useState(null);
+
+  // Load doctors on component mount
+  useEffect(() => {
+    if (!doctors || doctors.length === 0) {
+      // Load doctors if not already loaded
+    }
+  }, [doctors]);
 
   // Populate form if editing existing patient
   useEffect(() => {
@@ -23,6 +34,9 @@ function NewOPDPage() {
       setSex(patientForEditing.sex || '');
       setAddress(patientForEditing.address || '');
       setPhoneNumber(patientForEditing.phone_number || '');
+      setSelectedDoctor(patientForEditing.assigned_doctor || '');
+      setVisitType(patientForEditing.visit_type || 'New');
+      setChiefComplaint(patientForEditing.chief_complaint || '');
     }
   }, [patientForEditing]);
 
@@ -48,232 +62,470 @@ function NewOPDPage() {
     setAge(e.target.value);
   };
 
-  const clearForm = () => {
+  const resetForm = () => {
     setPatientName('');
     setAge('');
     setDob('');
     setSex('');
     setAddress('');
     setPhoneNumber('');
+    setSelectedDoctor('');
+    setVisitType('New');
+    setChiefComplaint('');
     setPatientForEditing(null);
+  };
+
+  // Print OPD function
+  const printOPD = (patientData) => {
+    const printWindow = window.open('', '_blank');
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata'
+    });
+    const formattedTime = currentDate.toLocaleTimeString('en-GB', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Kolkata'
+    });
+
+    const doctorName = doctors.find(d => d.id === patientData.assigned_doctor)?.name || 'Not Assigned';
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>OPD Registration - ${patientData.opd_number}</title>
+        <style>
+          @page { size: A5; margin: 10mm; }
+          body { 
+            font-family: Arial, sans-serif; 
+            font-size: 12px; 
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+          }
+          .clinic-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+          }
+          .clinic-subtitle {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+          }
+          .opd-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+          }
+          .patient-details {
+            margin: 15px 0;
+          }
+          .detail-row {
+            display: flex;
+            padding: 3px 0;
+            border-bottom: 1px dotted #ccc;
+          }
+          .label {
+            font-weight: bold;
+            width: 120px;
+            flex-shrink: 0;
+          }
+          .value {
+            flex-grow: 1;
+          }
+          .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+          }
+          .visit-type {
+            display: inline-block;
+            padding: 2px 8px;
+            background: ${patientData.visit_type === 'New' ? '#28a745' : '#17a2b8'};
+            color: white;
+            border-radius: 3px;
+            font-size: 10px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="clinic-name">UNICARE POLYCLINIC</div>
+          <div class="clinic-subtitle">Electronic Health Record System</div>
+        </div>
+
+        <div class="opd-info">
+          <div>
+            <strong>OPD No:</strong> ${patientData.opd_number}<br>
+            <strong>Date:</strong> ${formattedDate}
+          </div>
+          <div>
+            <strong>Time:</strong> ${formattedTime}<br>
+            <span class="visit-type">${patientData.visit_type}</span>
+          </div>
+        </div>
+
+        <div class="patient-details">
+          <div class="detail-row">
+            <div class="label">Patient Name:</div>
+            <div class="value">${patientData.patient_name}</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Age/Sex:</div>
+            <div class="value">${patientData.age} Years / ${patientData.sex}</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Phone:</div>
+            <div class="value">${patientData.phone_number}</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Address:</div>
+            <div class="value">${patientData.address}</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Doctor:</div>
+            <div class="value">${doctorName}</div>
+          </div>
+          ${patientData.chief_complaint ? `
+          <div class="detail-row">
+            <div class="label">Chief Complaint:</div>
+            <div class="value">${patientData.chief_complaint}</div>
+          </div>
+          ` : ''}
+        </div>
+
+        <div class="footer">
+          <p>Please keep this slip for your records</p>
+          <p>Generated on ${formattedDate} at ${formattedTime}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setErrorMessage('');
     setSuccessMessage('');
+    setErrorMessage('');
 
-    // Basic validation
-    if (!patientName || !age || !sex || !phoneNumber) {
-      setErrorMessage('Please fill all required fields: Name, Age, Sex, Phone Number.');
+    // Validation
+    if (!patientName.trim()) {
+      setErrorMessage('Patient name is required');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!phoneNumber.trim()) {
+      setErrorMessage('Phone number is required');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (phoneNumber.length !== 10) {
+      setErrorMessage('Phone number must be 10 digits');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!selectedDoctor) {
+      setErrorMessage('Please select a doctor');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!sex) {
+      setErrorMessage('Please select gender');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!age && !dob) {
+      setErrorMessage('Please provide either age or date of birth');
       setIsSubmitting(false);
       return;
     }
 
     try {
       const patientData = {
-        patient_name: patientName,
-        age: age,
-        dob: dob,
+        patient_name: patientName.trim(),
+        age: age ? parseInt(age) : null,
+        dob: dob || null,
         sex: sex,
-        address: address,
-        phone_number: phoneNumber
+        address: address.trim(),
+        phone_number: phoneNumber.trim(),
+        assigned_doctor: selectedDoctor,
+        visit_type: visitType,
+        chief_complaint: chiefComplaint.trim()
       };
 
       let result;
       if (patientForEditing) {
-        // Update existing patient
-        result = await updatePatient(patientForEditing.id, { ...patientData, id: patientForEditing.id });
-        setSuccessMessage(`Patient ${result.patient_name} updated successfully! OPD: ${result.opd_number}, Token: ${result.token_number}`);
+        result = await updatePatient(patientForEditing.id, patientData);
+        setSuccessMessage('Patient updated successfully!');
       } else {
-        // Add new patient
         result = await addPatient(patientData);
-        setSuccessMessage(`Patient ${result.patient_name} registered successfully! OPD: ${result.opd_number}, Token: ${result.token_number}`);
+        setLastRegisteredPatient(result);
+        setSuccessMessage(`Patient registered successfully! OPD Number: ${result.opd_number}`);
       }
 
-      clearForm();
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(''), 5000);
+      resetForm();
+
     } catch (error) {
       console.error('Error submitting patient:', error);
-      setErrorMessage(error.response?.data?.detail || 'Failed to save patient. Please try again.');
+      setErrorMessage(`Error: ${error.message || 'Failed to register patient. Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    clearForm();
-    setErrorMessage('');
-    setSuccessMessage('');
-  };
-
   return (
-    <div className="p-6 bg-white shadow-lg rounded-lg">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-charcoal-grey border-b pb-3">
-          {patientForEditing ? 'Edit Patient' : 'New OPD Registration'}
-        </h2>
-        {patientForEditing && (
-          <button
-            onClick={handleCancel}
-            className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded"
-          >
-            Cancel Edit
-          </button>
-        )}
-      </div>
-
-      {/* Success/Error Messages */}
-      {successMessage && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {successMessage}
-        </div>
-      )}
-      
-      {errorMessage && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {errorMessage}
-        </div>
-      )}
-
-      {/* Display current editing patient info */}
-      {patientForEditing && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-blue-100 p-3 rounded-lg shadow-sm">
-            <label className="block text-sm font-medium text-charcoal-grey">Current OPD Number</label>
-            <p className="text-lg text-cornflower-blue font-semibold">{patientForEditing.opd_number || 'N/A'}</p>
-          </div>
-          <div className="bg-blue-100 p-3 rounded-lg shadow-sm">
-            <label className="block text-sm font-medium text-charcoal-grey">Current Token Number</label>
-            <p className="text-lg text-cornflower-blue font-semibold">{patientForEditing.token_number || 'N/A'}</p>
-          </div>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Patient Name */}
-        <div>
-          <label htmlFor="patientName" className="block text-sm font-medium text-charcoal-grey">
-            Patient Name <span className="text-coral-red">*</span>
-          </label>
-          <input 
-            type="text" 
-            id="patientName" 
-            value={patientName} 
-            onChange={(e) => setPatientName(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-cornflower-blue rounded-md shadow-sm focus:outline-none focus:ring-cornflower-blue focus:border-cornflower-blue sm:text-sm" 
-            required 
-            disabled={isSubmitting}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Date of Birth */}
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <label htmlFor="dob" className="block text-sm font-medium text-charcoal-grey">Date of Birth</label>
-            <input 
-              type="date" 
-              id="dob" 
-              value={dob} 
-              onChange={handleDobChange}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-cornflower-blue rounded-md shadow-sm focus:outline-none focus:ring-cornflower-blue focus:border-cornflower-blue sm:text-sm" 
-              disabled={isSubmitting}
-            />
+            <h2 className="text-2xl font-bold text-charcoal-grey">
+              {patientForEditing ? 'Edit Patient' : 'New OPD Registration'}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Register new patient or update existing patient information
+            </p>
           </div>
-          {/* Age */}
-          <div>
-            <label htmlFor="age" className="block text-sm font-medium text-charcoal-grey">
-              Age <span className="text-coral-red">*</span>
-            </label>
-            <input 
-              type="number" 
-              id="age" 
-              value={age} 
-              onChange={handleAgeChange}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-cornflower-blue rounded-md shadow-sm focus:outline-none focus:ring-cornflower-blue focus:border-cornflower-blue sm:text-sm" 
-              required 
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-
-        {/* Sex */}
-        <div>
-          <label htmlFor="sex" className="block text-sm font-medium text-charcoal-grey">
-            Sex <span className="text-coral-red">*</span>
-          </label>
-          <select 
-            id="sex" 
-            value={sex} 
-            onChange={(e) => setSex(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-cornflower-blue rounded-md shadow-sm focus:outline-none focus:ring-cornflower-blue focus:border-cornflower-blue sm:text-sm" 
-            required
-            disabled={isSubmitting}
-          >
-            <option value="">Select Sex</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        {/* Address */}
-        <div>
-          <label htmlFor="address" className="block text-sm font-medium text-charcoal-grey">Address</label>
-          <textarea 
-            id="address" 
-            value={address} 
-            onChange={(e) => setAddress(e.target.value)} 
-            rows="3"
-            className="mt-1 block w-full px-3 py-2 bg-white border border-cornflower-blue rounded-md shadow-sm focus:outline-none focus:ring-cornflower-blue focus:border-cornflower-blue sm:text-sm"
-            disabled={isSubmitting}
-          ></textarea>
-        </div>
-
-        {/* Phone Number */}
-        <div>
-          <label htmlFor="phoneNumber" className="block text-sm font-medium text-charcoal-grey">
-            Phone Number <span className="text-coral-red">*</span>
-          </label>
-          <input 
-            type="tel" 
-            id="phoneNumber" 
-            value={phoneNumber} 
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-cornflower-blue rounded-md shadow-sm focus:outline-none focus:ring-cornflower-blue focus:border-cornflower-blue sm:text-sm" 
-            required 
-            disabled={isSubmitting}
-          />
-        </div>
-        
-        {/* Submit Button */}
-        <div className="pt-4 flex gap-4">
-          <button 
-            type="submit"
-            disabled={isSubmitting || isLoading}
-            className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cornflower-blue hover:bg-opacity-85 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cornflower-blue disabled:opacity-50"
-          >
-            {isSubmitting 
-              ? (patientForEditing ? 'Updating...' : 'Registering...') 
-              : (patientForEditing ? 'Update Patient' : 'Register Patient')
-            }
-          </button>
-          
-          {patientForEditing && (
-            <button 
-              type="button"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-              className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cornflower-blue disabled:opacity-50"
+          {lastRegisteredPatient && (
+            <button
+              onClick={() => printOPD(lastRegisteredPatient)}
+              className="bg-cornflower-blue hover:bg-opacity-80 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
             >
-              Cancel
+              <span>🖨️</span>
+              <span>Print OPD</span>
             </button>
           )}
         </div>
-      </form>
+
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            <div className="flex justify-between items-center">
+              <span>{successMessage}</span>
+              {lastRegisteredPatient && (
+                <button
+                  onClick={() => printOPD(lastRegisteredPatient)}
+                  className="ml-4 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                >
+                  Print OPD
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {errorMessage}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Patient Information Section */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-charcoal-grey border-b pb-2">
+                Patient Information
+              </h3>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Patient Name *
+                </label>
+                <input
+                  type="text"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  placeholder="Enter full name"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Age
+                  </label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={handleAgeChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                    placeholder="Years"
+                    min="0"
+                    max="120"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    value={dob}
+                    onChange={handleDobChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender *
+                </label>
+                <select
+                  value={sex}
+                  onChange={(e) => setSex(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  placeholder="10-digit mobile number"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-charcoal-grey border-b pb-2">
+                Visit Information
+              </h3>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Assigned Doctor *
+                </label>
+                <select
+                  value={selectedDoctor}
+                  onChange={(e) => setSelectedDoctor(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  required
+                >
+                  <option value="">Select Doctor</option>
+                  {doctors && doctors.map((doctor) => (
+                    <option key={doctor.id} value={doctor.id}>
+                      Dr. {doctor.name} - {doctor.specialization}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Visit Type
+                </label>
+                <select
+                  value={visitType}
+                  onChange={(e) => setVisitType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                >
+                  <option value="New">New Patient</option>
+                  <option value="Follow-up">Follow-up</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Chief Complaint
+                </label>
+                <textarea
+                  value={chiefComplaint}
+                  onChange={(e) => setChiefComplaint(e.target.value)}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  placeholder="Primary reason for visit..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  placeholder="Patient address..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-4 pt-4 border-t">
+            {patientForEditing && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={isSubmitting || isLoading}
+              className="bg-cornflower-blue hover:bg-opacity-80 text-white font-semibold py-2 px-8 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {isSubmitting || isLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                patientForEditing ? 'Update Patient' : 'Register Patient'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
