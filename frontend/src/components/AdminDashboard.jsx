@@ -26,10 +26,13 @@ function AdminDashboard({ onLogout, userName }) {
   ];
 
   useEffect(() => {
-    if (activeTab === 'users') {
+    // Use context users data when available
+    if (contextUsers && contextUsers.length > 0) {
+      setUsers(contextUsers);
+    } else if (activeTab === 'users') {
       loadUsers();
     }
-  }, [activeTab]);
+  }, [activeTab, contextUsers]);
 
   const loadUsers = async () => {
     try {
