@@ -29,16 +29,14 @@ function AppContent() {
       setUserRole(storedRole || '');
       setUserName(storedName || '');
       
-      // Load data if already authenticated
-      if (isAuthenticated && loadInitialData) {
-        await loadInitialData();
-      }
+      // Don't auto-load data here to prevent infinite loops
+      // Let individual components load their own data as needed
       
       setIsCheckingAuth(false);
     };
     
     checkAuth();
-  }, [loadInitialData]);
+  }, []); // Remove loadInitialData from dependencies
 
   const handleLoginSuccess = async (role, name) => {
     setIsLoggedIn(true);
