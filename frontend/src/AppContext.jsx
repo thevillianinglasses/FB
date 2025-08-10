@@ -53,7 +53,7 @@ export const AppProvider = ({ children }) => {
     }
   }, []); // Empty dependency array since it doesn't depend on any props or state
 
-  const loadDoctors = async () => {
+  const loadDoctors = useCallback(async () => {
     try {
       const doctorsData = await doctorsAPI.getAll();
       setDoctors(doctorsData);
@@ -63,9 +63,9 @@ export const AppProvider = ({ children }) => {
         throw error;
       }
     }
-  };
+  }, []);
 
-  const loadPatients = async () => {
+  const loadPatients = useCallback(async () => {
     try {
       const patientsData = await patientsAPI.getAll();
       setPatients(patientsData);
@@ -75,9 +75,9 @@ export const AppProvider = ({ children }) => {
         throw error;
       }
     }
-  };
+  }, []);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const usersData = await usersAPI.getAll();
       setUsers(usersData);
@@ -87,9 +87,9 @@ export const AppProvider = ({ children }) => {
         throw error;
       }
     }
-  };
+  }, []);
 
-  const loadLabTests = async () => {
+  const loadLabTests = useCallback(async () => {
     try {
       const testsData = await labAPI.getTests();
       setLabTests(testsData);
@@ -99,9 +99,9 @@ export const AppProvider = ({ children }) => {
         throw error;
       }
     }
-  };
+  }, []);
 
-  const loadMedications = async () => {
+  const loadMedications = useCallback(async () => {
     try {
       const medicationsData = await pharmacyAPI.getMedications();
       setMedications(medicationsData);
@@ -111,7 +111,7 @@ export const AppProvider = ({ children }) => {
         throw error;
       }
     }
-  };
+  }, []);
 
   // Function to add a new patient
   const addPatient = async (patientData) => {
