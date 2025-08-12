@@ -214,10 +214,12 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: true
   frontend_tested: true
   deployment_ready: true
+  doctors_api_tested: true
+  doctors_api_issue_resolved: true
 
 test_plan:
   current_focus:
