@@ -121,7 +121,7 @@ function BillingSystem() {
     alert(`Product "${product.name}" added successfully!`);
   };
 
-  // Default products/services
+  // Default products/services - Most commonly used first
   const defaultProducts = [
     {
       id: '1',
@@ -129,47 +129,17 @@ function BillingSystem() {
       category: 'Consultation',
       price: 500,
       taxable: true,
-      department: 'General Medicine'
+      department: 'General Medicine',
+      usage_count: 50 // Most used
     },
     {
       id: '2',
-      name: 'Cardiology Consultation',
-      category: 'Consultation', 
-      price: 800,
-      taxable: true,
-      department: 'Cardiology'
-    },
-    {
-      id: '3',
       name: 'Blood Pressure Check',
       category: 'Procedure',
       price: 100,
       taxable: false,
-      department: 'Nursing'
-    },
-    {
-      id: '4',
-      name: 'ECG',
-      category: 'Procedure',
-      price: 300,
-      taxable: true,
-      department: 'Cardiology'
-    },
-    {
-      id: '5',
-      name: 'Blood Test - Basic',
-      category: 'Laboratory',
-      price: 250,
-      taxable: true,
-      department: 'Laboratory'
-    },
-    {
-      id: '6',
-      name: 'X-Ray - Chest',
-      category: 'Imaging',
-      price: 400,
-      taxable: true,
-      department: 'Radiology'
+      department: 'Nursing',
+      usage_count: 45
     },
     {
       id: '7',
@@ -177,7 +147,44 @@ function BillingSystem() {
       category: 'Medication',
       price: 25,
       taxable: false,
-      department: 'Pharmacy'
+      department: 'Pharmacy',
+      usage_count: 40
+    },
+    {
+      id: '5',
+      name: 'Blood Test - Basic',
+      category: 'Laboratory',
+      price: 250,
+      taxable: true,
+      department: 'Laboratory',
+      usage_count: 35
+    },
+    {
+      id: '3',
+      name: 'Cardiology Consultation',
+      category: 'Consultation', 
+      price: 800,
+      taxable: true,
+      department: 'Cardiology',
+      usage_count: 30
+    },
+    {
+      id: '4',
+      name: 'ECG',
+      category: 'Procedure',
+      price: 300,
+      taxable: true,
+      department: 'Cardiology',
+      usage_count: 25
+    },
+    {
+      id: '6',
+      name: 'X-Ray - Chest',
+      category: 'Imaging',
+      price: 400,
+      taxable: true,
+      department: 'Radiology',
+      usage_count: 20
     },
     {
       id: '8',
@@ -185,7 +192,8 @@ function BillingSystem() {
       category: 'Medication',
       price: 80,
       taxable: false,
-      department: 'Pharmacy'
+      department: 'Pharmacy',
+      usage_count: 15
     }
   ];
 
