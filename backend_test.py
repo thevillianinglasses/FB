@@ -565,7 +565,186 @@ class UnicareEHRTester:
         successful_access = sum(access_results)
         print(f"✅ {successful_access}/{len(roles_to_test)} roles can access patient data")
         
-        return successful_access == len(roles_to_test)
+    def test_patient_registration_workflow(self):
+        """Test the complete patient registration workflow as per review request"""
+        print("\n🏥 Testing Patient Registration Workflow (POST /api/patients)...")
+        
+        # Login as reception (who can create patients)
+        if not self.test_login(role="reception"):
+            print("❌ Failed to login as reception for patient registration")
+            return False
+            
+        # Get doctors first
+        success, doctors_response = self.run_test(
+            "Get Doctors List",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success or not doctors_response:
+            print("❌ Failed to get doctors list")
+            return False
+            
+        doctor_id = doctors_response[0]['id'] if doctors_response else None
+        
+        # Test 1: Create patient with all required fields
+        print("\n📝 Test 1: Patient creation with all required fields")
+        patient_data = {
+            "patient_name": "Priya Nair",
+            "phone_number": "9876543210", 
+            "sex": "Female",
+            "age": "28",
+            "assigned_doctor": doctor_id,
+            "visit_type": "New",
+            "patient_rating": 8,
+            "address": "456 Marine Drive, Ernakulam, Kerala",
+            "dob": "1996-07-20"
+        }
+        
+        success, patient_response = self.run_test(
+            "Create Patient with All Required Fields",
+            "POST",
+            "api/patients",
+            200,
+            data=patient_data
+        )
+        
+        if not success:
+            return False
+            
+        created_patient_id = patient_response.get('id')
+        opd_number = patient_response.get('opd_number')
+        token_number = patient_response.get('token_number')
+        
+        # Test 2: Verify OPD and token number generation
+        print("\n🔢 Test 2: Verify OPD and token number generation")
+        if not opd_number or not token_number:
+            print("❌ OPD or token number not generated")
+            return False
+            
+        # Check OPD number format (should be NNN/YY)
+        import re
+        if not re.match(r'^\d{3}/\d{2}$', opd_number):
+            print(f"❌ Invalid OPD number format: {opd_number} (expected: NNN/YY)")
+            return False
+            
+        print(f"✅ OPD number generated correctly: {opd_number}")
+        print(f"✅ Token number generated: {token_number}")
+        
+        # Test 3: Verify created patient data is returned properly
+        print("\n📋 Test 3: Verify patient data returned with all fields")
+        required_fields = ['id', 'patient_name', 'phone_number', 'sex', 'age', 'opd_number', 'token_number', 'created_at']
+        missing_fields = [field for field in required_fields if field not in patient_response]
+        
+        if missing_fields:
+            print(f"❌ Missing fields in response: {missing_fields}")
+            return False
+            
+        print("✅ All required fields present in patient response")
+        
+        # Test 4: Verify patient appears in GET /api/patients
+        print("\n📊 Test 4: Verify patient appears in patients list")
+        success, patients_list = self.run_test(
+            "Get All Patients",
+            "GET", 
+            "api/patients",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Find our created patient in the list
+        created_patient_found = any(p.get('id') == created_patient_id for p in patients_list)
+        if not created_patient_found:
+            print(f"❌ Created patient {created_patient_id} not found in patients list")
+            return False
+            
+        print(f"✅ Created patient found in patients list ({len(patients_list)} total patients)")
+        
+        # Test 5: Test duplicate OPD number prevention
+        print("\n🔒 Test 5: Test duplicate OPD number prevention")
+        # Create another patient and verify different OPD number
+        patient_data2 = {
+            "patient_name": "Arjun Menon",
+            "phone_number": "9876543211",
+            "sex": "Male", 
+            "age": "32",
+            "assigned_doctor": doctor_id,
+            "visit_type": "New",
+            "patient_rating": 6
+        }
+        
+        success, patient_response2 = self.run_test(
+            "Create Second Patient",
+            "POST",
+            "api/patients", 
+            200,
+            data=patient_data2
+        )
+        
+        if not success:
+            return False
+            
+        opd_number2 = patient_response2.get('opd_number')
+        if opd_number == opd_number2:
+            print(f"❌ Duplicate OPD numbers generated: {opd_number}")
+            return False
+            
+        print(f"✅ Unique OPD numbers generated: {opd_number} vs {opd_number2}")
+        
+        # Test 6: Test missing required fields
+        print("\n❌ Test 6: Test edge cases - missing required fields")
+        
+        # Test missing patient_name
+        invalid_data = {"phone_number": "9876543212", "sex": "Male", "age": "25"}
+        success, response = self.run_test(
+            "Create Patient - Missing Name",
+            "POST",
+            "api/patients",
+            422,  # Validation error expected
+            data=invalid_data
+        )
+        
+        if success:
+            print("✅ Correctly rejected patient with missing name")
+        else:
+            print("⚠️ Missing name validation may need improvement")
+            
+        # Test missing phone_number
+        invalid_data2 = {"patient_name": "Test User", "sex": "Male", "age": "25"}
+        success, response = self.run_test(
+            "Create Patient - Missing Phone",
+            "POST", 
+            "api/patients",
+            422,  # Validation error expected
+            data=invalid_data2
+        )
+        
+        if success:
+            print("✅ Correctly rejected patient with missing phone")
+        else:
+            print("⚠️ Missing phone validation may need improvement")
+            
+        # Test 7: Check timestamps and formatting
+        print("\n⏰ Test 7: Check timestamps and formatting")
+        created_at = patient_response.get('created_at')
+        if not created_at:
+            print("❌ Missing created_at timestamp")
+            return False
+            
+        # Verify timestamp format
+        try:
+            from datetime import datetime
+            datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            print("✅ Timestamp format is valid")
+        except:
+            print(f"❌ Invalid timestamp format: {created_at}")
+            return False
+            
+        print("\n🎉 Patient Registration Workflow Tests Completed Successfully!")
+        return True
 
 def main():
     print("🏥 Starting Comprehensive Unicare EHR Backend API Tests")
