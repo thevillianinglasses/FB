@@ -1,30 +1,66 @@
 import React, { useState } from 'react';
-import NewOPDPage from '../NewOPDPage';
-import PatientLogPage from '../PatientLogPage';
-import AllPatientsPage from '../AllPatientsPage';
-import CancelledPage from '../CancelledPage';
-import AppointmentSchedulingPage from '../AppointmentSchedulingPage';
-import FinalBillingPage from '../FinalBillingPage';
-import ProceduresServicesPage from '../ProceduresServicesPage';
+import RegistrationKerala from '../RegistrationKerala';
+import PatientLogKerala from '../PatientLogKerala';
 import { useAppContext } from '../AppContext';
 
 function ReceptionDashboard({ onLogout, userName }) {
-  const [activeTab, setActiveTab] = useState('New OPD');
+  const [activeTab, setActiveTab] = useState('Registration');
   const { setPatientForEditing, clearError } = useAppContext();
 
   const tabs = [
-    { name: 'New OPD', component: <NewOPDPage />, icon: '👤' },
-    { name: 'Patient Log', component: <PatientLogPage />, icon: '📋' },
-    { name: 'All Patients', component: <AllPatientsPage onEditPatient={handleEditPatientRequest} />, icon: '👥' },
-    { name: 'Appointments', component: <AppointmentSchedulingPage />, icon: '📅' },
-    { name: 'Billing', component: <FinalBillingPage />, icon: '💰' },
-    { name: 'Services', component: <ProceduresServicesPage />, icon: '🏥' }
+    { name: 'Registration', icon: '👤' },
+    { name: 'Patient Log', icon: '📋' },
+    { name: 'Appointments', icon: '📅' },
+    { name: 'Billing', icon: '💰' }
   ];
 
   function handleEditPatientRequest(patientToEdit) {
     setPatientForEditing(patientToEdit);
-    setActiveTab('New OPD');
+    setActiveTab('Registration');
   }
+
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'Registration':
+        return <RegistrationKerala />;
+      case 'Patient Log':
+        return <PatientLogKerala />;
+      case 'Appointments':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold text-charcoal-grey mb-4">
+              Appointment Scheduling — Unicare Polyclinic (Kerala)
+            </h2>
+            <p className="text-coral-red italic mb-4">
+              അപ്പോയിന്റ്മെന്റ് ഷെഡ്യൂളിംഗ് • Coming Soon
+            </p>
+            <div className="bg-gray-50 p-8 rounded-lg text-center">
+              <div className="text-6xl mb-4">📅</div>
+              <h3 className="text-xl font-semibold text-charcoal-grey mb-2">Appointment Scheduling</h3>
+              <p className="text-gray-600">Calendar booking system under development</p>
+            </div>
+          </div>
+        );
+      case 'Billing':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold text-charcoal-grey mb-4">
+              Billing (Products & Services) — Unicare Polyclinic (Kerala)
+            </h2>
+            <p className="text-coral-red italic mb-4">
+              ബില്ലിംഗ് സിസ്റ്റം • INR Currency • Coming Soon
+            </p>
+            <div className="bg-gray-50 p-8 rounded-lg text-center">
+              <div className="text-6xl mb-4">💰</div>
+              <h3 className="text-xl font-semibold text-charcoal-grey mb-2">Billing System</h3>
+              <p className="text-gray-600">Products & Services billing under development</p>
+            </div>
+          </div>
+        );
+      default:
+        return <RegistrationKerala />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -34,8 +70,8 @@ function ReceptionDashboard({ onLogout, userName }) {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-charcoal-grey">Reception Dashboard</h1>
-              <p className="text-sm text-coral-red italic">Unicare Polyclinic - Patient Management</p>
-              <p className="text-xs text-gray-600 mt-1">Welcome back, {userName}</p>
+              <p className="text-sm text-coral-red italic">Unicare Polyclinic (Kerala) - Patient Management</p>
+              <p className="text-xs text-gray-600 mt-1">Welcome back, {userName} • Asia/Kolkata</p>
             </div>
             <button
               onClick={onLogout}
@@ -55,7 +91,7 @@ function ReceptionDashboard({ onLogout, userName }) {
               <button
                 key={tab.name}
                 onClick={() => {
-                  if (activeTab === 'New OPD' && setPatientForEditing) {
+                  if (activeTab === 'Registration' && setPatientForEditing) {
                     setPatientForEditing(null);
                   }
                   setActiveTab(tab.name);
@@ -77,15 +113,12 @@ function ReceptionDashboard({ onLogout, userName }) {
 
       {/* Main Content */}
       <main className="px-6 py-6">
-        {activeTab === 'New OPD' && <NewOPDPage />}
-        {activeTab === 'Patient Log' && <PatientLogPage />}
-        {activeTab === 'All Patients' && <AllPatientsPage onEditPatient={handleEditPatientRequest} />}
-        {activeTab === 'Appointments' && <AppointmentSchedulingPage />}
-        {activeTab === 'Billing' && <FinalBillingPage />}
-        {activeTab === 'Services' && <ProceduresServicesPage />}
+        {renderActiveTab()}
       </main>
     </div>
   );
 }
+
+export default ReceptionDashboard;
 
 export default ReceptionDashboard;
