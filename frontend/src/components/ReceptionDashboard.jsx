@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import NewOPDPageEnhanced from '../NewOPDPageEnhanced';
 import PatientLogPage from '../PatientLogPage';
 import AllPatientsPageEnhanced from '../AllPatientsPageEnhanced';
+import AppointmentScheduling from '../AppointmentScheduling';
+import BillingSystem from '../BillingSystem';
 import { useAppContext } from '../AppContext';
 
 function ReceptionDashboard({ onLogout, userName }) {
