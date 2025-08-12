@@ -240,12 +240,7 @@ function PatientLogKerala() {
             <div class="value">${patient.address}</div>
           </div>
           ` : ''}
-          ${patient.chief_complaint ? `
-          <div class="detail-row">
-            <div class="label">Complaint:</div>
-            <div class="value">${patient.chief_complaint}</div>
-          </div>
-          ` : ''}
+
         </div>
 
         <div class="footer">
