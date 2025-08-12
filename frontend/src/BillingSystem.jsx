@@ -26,13 +26,69 @@ function BillingSystem() {
 
   // State for product management
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showEditProduct, setShowEditProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [showDailyCollection, setShowDailyCollection] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: 'Consultation',
     price: '',
     taxable: true,
+    doctorId: '',
     department: 'General Medicine'
   });
+
+  // Edit product functionality
+  const editProduct = (product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      category: product.category,
+      price: product.price.toString(),
+      taxable: product.taxable,
+      doctorId: product.doctorId || '',
+      department: product.department
+    });
+    setShowEditProduct(true);
+  };
+
+  // Update product
+  const updateProduct = () => {
+    if (!newProduct.name.trim() || !newProduct.price || parseFloat(newProduct.price) <= 0) {
+      alert('Please enter valid product name and price');
+      return;
+    }
+
+    const updatedProducts = products.map(p => 
+      p.id === editingProduct.id 
+        ? {
+            ...p,
+            name: newProduct.name.trim(),
+            category: newProduct.category,
+            price: parseFloat(newProduct.price),
+            taxable: newProduct.taxable,
+            doctorId: newProduct.doctorId,
+            department: newProduct.department
+          }
+        : p
+    );
+
+    setProducts(updatedProducts);
+    
+    // Reset form
+    setNewProduct({
+      name: '',
+      category: 'Consultation',
+      price: '',
+      taxable: true,
+      doctorId: '',
+      department: 'General Medicine'
+    });
+    
+    setShowEditProduct(false);
+    setEditingProduct(null);
+    alert(`Product "${newProduct.name}" updated successfully!`);
+  };
 
   // Add new product
   const addNewProduct = () => {
