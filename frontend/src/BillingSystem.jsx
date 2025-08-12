@@ -1008,12 +1008,20 @@ function BillingSystem() {
                         <p className="text-lg font-bold text-cornflower-blue">{formatCurrency(product.price)}</p>
                         <p className="text-xs text-gray-400">{product.taxable ? 'Taxable' : 'Non-taxable'}</p>
                       </div>
-                      <button 
-                        onClick={() => editProduct(product)}
-                        className="text-cornflower-blue hover:text-opacity-80 text-sm"
-                      >
-                        Edit
-                      </button>
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => editProduct(product)}
+                            className="text-cornflower-blue hover:text-opacity-80 text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => deleteProduct(product)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
                     </div>
                   </div>
                 ))}
