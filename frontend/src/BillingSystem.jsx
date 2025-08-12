@@ -864,6 +864,126 @@ function BillingSystem() {
           )}
         </div>
       </div>
+
+      {/* Add Product Modal */}
+      {showAddProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md m-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Add New Product/Service
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Product/Service Name *
+                </label>
+                <input
+                  type="text"
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  placeholder="Enter product/service name"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={newProduct.category}
+                    onChange={(e) => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  >
+                    <option value="Consultation">Consultation</option>
+                    <option value="Procedure">Procedure</option>
+                    <option value="Laboratory">Laboratory</option>
+                    <option value="Imaging">Imaging</option>
+                    <option value="Medication">Medication</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Department
+                  </label>
+                  <select
+                    value={newProduct.department}
+                    onChange={(e) => setNewProduct(prev => ({ ...prev, department: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  >
+                    <option value="General Medicine">General Medicine</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Laboratory">Laboratory</option>
+                    <option value="Pharmacy">Pharmacy</option>
+                    <option value="Nursing">Nursing</option>
+                    <option value="Radiology">Radiology</option>
+                    <option value="Emergency">Emergency</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Price (₹) *
+                </label>
+                <input
+                  type="number"
+                  value={newProduct.price}
+                  onChange={(e) => setNewProduct(prev => ({ ...prev, price: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  placeholder="Enter price"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="taxable"
+                  checked={newProduct.taxable}
+                  onChange={(e) => setNewProduct(prev => ({ ...prev, taxable: e.target.checked }))}
+                  className="mr-2"
+                />
+                <label htmlFor="taxable" className="text-sm text-gray-700">
+                  Taxable (10% tax will be applied)
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={() => {
+                  setShowAddProduct(false);
+                  setNewProduct({
+                    name: '',
+                    category: 'Consultation',
+                    price: '',
+                    taxable: true,
+                    department: 'General Medicine'
+                  });
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addNewProduct}
+                className="px-4 py-2 bg-cornflower-blue text-white rounded-lg hover:bg-opacity-80"
+              >
+                Add Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
