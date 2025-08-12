@@ -52,6 +52,44 @@ function BillingSystem() {
     setShowEditProduct(true);
   };
 
+  // Update product
+  const updateProduct = () => {
+    if (!newProduct.name.trim() || !newProduct.price || parseFloat(newProduct.price) <= 0) {
+      alert('Please enter valid product name and price');
+      return;
+    }
+
+    const updatedProducts = products.map(p => 
+      p.id === editingProduct.id 
+        ? {
+            ...p,
+            name: newProduct.name.trim(),
+            category: newProduct.category,
+            price: parseFloat(newProduct.price),
+            taxable: newProduct.taxable,
+            doctorId: newProduct.doctorId,
+            department: newProduct.department
+          }
+        : p
+    );
+
+    setProducts(updatedProducts);
+    
+    // Reset form
+    setNewProduct({
+      name: '',
+      category: 'Consultation',
+      price: '',
+      taxable: true,
+      doctorId: '',
+      department: 'General Medicine'
+    });
+    
+    setShowEditProduct(false);
+    setEditingProduct(null);
+    alert(`Product "${newProduct.name}" updated successfully!`);
+  };
+
   // Delete product
   const deleteProduct = (product) => {
     const confirmDelete = window.confirm(
