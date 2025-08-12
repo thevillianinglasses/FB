@@ -181,6 +181,8 @@ function AllPatientsPageEnhanced() {
   // Handle patient edit
   const handleEdit = (patient) => {
     setPatientForEditing(patient);
+    // You could also add navigation logic here if needed
+    alert(`Edit functionality for ${patient.patient_name} - Navigate to registration form`);
   };
 
   // Handle patient delete (disabled for unique patients as per requirements)
