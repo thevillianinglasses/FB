@@ -378,7 +378,7 @@ function RegistrationKerala() {
         phone_number: phoneNumber.trim(),
         patient_name: patientName.trim(),
         sex: sex,
-        age: age ? parseInt(age) : null,
+        age: age || null,
         dob: dob || null,
         address: address.trim(),
         allergies: allergies.trim(),
