@@ -572,7 +572,8 @@ function BillingSystem() {
               { id: 'new-bill', label: 'New Bill', icon: '📄' },
               { id: 'pending-bills', label: 'Pending Bills', icon: '⏳' },
               { id: 'completed-bills', label: 'Completed Bills', icon: '✅' },
-              { id: 'products', label: 'Products & Services', icon: '🛒' }
+              { id: 'products', label: 'Products & Services', icon: '🛒' },
+              { id: 'daily-collection', label: 'Daily Collection', icon: '💰' }
             ].map((tab) => (
               <button
                 key={tab.id}
