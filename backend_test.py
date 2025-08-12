@@ -969,8 +969,11 @@ def main():
     print("🎯 Focus: Doctors API Endpoint Testing (GET /api/doctors)")
     print("=" * 60)
     
-    # Initialize tester with correct backend URL from frontend/.env
-    tester = UnicareEHRTester("http://localhost:8001")
+    # Get backend URL from frontend .env file
+    backend_url = "http://localhost:8001"  # Default from frontend/.env VITE_BACKEND_URL
+    
+    # Initialize tester with correct backend URL
+    tester = UnicareEHRTester(backend_url)
     
     # Run focused doctors API tests as per review request
     tests = [
