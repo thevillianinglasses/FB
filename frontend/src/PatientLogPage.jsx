@@ -141,7 +141,7 @@ function PatientLogPage() {
           <div class="detail-row"><div class="label">Phone:</div><div class="value">${patient.phone_number}</div></div>
           <div class="detail-row"><div class="label">Address:</div><div class="value">${patient.address}</div></div>
           <div class="detail-row"><div class="label">Doctor:</div><div class="value">${doctorName}</div></div>
-          ${patient.chief_complaint ? `<div class="detail-row"><div class="label">Chief Complaint:</div><div class="value">${patient.chief_complaint}</div></div>` : ''}
+
         </div>
         <div class="footer">
           <p>Please keep this slip for your records</p>
