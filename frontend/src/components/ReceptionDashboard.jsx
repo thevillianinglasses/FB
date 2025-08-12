@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import NewOPDPageEnhanced from '../NewOPDPageEnhanced';
-import PatientLogPage from '../PatientLogPage';
+import PatientLogPageFixed from '../PatientLogPageFixed';
 import AllPatientsPageEnhanced from '../AllPatientsPageEnhanced';
 import AppointmentScheduling from '../AppointmentScheduling';
 import BillingSystem from '../BillingSystem';
