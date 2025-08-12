@@ -12,7 +12,6 @@ function NewOPDPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [visitType, setVisitType] = useState('New');
-  const [chiefComplaint, setChiefComplaint] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -67,7 +66,6 @@ function NewOPDPage() {
       setPhoneNumber(patientForEditing.phone_number || '');
       setSelectedDoctor(patientForEditing.assigned_doctor || '');
       setVisitType(patientForEditing.visit_type || 'New');
-      setChiefComplaint(patientForEditing.chief_complaint || '');
       setPatientRating(patientForEditing.patient_rating || 0);
     }
   }, [patientForEditing]);
@@ -103,7 +101,6 @@ function NewOPDPage() {
     setPhoneNumber('');
     setSelectedDoctor('');
     setVisitType('New');
-    setChiefComplaint('');
     setPatientRating(0);
     setPatientForEditing(null);
   };
