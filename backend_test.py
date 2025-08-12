@@ -133,6 +133,224 @@ class UnicareEHRTester:
             return True
         return False
 
+    def test_doctors_api_comprehensive(self):
+        """Comprehensive test for doctors API endpoint as per review request"""
+        print("\n👨‍⚕️ Testing Doctors API Endpoint Comprehensively...")
+        
+        # Login as admin to access doctors API
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin for doctors API testing")
+            return False
+            
+        print("\n📋 Test 1: GET /api/doctors - Basic functionality")
+        success, doctors_response = self.run_test(
+            "GET /api/doctors",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get doctors list")
+            return False
+            
+        if not isinstance(doctors_response, list):
+            print(f"❌ Expected list response, got {type(doctors_response)}")
+            return False
+            
+        print(f"✅ Successfully retrieved {len(doctors_response)} doctors")
+        
+        if len(doctors_response) == 0:
+            print("⚠️ No doctors found in system")
+            return False
+            
+        # Test 2: Verify doctor data structure
+        print("\n🔍 Test 2: Verify doctor data structure and required fields")
+        
+        required_fields = ['id', 'name', 'specialty', 'default_fee']
+        all_doctors_valid = True
+        
+        for i, doctor in enumerate(doctors_response):
+            print(f"\n   Doctor {i+1}: {doctor.get('name', 'Unknown')}")
+            
+            # Check required fields
+            missing_fields = [field for field in required_fields if field not in doctor]
+            if missing_fields:
+                print(f"   ❌ Missing required fields: {missing_fields}")
+                all_doctors_valid = False
+            else:
+                print(f"   ✅ All required fields present")
+                
+            # Check default_fee field specifically
+            default_fee = doctor.get('default_fee')
+            if default_fee is None:
+                print(f"   ❌ default_fee field is missing")
+                all_doctors_valid = False
+            else:
+                print(f"   📊 default_fee: {default_fee} (type: {type(default_fee).__name__})")
+                
+                # Check if default_fee is string type as expected by frontend
+                if not isinstance(default_fee, str):
+                    print(f"   ⚠️ default_fee is {type(default_fee).__name__}, frontend expects string")
+                    # This is a critical issue for frontend compatibility
+                    all_doctors_valid = False
+                else:
+                    print(f"   ✅ default_fee is string type as expected")
+                    
+                # Verify it's a valid numeric string
+                try:
+                    float(default_fee)
+                    print(f"   ✅ default_fee is valid numeric string")
+                except ValueError:
+                    print(f"   ❌ default_fee '{default_fee}' is not a valid numeric string")
+                    all_doctors_valid = False
+                    
+            # Check other important fields
+            specialty = doctor.get('specialty', '')
+            name = doctor.get('name', '')
+            
+            print(f"   📝 Name: '{name}'")
+            print(f"   🏥 Specialty: '{specialty}'")
+            
+            if not name.strip():
+                print(f"   ❌ Doctor name is empty")
+                all_doctors_valid = False
+                
+            if not specialty.strip():
+                print(f"   ⚠️ Doctor specialty is empty")
+                
+        if not all_doctors_valid:
+            print("\n❌ Doctor data structure validation failed")
+            return False
+            
+        print("\n✅ All doctors have valid data structure")
+        
+        # Test 3: Check response format matches frontend expectations
+        print("\n🎯 Test 3: Verify response format matches frontend expectations")
+        
+        sample_doctor = doctors_response[0]
+        expected_structure = {
+            'id': 'string',
+            'name': 'string', 
+            'specialty': 'string',
+            'default_fee': 'string'  # Critical: frontend expects string
+        }
+        
+        structure_valid = True
+        for field, expected_type in expected_structure.items():
+            if field not in sample_doctor:
+                print(f"   ❌ Missing field: {field}")
+                structure_valid = False
+                continue
+                
+            actual_value = sample_doctor[field]
+            actual_type = type(actual_value).__name__
+            
+            if expected_type == 'string' and not isinstance(actual_value, str):
+                print(f"   ❌ Field '{field}': expected string, got {actual_type}")
+                structure_valid = False
+            else:
+                print(f"   ✅ Field '{field}': {actual_type} ✓")
+                
+        if not structure_valid:
+            print("\n❌ Response structure doesn't match frontend expectations")
+            return False
+            
+        print("\n✅ Response structure matches frontend expectations")
+        
+        # Test 4: Test API performance and timeout issues
+        print("\n⏱️ Test 4: Test API performance (checking for timeout issues)")
+        
+        import time
+        start_time = time.time()
+        
+        success, response = self.run_test(
+            "GET /api/doctors - Performance Test",
+            "GET", 
+            "api/doctors",
+            200
+        )
+        
+        end_time = time.time()
+        response_time = end_time - start_time
+        
+        print(f"   Response time: {response_time:.2f} seconds")
+        
+        if response_time > 5.0:
+            print(f"   ⚠️ Slow response time: {response_time:.2f}s (may cause frontend timeout)")
+        elif response_time > 2.0:
+            print(f"   ⚠️ Moderate response time: {response_time:.2f}s")
+        else:
+            print(f"   ✅ Good response time: {response_time:.2f}s")
+            
+        # Test 5: Test with different user roles
+        print("\n🔐 Test 5: Test doctors API access with different roles")
+        
+        roles_to_test = ["reception", "doctor", "laboratory", "pharmacy", "nursing"]
+        access_results = {}
+        
+        for role in roles_to_test:
+            if self.test_login(role=role):
+                success, response = self.run_test(
+                    f"GET /api/doctors as {role}",
+                    "GET",
+                    "api/doctors", 
+                    200
+                )
+                access_results[role] = success
+                if success:
+                    print(f"   ✅ {role} can access doctors API")
+                else:
+                    print(f"   ❌ {role} cannot access doctors API")
+            else:
+                print(f"   ❌ Failed to login as {role}")
+                access_results[role] = False
+                
+        successful_roles = sum(access_results.values())
+        print(f"\n   📊 {successful_roles}/{len(roles_to_test)} roles can access doctors API")
+        
+        # Test 6: Verify data consistency
+        print("\n🔄 Test 6: Verify data consistency across multiple requests")
+        
+        # Make multiple requests and verify consistent data
+        responses = []
+        for i in range(3):
+            success, response = self.run_test(
+                f"GET /api/doctors - Consistency Test {i+1}",
+                "GET",
+                "api/doctors",
+                200
+            )
+            if success:
+                responses.append(response)
+                
+        if len(responses) < 3:
+            print("   ❌ Failed to get consistent responses")
+            return False
+            
+        # Check if all responses are identical
+        first_response = responses[0]
+        consistent = all(resp == first_response for resp in responses[1:])
+        
+        if consistent:
+            print("   ✅ Data is consistent across multiple requests")
+        else:
+            print("   ❌ Data inconsistency detected across requests")
+            return False
+            
+        print("\n🎉 Doctors API Comprehensive Testing Completed!")
+        
+        # Summary of findings
+        print("\n📋 SUMMARY OF FINDINGS:")
+        print(f"   • Total doctors found: {len(doctors_response)}")
+        print(f"   • All required fields present: {'✅' if all_doctors_valid else '❌'}")
+        print(f"   • default_fee field type: {'✅ String' if all(isinstance(d.get('default_fee'), str) for d in doctors_response) else '❌ Not String'}")
+        print(f"   • API response time: {response_time:.2f}s")
+        print(f"   • Role-based access: {successful_roles}/{len(roles_to_test)} roles working")
+        print(f"   • Data consistency: {'✅' if consistent else '❌'}")
+        
+        return all_doctors_valid and structure_valid and consistent
+
     def test_create_patient(self):
         """Test creating a new patient with all required fields as per review request"""
         # First get doctors to assign one
