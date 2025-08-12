@@ -163,6 +163,54 @@ frontend:
         agent: "testing"
         comment: "All role-based dashboards working perfectly: Admin, Reception, Doctor, Laboratory, Pharmacy, and Nursing. Navigation between modules works flawlessly. Correct role-based content displayed for each user type."
 
+  - task: "Enhanced Patient Registration Form"
+    implemented: true
+    working: true
+    file: "frontend/src/NewOPDPageEnhanced.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE ENHANCED REGISTRATION TESTING COMPLETED: ✅ Login as reception1/reception123 successful ✅ Enhanced form loads with all features: OPD Number display (018/25, 019/25 format), Token Number display (1), Two-column layout (Patient Info + Visit Info), Department selection dropdown with options, Doctor selection with auto-fill consultation fee (₹500), Patient rating slider (-10 to +10) functional, Total visits counter working ✅ All enhanced features working perfectly for Kerala polyclinic requirements."
+
+  - task: "Phone Auto-fill Functionality"
+    implemented: true
+    working: true
+    file: "frontend/src/NewOPDPageEnhanced.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PHONE AUTO-FILL TESTING SUCCESSFUL: ✅ Floating selector appears for multiple patients with same phone number ✅ Shows patient list with details (Test Patient, Priya Nair, Integration Test Patient, etc.) with age, gender, last visit date ✅ 'Create new patient with this number' option available ✅ Auto-fill badge displays correctly ✅ Form fields populate automatically when patient selected ✅ Works on desktop, tablet, and mobile viewports ✅ Duplicate detection and patient selection working perfectly."
+
+  - task: "Print OPD Functionality"
+    implemented: true
+    working: true
+    file: "frontend/src/NewOPDPageEnhanced.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PRINT OPD FUNCTIONALITY CONFIRMED: ✅ Print OPD button appears after successful registration ✅ Print dialog opens correctly when clicked ✅ Kerala-formatted OPD slip generated with proper styling ✅ Contains all patient data, doctor info, fees, OPD/Token numbers ✅ Professional formatting with Kerala-specific text and INR currency ✅ Print functionality working across all test scenarios."
+
+  - task: "Patient Log Integration"
+    implemented: true
+    working: true
+    file: "frontend/src/PatientLogKerala.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "PATIENT LOG INTEGRATION VERIFIED: ✅ Patient Log tab accessible from Reception Dashboard ✅ Shows daily patient count (5 visits for today) ✅ Displays registered patients with OPD numbers (018/25, 019/25) ✅ Patient details correctly shown (name, age/sex, phone, doctor, status) ✅ Real-time updates after new registrations ✅ Filtering and search functionality available ✅ Professional Kerala-themed interface."
+
   - task: "Patient Management Interface"
     implemented: true
     working: true
