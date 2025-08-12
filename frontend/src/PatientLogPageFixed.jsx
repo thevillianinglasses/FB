@@ -20,6 +20,28 @@ function PatientLogPageFixed() {
   const [patientToVoid, setPatientToVoid] = useState(null);
   const [voidReason, setVoidReason] = useState('');
 
+  // Load saved patient statuses from localStorage
+  useEffect(() => {
+    const savedStatuses = localStorage.getItem('patientStatuses');
+    const savedReasons = localStorage.getItem('voidReasons');
+    
+    if (savedStatuses) {
+      setPatientStatuses(JSON.parse(savedStatuses));
+    }
+    if (savedReasons) {
+      setVoidReasons(JSON.parse(savedReasons));
+    }
+  }, []);
+
+  // Save patient statuses to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('patientStatuses', JSON.stringify(patientStatuses));
+  }, [patientStatuses]);
+
+  useEffect(() => {
+    localStorage.setItem('voidReasons', JSON.stringify(voidReasons));
+  }, [voidReasons]);
+
   useEffect(() => {
     loadPatients();
     loadDoctors();
