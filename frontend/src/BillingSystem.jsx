@@ -237,22 +237,38 @@ function BillingSystem() {
     setBills(sampleBills);
   }, []);
 
+  // State for patient search
+  const [showPatientSelector, setShowPatientSelector] = useState(false);
+  const [matchingPatients, setMatchingPatients] = useState([]);
+
   // Handle patient search and selection
   const handlePatientSearch = (searchTerm) => {
+    setCurrentBill(prev => ({ ...prev, patientName: searchTerm }));
+    
     if (searchTerm.length === 10 && /^\d+$/.test(searchTerm)) {
       // Phone number search
-      const matchingPatients = patients.filter(p => p.phone_number === searchTerm);
-      if (matchingPatients.length > 0) {
-        selectPatient(matchingPatients[0]);
+      const matches = patients.filter(p => p.phone_number === searchTerm);
+      if (matches.length > 0) {
+        if (matches.length === 1) {
+          selectPatient(matches[0]);
+        } else {
+          setMatchingPatients(matches);
+          setShowPatientSelector(true);
+        }
       }
     } else if (searchTerm.length > 2) {
       // Name search
-      const matchingPatients = patients.filter(p => 
+      const matches = patients.filter(p => 
         p.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      if (matchingPatients.length === 1) {
-        selectPatient(matchingPatients[0]);
+      if (matches.length > 0) {
+        setMatchingPatients(matches);
+        setShowPatientSelector(true);
+      } else {
+        setShowPatientSelector(false);
       }
+    } else {
+      setShowPatientSelector(false);
     }
   };
 
