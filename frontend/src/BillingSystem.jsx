@@ -413,6 +413,17 @@ function BillingSystem() {
     alert(`Bill ${newBill.billNumber} created successfully!`);
   };
 
+  // Mark bill as paid
+  const markBillAsPaid = (billId) => {
+    setBills(prev => 
+      prev.map(bill => 
+        bill.id === billId 
+          ? { ...bill, status: 'Completed', paidAt: new Date().toISOString() }
+          : bill
+      )
+    );
+  };
+
   // Handle refund
   const handleRefund = (bill) => {
     const confirmRefund = window.confirm(
