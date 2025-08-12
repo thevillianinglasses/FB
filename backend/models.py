@@ -97,7 +97,7 @@ class Doctor(BaseModel):
     specialty: str = ""
     qualification: str = ""
     registration_number: str = ""
-    default_fee: int = 0
+    default_fee: str = "150"  # Default consultation fee
     phone: str = ""
     email: str = ""
     schedule: str = ""
