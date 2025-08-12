@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import NewOPDPageEnhanced from '../NewOPDPageEnhanced';
 import PatientLogPageFixed from '../PatientLogPageFixed';
 import AllPatientsPageEnhanced from '../AllPatientsPageEnhanced';
-import AppointmentScheduling from '../AppointmentScheduling';
+import AppointmentSchedulingEnhanced from '../AppointmentSchedulingEnhanced';
 import BillingSystem from '../BillingSystem';
 import { useAppContext } from '../AppContext';
 
