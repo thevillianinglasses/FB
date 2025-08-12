@@ -45,14 +45,14 @@ function AllPatientsPageEnhanced() {
     // Count unique phone numbers to get unique patients
     const uniquePhones = new Set(patients.map(p => p.phone_number)).size;
     
-    // Count by visit type (if we had this data)
-    const newPatients = patients.filter(p => p.visit_type === 'New' || !p.visit_type).length;
-    const followUpPatients = patients.filter(p => p.visit_type === 'Follow-up').length;
+    // Count by visit type correctly
+    const newPatientVisits = patients.filter(p => !p.visit_type || p.visit_type === 'New').length;
+    const followUpVisits = patients.filter(p => p.visit_type === 'Follow-up').length;
 
     setStats({
       totalPatients: patients.length,
-      newPatients,
-      followUpPatients,
+      newPatients: newPatientVisits,
+      followUpPatients: followUpVisits,
       todayVisits,
       uniquePhoneNumbers: uniquePhones
     });
