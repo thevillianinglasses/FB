@@ -24,7 +24,7 @@ function ReceptionDashboard({ onLogout, userName }) {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'New OPD':
-        return <NewOPDPage />;
+        return <NewOPDPageEnhanced />;
       case 'Patient Log':
         return <PatientLogPage />;
       case 'All Patients':
