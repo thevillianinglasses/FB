@@ -618,20 +618,52 @@ function BillingSystem() {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Patient Information</h3>
                   
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <div>
+                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Patient Name
                       </label>
                       <input
                         type="text"
                         value={currentBill.patientName}
-                        onChange={(e) => {
-                          setCurrentBill(prev => ({ ...prev, patientName: e.target.value }));
-                          handlePatientSearch(e.target.value);
-                        }}
+                        onChange={(e) => handlePatientSearch(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
-                        placeholder="Enter patient name"
+                        placeholder="Enter patient name or phone"
                       />
+                      
+                      {/* Floating Patient Selector */}
+                      {showPatientSelector && matchingPatients.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          <div className="p-2 bg-gray-50 border-b">
+                            <span className="text-sm font-medium text-gray-700">
+                              Select Patient ({matchingPatients.length} found):
+                            </span>
+                          </div>
+                          {matchingPatients.map((patient, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => {
+                                selectPatient(patient);
+                                setShowPatientSelector(false);
+                              }}
+                              className="w-full text-left p-3 hover:bg-blue-50 border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">{patient.patient_name}</div>
+                              <div className="text-sm text-gray-600">
+                                {patient.phone_number} • {patient.age} years, {patient.sex}
+                              </div>
+                              <div className="text-xs text-gray-500">{patient.address}</div>
+                            </button>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => setShowPatientSelector(false)}
+                            className="w-full text-left p-3 bg-green-50 text-green-700 hover:bg-green-100"
+                          >
+                            + Create new patient: "{currentBill.patientName}"
+                          </button>
+                        </div>
+                      )}
                     </div>
                     
                     <div>
