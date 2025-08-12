@@ -37,23 +37,25 @@ function AllPatientsPageEnhanced() {
     if (!patients || patients.length === 0) return;
 
     const today = new Date().toISOString().split('T')[0];
-    const todayVisits = patients.filter(p => {
+    
+    // Get today's visits only
+    const todayPatients = patients.filter(p => {
       const patientDate = new Date(p.created_at).toISOString().split('T')[0];
       return patientDate === today;
-    }).length;
+    });
 
     // Count unique phone numbers to get unique patients
     const uniquePhones = new Set(patients.map(p => p.phone_number)).size;
     
-    // Count by visit type correctly
-    const newPatientVisits = patients.filter(p => !p.visit_type || p.visit_type === 'New').length;
-    const followUpVisits = patients.filter(p => p.visit_type === 'Follow-up').length;
+    // Count visit types correctly - only from today's visits
+    const todayNewVisits = todayPatients.filter(p => !p.visit_type || p.visit_type === 'New').length;
+    const todayFollowUpVisits = todayPatients.filter(p => p.visit_type === 'Follow-up').length;
 
     setStats({
       totalPatients: patients.length,
-      newPatients: newPatientVisits,
-      followUpPatients: followUpVisits,
-      todayVisits,
+      newPatients: todayNewVisits,  // Fixed: Only today's new patients
+      followUpPatients: todayFollowUpVisits,  // Fixed: Only today's follow-ups
+      todayVisits: todayPatients.length,
       uniquePhoneNumbers: uniquePhones
     });
   };
