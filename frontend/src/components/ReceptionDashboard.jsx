@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import NewOPDPage from '../NewOPDPage';
+import NewOPDPageEnhanced from '../NewOPDPageEnhanced';
 import PatientLogPage from '../PatientLogPage';
 import AllPatientsPage from '../AllPatientsPage';
 import { useAppContext } from '../AppContext';
