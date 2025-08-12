@@ -52,42 +52,17 @@ function BillingSystem() {
     setShowEditProduct(true);
   };
 
-  // Update product
-  const updateProduct = () => {
-    if (!newProduct.name.trim() || !newProduct.price || parseFloat(newProduct.price) <= 0) {
-      alert('Please enter valid product name and price');
-      return;
-    }
-
-    const updatedProducts = products.map(p => 
-      p.id === editingProduct.id 
-        ? {
-            ...p,
-            name: newProduct.name.trim(),
-            category: newProduct.category,
-            price: parseFloat(newProduct.price),
-            taxable: newProduct.taxable,
-            doctorId: newProduct.doctorId,
-            department: newProduct.department
-          }
-        : p
+  // Delete product
+  const deleteProduct = (product) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${product.name}"?\n\n` +
+      `This action cannot be undone.`
     );
-
-    setProducts(updatedProducts);
     
-    // Reset form
-    setNewProduct({
-      name: '',
-      category: 'Consultation',
-      price: '',
-      taxable: true,
-      doctorId: '',
-      department: 'General Medicine'
-    });
-    
-    setShowEditProduct(false);
-    setEditingProduct(null);
-    alert(`Product "${newProduct.name}" updated successfully!`);
+    if (confirmDelete) {
+      setProducts(prev => prev.filter(p => p.id !== product.id));
+      alert(`Product "${product.name}" deleted successfully!`);
+    }
   };
 
   // Add new product
