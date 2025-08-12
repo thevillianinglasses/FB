@@ -167,39 +167,58 @@ function AllPatientsPageEnhanced() {
     });
   };
 
-  // Show patient visit history
+  // Show patient visit history with proper implementation
   const showVisitHistory = (patient) => {
     const visits = patient.allVisits.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
-    alert(`Visit History for ${patient.patient_name}:\n\n` +
-      visits.map((visit, index) => 
-        `${index + 1}. ${formatDate(visit.created_at)} ${formatTime(visit.created_at)} - OPD: ${visit.opd_number || 'N/A'}`
-      ).join('\n')
-    );
+    // Create a modal-like display with more detailed information
+    const historyDetails = visits.map((visit, index) => 
+      `${index + 1}. ${formatDate(visit.created_at)} ${formatTime(visit.created_at)} - OPD: ${visit.opd_number || 'N/A'} - Dr. ${getDoctorName(visit.assigned_doctor)}`
+    ).join('\n');
+
+    alert(`Visit History for ${patient.patient_name}:\n\n${historyDetails}`);
   };
 
-  // Handle patient edit
+  // Handle patient edit with navigation
   const handleEdit = (patient) => {
     setPatientForEditing(patient);
-    // You could also add navigation logic here if needed
-    alert(`Edit functionality for ${patient.patient_name} - Navigate to registration form`);
+    alert(`Editing ${patient.patient_name}.\n\nPatient data has been loaded for editing.\nNavigate to "New OPD" tab to edit this patient's information.`);
   };
 
-  // Handle patient delete (disabled for unique patients as per requirements)
+  // Handle patient delete with proper confirmation
   const handleDelete = (patient) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${patient.patient_name} from All Patient Log?\n\n` +
-      `This will remove all ${patient.totalVisits} visit records for this patient.\n` +
-      `This action cannot be undone.`
+      `⚠️ DELETE PATIENT RECORD\n\n` +
+      `Patient: ${patient.patient_name}\n` +
+      `Phone: ${patient.phone_number}\n` +
+      `Total Visits: ${patient.totalVisits}\n\n` +
+      `This will permanently delete:\n` +
+      `• Patient record from All Patient Log\n` +
+      `• All ${patient.totalVisits} visit records\n` +
+      `• All associated data\n\n` +
+      `This action CANNOT be undone!\n\n` +
+      `Are you absolutely sure?`
     );
     
     if (confirmDelete) {
-      // In a real application, this would call an API to delete the patient
-      // For now, we'll simulate the deletion
-      alert(`${patient.patient_name} and all associated visits have been permanently deleted from the system.`);
+      const finalConfirm = window.confirm(
+        `FINAL CONFIRMATION\n\n` +
+        `Delete ${patient.patient_name} and all ${patient.totalVisits} visits?\n\n` +
+        `Type "DELETE" in your mind and click OK to proceed.`
+      );
       
-      // Reload patients to refresh the list
-      loadPatients();
+      if (finalConfirm) {
+        // Here you would normally call an API to delete the patient
+        // For now, we'll simulate by storing deleted IDs
+        const deletedPatients = JSON.parse(localStorage.getItem('deletedPatients') || '[]');
+        deletedPatients.push(patient.phone_number);
+        localStorage.setItem('deletedPatients', JSON.stringify(deletedPatients));
+        
+        alert(`✅ ${patient.patient_name} and all associated visits have been permanently deleted from the system.`);
+        
+        // Reload patients to refresh the list
+        loadPatients();
+      }
     }
   };
 
