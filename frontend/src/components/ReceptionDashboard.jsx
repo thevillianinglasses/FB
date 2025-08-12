@@ -32,37 +32,9 @@ function ReceptionDashboard({ onLogout, userName }) {
       case 'All Patients':
         return <AllPatientsPageEnhanced onEditPatient={handleEditPatientRequest} />;
       case 'Appointments':
-        return (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold text-charcoal-grey mb-4">
-              Appointment Scheduling — Unicare Polyclinic (Kerala)
-            </h2>
-            <p className="text-coral-red italic mb-4">
-              അപ്പോയിന്റ്മെന്റ് ഷെഡ്യൂളിംഗ് • Coming Soon
-            </p>
-            <div className="bg-gray-50 p-8 rounded-lg text-center">
-              <div className="text-6xl mb-4">📅</div>
-              <h3 className="text-xl font-semibold text-charcoal-grey mb-2">Appointment Scheduling</h3>
-              <p className="text-gray-600">Calendar booking system under development</p>
-            </div>
-          </div>
-        );
+        return <AppointmentScheduling />;
       case 'Billing':
-        return (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold text-charcoal-grey mb-4">
-              Billing (Products & Services) — Unicare Polyclinic (Kerala)
-            </h2>
-            <p className="text-coral-red italic mb-4">
-              ബില്ലിംഗ് സിസ്റ്റം • INR Currency • Coming Soon
-            </p>
-            <div className="bg-gray-50 p-8 rounded-lg text-center">
-              <div className="text-6xl mb-4">💰</div>
-              <h3 className="text-xl font-semibold text-charcoal-grey mb-2">Billing System</h3>
-              <p className="text-gray-600">Products & Services billing under development</p>
-            </div>
-          </div>
-        );
+        return <BillingSystem />;
       default:
         return <NewOPDPageEnhanced />;
     }
