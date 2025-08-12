@@ -681,10 +681,15 @@ function AppointmentSchedulingEnhanced() {
                   </tbody>
                 </table>
                 
-                {getTodaysAppointments().length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    No appointments scheduled for today.
-                  </div>
+                {getTodaysAppointments().filter(apt => selectedDoctor ? apt.doctorId === selectedDoctor : true).length === 0 && (
+                  <tr>
+                    <td colSpan="8" className="text-center py-8 text-gray-500">
+                      {selectedDoctor ? 
+                        `No appointments for ${getDoctorName(selectedDoctor)} today.` : 
+                        'No appointments scheduled for today.'
+                      }
+                    </td>
+                  </tr>
                 )}
               </div>
             </div>
