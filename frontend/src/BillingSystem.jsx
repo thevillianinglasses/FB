@@ -952,13 +952,25 @@ function BillingSystem() {
                         <p className="text-lg font-bold text-green-600">{formatCurrency(bill.total)}</p>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Paid</span>
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${
+                          bill.status === 'Refunded' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                        }`}>
+                          {bill.status === 'Refunded' ? 'Refunded' : 'Paid'}
+                        </span>
                         <button
                           onClick={() => printBill(bill)}
                           className="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
                         >
                           Print
                         </button>
+                        {bill.status === 'Completed' && (
+                          <button
+                            onClick={() => handleRefund(bill)}
+                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                          >
+                            Refund
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
