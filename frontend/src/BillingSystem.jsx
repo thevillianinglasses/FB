@@ -909,7 +909,10 @@ function BillingSystem() {
                         <p className="text-lg font-bold text-cornflower-blue">{formatCurrency(product.price)}</p>
                         <p className="text-xs text-gray-400">{product.taxable ? 'Taxable' : 'Non-taxable'}</p>
                       </div>
-                      <button className="text-cornflower-blue hover:text-opacity-80 text-sm">
+                      <button 
+                        onClick={() => editProduct(product)}
+                        className="text-cornflower-blue hover:text-opacity-80 text-sm"
+                      >
                         Edit
                       </button>
                     </div>
