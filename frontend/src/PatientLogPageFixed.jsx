@@ -57,10 +57,18 @@ function PatientLogPageFixed() {
       filtered = filtered.filter(patient => patient.assigned_doctor === selectedDoctor);
     }
 
-    // Apply status filter
+    // Apply status filter - FIXED: Properly filter by status
     if (selectedStatus) {
-      const status = patientStatuses[patient.id] || 'Active';
-      filtered = filtered.filter(patient => status === selectedStatus);
+      filtered = filtered.filter(patient => {
+        const status = patientStatuses[patient.id] || 'Active';
+        return status === selectedStatus;
+      });
+    } else {
+      // By default, hide voided entries unless specifically searching for them
+      filtered = filtered.filter(patient => {
+        const status = patientStatuses[patient.id] || 'Active';
+        return status !== 'Voided';
+      });
     }
 
     // Apply visit type filter
