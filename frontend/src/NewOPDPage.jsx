@@ -263,7 +263,7 @@ function NewOPDPage() {
 
       const patientData = {
         patient_name: patientName.trim(),
-        age: age ? parseInt(age) : null,
+        age: age || null,
         dob: dob || null,
         sex: sex,
         address: address.trim(),
