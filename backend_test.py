@@ -748,33 +748,26 @@ class UnicareEHRTester:
 
 def main():
     print("🏥 Starting Comprehensive Unicare EHR Backend API Tests")
+    print("🎯 Focus: Patient Registration API (POST /api/patients) Testing")
     print("=" * 60)
     
-    # Initialize tester
-    tester = UnicareEHRTester()
+    # Initialize tester with correct backend URL
+    tester = UnicareEHRTester("http://localhost:8001")
     
-    # Run comprehensive tests
+    # Run focused patient registration tests as per review request
     tests = [
         # Basic connectivity and auth tests
         tester.test_health_check,
-        tester.test_invalid_login,
-        tester.test_login,  # Login as admin
+        tester.test_login,  # Login as admin first
         
-        # User management tests
+        # Create test users if needed
         tester.test_create_test_users,
-        tester.test_role_based_login,
         
-        # Role-specific API tests
-        tester.test_admin_apis,
-        tester.test_reception_apis,
-        tester.test_laboratory_apis,
-        tester.test_pharmacy_apis,
-        tester.test_nursing_apis,
-        tester.test_doctor_apis,
+        # Main focus: Patient Registration Workflow Testing
+        tester.test_patient_registration_workflow,
         
-        # Security and integration tests
+        # Additional verification tests
         tester.test_role_based_access_control,
-        tester.test_cross_module_integration,
         tester.test_unauthorized_access,
     ]
     
