@@ -71,6 +71,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Patient registration, retrieval, and management working. OPD and token number generation functional. CRUD operations successful. 11 patients found in system."
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE PATIENT REGISTRATION API TESTING COMPLETED: ✅ POST /api/patients working perfectly with all required fields (patient_name, phone_number, sex, age, assigned_doctor, visit_type, patient_rating) ✅ OPD number generation correct (014/25, 015/25 format) ✅ Token number generation working ✅ No duplicate OPD numbers ✅ All patient data returned properly ✅ Patients appear in GET /api/patients ✅ Validation working for missing fields (422 errors) ✅ Timestamps and formatting correct ✅ Exact API workflow that NewOPDPage.jsx uses is functional. 12 patients now in system."
 
   - task: "Laboratory Module APIs"
     implemented: true
