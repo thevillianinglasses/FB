@@ -24,6 +24,47 @@ function BillingSystem() {
     notes: ''
   });
 
+  // State for product management
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    category: 'Consultation',
+    price: '',
+    taxable: true,
+    department: 'General Medicine'
+  });
+
+  // Add new product
+  const addNewProduct = () => {
+    if (!newProduct.name.trim() || !newProduct.price || parseFloat(newProduct.price) <= 0) {
+      alert('Please enter valid product name and price');
+      return;
+    }
+
+    const product = {
+      id: `custom-${Date.now()}`,
+      name: newProduct.name.trim(),
+      category: newProduct.category,
+      price: parseFloat(newProduct.price),
+      taxable: newProduct.taxable,
+      department: newProduct.department
+    };
+
+    setProducts(prev => [...prev, product]);
+    
+    // Reset form
+    setNewProduct({
+      name: '',
+      category: 'Consultation',
+      price: '',
+      taxable: true,
+      department: 'General Medicine'
+    });
+    
+    setShowAddProduct(false);
+    alert(`Product "${product.name}" added successfully!`);
+  };
+
   // Default products/services
   const defaultProducts = [
     {
