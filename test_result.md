@@ -116,12 +116,15 @@ backend:
     working: true
     file: "backend/server.py"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "Doctor/EMR APIs functional. Consultations endpoint accessible. Role-based access working for doctor users."
+      - working: true
+        agent: "testing"
+        comment: "DOCTORS API COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY: ✅ GET /api/doctors working perfectly with 2 doctors found ✅ All required fields present (id, name, specialty, default_fee) ✅ default_fee field correctly returned as string type (not integer) - CRITICAL FIX APPLIED ✅ Data structure matches frontend expectations exactly ✅ Excellent API performance (0.00s response time) ✅ All user roles (admin, reception, doctor, laboratory, pharmacy, nursing) can access doctors API ✅ Data consistency verified across multiple requests ✅ Doctor data: Dr. Emily Carter (General Medicine, fee: '500'), Dr. John Adebayo (Cardiology, fee: '800') ✅ Frontend dropdown timeout issue RESOLVED - doctors API now returns proper string default_fee values"
 
   - task: "Error Handling"
     implemented: true
