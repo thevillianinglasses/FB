@@ -413,15 +413,25 @@ function BillingSystem() {
     alert(`Bill ${newBill.billNumber} created successfully!`);
   };
 
-  // Mark bill as paid
-  const markBillAsPaid = (billId) => {
-    setBills(prev => 
-      prev.map(bill => 
-        bill.id === billId 
-          ? { ...bill, status: 'Completed', paidAt: new Date().toISOString() }
-          : bill
-      )
+  // Handle refund
+  const handleRefund = (bill) => {
+    const confirmRefund = window.confirm(
+      `Issue refund for ${bill.patientName}?\n\n` +
+      `Bill: ${bill.billNumber}\n` +
+      `Amount: ${formatCurrency(bill.total)}\n\n` +
+      `This will change the status back to "Refunded" and reverse the payment.`
     );
+    
+    if (confirmRefund) {
+      setBills(prev => 
+        prev.map(b => 
+          b.id === bill.id 
+            ? { ...b, status: 'Refunded', refundedAt: new Date().toISOString() }
+            : b
+        )
+      );
+      alert(`Refund of ${formatCurrency(bill.total)} processed for ${bill.patientName}`);
+    }
   };
 
   // Reset bill form
