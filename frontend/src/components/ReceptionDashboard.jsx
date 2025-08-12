@@ -28,7 +28,7 @@ function ReceptionDashboard({ onLogout, userName }) {
       case 'Patient Log':
         return <PatientLogPage />;
       case 'All Patients':
-        return <AllPatientsPage onEditPatient={handleEditPatientRequest} />;
+        return <AllPatientsPageEnhanced onEditPatient={handleEditPatientRequest} />;
       case 'Appointments':
         return (
           <div className="bg-white rounded-lg shadow p-6">
