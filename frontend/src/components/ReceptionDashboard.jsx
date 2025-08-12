@@ -62,7 +62,7 @@ function ReceptionDashboard({ onLogout, userName }) {
           </div>
         );
       default:
-        return <NewOPDPage />;
+        return <NewOPDPageEnhanced />;
     }
   };
 
