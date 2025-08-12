@@ -76,7 +76,7 @@ async def create_db_client():
                     "name": "Dr. Emily Carter",
                     "specialty": "General Medicine",
                     "qualification": "MBBS, MD",
-                    "default_fee": 500,
+                    "default_fee": "500",  # Changed to string to match model
                     "phone": "9876543210",
                     "room_number": "101",
                     "created_at": datetime.utcnow()
@@ -86,7 +86,7 @@ async def create_db_client():
                     "name": "Dr. John Adebayo",
                     "specialty": "Cardiology",
                     "qualification": "MBBS, DM Cardiology",
-                    "default_fee": 800,
+                    "default_fee": "800",  # Changed to string to match model
                     "phone": "9876543211",
                     "room_number": "102",
                     "created_at": datetime.utcnow()
