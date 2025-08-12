@@ -28,7 +28,7 @@ function ReceptionDashboard({ onLogout, userName }) {
       case 'New OPD':
         return <NewOPDPageEnhanced />;
       case 'Patient Log':
-        return <PatientLogPage />;
+        return <PatientLogPageFixed />;
       case 'All Patients':
         return <AllPatientsPageEnhanced onEditPatient={handleEditPatientRequest} />;
       case 'Appointments':
