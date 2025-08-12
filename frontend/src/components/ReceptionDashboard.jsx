@@ -32,7 +32,7 @@ function ReceptionDashboard({ onLogout, userName }) {
       case 'All Patients':
         return <AllPatientsPageEnhanced onEditPatient={handleEditPatientRequest} />;
       case 'Appointments':
-        return <AppointmentScheduling />;
+        return <AppointmentSchedulingEnhanced />;
       case 'Billing':
         return <BillingSystem />;
       default:
