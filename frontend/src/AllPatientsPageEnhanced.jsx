@@ -459,10 +459,9 @@ function AllPatientsPageEnhanced() {
                         </button>
                         <button
                           onClick={() => handleDelete(patient)}
-                          className="text-gray-400 hover:text-gray-600 text-sm cursor-not-allowed"
-                          title="Cannot delete from permanent patient log"
+                          className="text-red-600 hover:text-red-800 text-sm"
                         >
-                          🔒 Protected
+                          Delete
                         </button>
                       </div>
                     </td>
