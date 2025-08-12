@@ -134,18 +134,39 @@ class UnicareEHRTester:
         return False
 
     def test_create_patient(self):
-        """Test creating a new patient"""
+        """Test creating a new patient with all required fields as per review request"""
+        # First get doctors to assign one
+        success, doctors_response = self.run_test(
+            "Get Doctors for Patient Assignment",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success or not doctors_response:
+            print("❌ Failed to get doctors for patient assignment")
+            return False
+            
+        doctor_id = doctors_response[0]['id'] if doctors_response else None
+        if not doctor_id:
+            print("❌ No doctors available for assignment")
+            return False
+            
+        # Create patient with all required fields from review request
         patient_data = {
-            "patient_name": "Test Patient",
-            "age": "30",
-            "dob": "1994-01-01",
+            "patient_name": "Rajesh Kumar",
+            "age": "35",
+            "dob": "1989-03-15",
             "sex": "Male",
-            "address": "123 Test Street",
-            "phone_number": "1234567890"
+            "address": "123 MG Road, Kochi, Kerala",
+            "phone_number": "9876543210",
+            "assigned_doctor": doctor_id,
+            "visit_type": "New",
+            "patient_rating": 7
         }
         
         success, response = self.run_test(
-            "Create Patient",
+            "Create Patient with All Required Fields",
             "POST",
             "api/patients",
             200,
@@ -157,6 +178,16 @@ class UnicareEHRTester:
             print(f"   Patient created with ID: {self.patient_id}")
             print(f"   OPD Number: {response.get('opd_number', 'N/A')}")
             print(f"   Token Number: {response.get('token_number', 'N/A')}")
+            
+            # Verify all fields are returned
+            required_fields = ['patient_name', 'phone_number', 'sex', 'age', 'opd_number', 'token_number']
+            missing_fields = [field for field in required_fields if field not in response or not response[field]]
+            
+            if missing_fields:
+                print(f"❌ Missing required fields in response: {missing_fields}")
+                return False
+                
+            print(f"✅ All required fields present in response")
             return True
         return False
 
