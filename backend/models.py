@@ -85,6 +85,12 @@ class Patient(BaseModel):
     emergency_contact_phone: str = ""
     allergies: str = ""
     medical_history: str = ""
+    assigned_doctor: str = ""  # Doctor ID
+    visit_type: str = "New"
+    patient_rating: int = 0
+    department: str = ""
+    consultation_fee: str = ""
+    total_visits: int = 1
     opd_number: str = ""
     token_number: str = ""
     created_at: datetime = Field(default_factory=datetime.utcnow)
