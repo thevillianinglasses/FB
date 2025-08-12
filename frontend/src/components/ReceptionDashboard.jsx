@@ -124,5 +124,3 @@ function ReceptionDashboard({ onLogout, userName }) {
 }
 
 export default ReceptionDashboard;
-
-export default ReceptionDashboard;
