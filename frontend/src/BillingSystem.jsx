@@ -835,7 +835,10 @@ function BillingSystem() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Products & Services</h3>
-                <button className="bg-cornflower-blue text-white px-4 py-2 rounded-lg hover:bg-opacity-80">
+                <button 
+                  onClick={() => setShowAddProduct(true)}
+                  className="bg-cornflower-blue text-white px-4 py-2 rounded-lg hover:bg-opacity-80"
+                >
                   Add Product
                 </button>
               </div>
