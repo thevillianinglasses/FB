@@ -1,30 +1,34 @@
 import React, { useState } from 'react';
-import RegistrationKerala from '../RegistrationKerala';
-import PatientLogKerala from '../PatientLogKerala';
+import NewOPDPage from '../NewOPDPage';
+import PatientLogPage from '../PatientLogPage';
+import AllPatientsPage from '../AllPatientsPage';
 import { useAppContext } from '../AppContext';
 
 function ReceptionDashboard({ onLogout, userName }) {
-  const [activeTab, setActiveTab] = useState('Registration');
+  const [activeTab, setActiveTab] = useState('New OPD');
   const { setPatientForEditing, clearError } = useAppContext();
 
   const tabs = [
-    { name: 'Registration', icon: '👤' },
+    { name: 'New OPD', icon: '👤' },
     { name: 'Patient Log', icon: '📋' },
+    { name: 'All Patients', icon: '👥' },
     { name: 'Appointments', icon: '📅' },
     { name: 'Billing', icon: '💰' }
   ];
 
   function handleEditPatientRequest(patientToEdit) {
     setPatientForEditing(patientToEdit);
-    setActiveTab('Registration');
+    setActiveTab('New OPD');
   }
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'Registration':
-        return <RegistrationKerala />;
+      case 'New OPD':
+        return <NewOPDPage />;
       case 'Patient Log':
-        return <PatientLogKerala />;
+        return <PatientLogPage />;
+      case 'All Patients':
+        return <AllPatientsPage onEditPatient={handleEditPatientRequest} />;
       case 'Appointments':
         return (
           <div className="bg-white rounded-lg shadow p-6">
@@ -58,7 +62,7 @@ function ReceptionDashboard({ onLogout, userName }) {
           </div>
         );
       default:
-        return <RegistrationKerala />;
+        return <NewOPDPage />;
     }
   };
 
@@ -91,7 +95,7 @@ function ReceptionDashboard({ onLogout, userName }) {
               <button
                 key={tab.name}
                 onClick={() => {
-                  if (activeTab === 'Registration' && setPatientForEditing) {
+                  if (activeTab === 'New OPD' && setPatientForEditing) {
                     setPatientForEditing(null);
                   }
                   setActiveTab(tab.name);
