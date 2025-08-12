@@ -369,6 +369,12 @@ function AllPatientsPageEnhanced() {
               ) : (
                 paginatedPatients.map((patient, index) => (
                   <tr key={`${patient.phone_number}-${index}`} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="text-gray-900 font-medium">
+                        {(currentPage - 1) * pageSize + index + 1}
+                      </div>
+                    </td>
+                    
                     <td className="px-6 py-4">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
@@ -377,11 +383,9 @@ function AllPatientsPageEnhanced() {
                         <div className="text-sm text-gray-500">
                           {patient.age} years, {patient.sex}
                         </div>
-                        {patient.opd_number && (
-                          <div className="text-xs text-cornflower-blue">
-                            Latest OPD: {patient.opd_number}
-                          </div>
-                        )}
+                        <div className="text-xs text-cornflower-blue">
+                          Latest OPD: {patient.opd_number || 'N/A'}
+                        </div>
                       </div>
                     </td>
                     
