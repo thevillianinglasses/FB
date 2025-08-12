@@ -906,7 +906,10 @@ function BillingSystem() {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-sm text-gray-500">{product.category} • {product.department}</p>
+                        <p className="text-sm text-gray-500">{product.category}</p>
+                        <p className="text-sm text-gray-500">
+                          {getDoctorName(product.doctorId) || product.department}
+                        </p>
                         <p className="text-lg font-bold text-cornflower-blue">{formatCurrency(product.price)}</p>
                         <p className="text-xs text-gray-400">{product.taxable ? 'Taxable' : 'Non-taxable'}</p>
                       </div>
@@ -919,6 +922,109 @@ function BillingSystem() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'daily-collection' && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Daily Collection Report</h3>
+              
+              {/* Date Range Filters */}
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                    <input
+                      type="date"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-cornflower-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                    <input
+                      type="date"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-cornflower-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-cornflower-blue">
+                      <option value="">All Doctors</option>
+                      {doctors.map(doctor => (
+                        <option key={doctor.id} value={doctor.id}>
+                          Dr. {doctor.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <button className="w-full bg-cornflower-blue text-white px-4 py-2 rounded-lg hover:bg-opacity-80">
+                      Generate Report
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Collection Summary */}
+              <div className="grid md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white border rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600">₹12,450</div>
+                  <div className="text-sm text-gray-600">Today's Collection</div>
+                </div>
+                <div className="bg-white border rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-600">₹8,200</div>
+                  <div className="text-sm text-gray-600">Consultations</div>
+                </div>
+                <div className="bg-white border rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-600">₹2,800</div>
+                  <div className="text-sm text-gray-600">Procedures</div>
+                </div>
+                <div className="bg-white border rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-orange-600">₹1,450</div>
+                  <div className="text-sm text-gray-600">Medications</div>
+                </div>
+              </div>
+
+              {/* Doctor Collection Breakdown */}
+              <div className="bg-white border rounded-lg overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 border-b">
+                  <h4 className="text-lg font-medium text-gray-900">Doctor-wise Collection</h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doctor</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patients</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Collections</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Average</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      <tr>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">Dr. Emily Carter</div>
+                          <div className="text-sm text-gray-500">General Medicine</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">15</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">₹7,500</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹500</td>
+                      </tr>
+                      <tr>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">Dr. John Adebayo</div>
+                          <div className="text-sm text-gray-500">Cardiology</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">6</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">₹4,800</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹800</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
