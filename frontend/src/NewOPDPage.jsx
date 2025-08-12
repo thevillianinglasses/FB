@@ -263,16 +263,16 @@ function NewOPDPage() {
 
       const patientData = {
         patient_name: patientName.trim(),
-        age: age || null,
-        dob: dob || null,
+        age: age || "",
+        dob: dob || "",
         sex: sex,
         address: address.trim(),
         phone_number: phoneNumber.trim(),
-        assigned_doctor: selectedDoctor,
-        visit_type: visitType,
-        patient_rating: patientRating,
-        opd_number: opdNumber,
-        token_number: tokenNumber
+        email: "",
+        emergency_contact_name: "",
+        emergency_contact_phone: "",
+        allergies: "",
+        medical_history: ""
       };
 
       console.log('📤 Sending patient data:', patientData);
