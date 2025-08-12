@@ -381,7 +381,13 @@ function NewOPDPageEnhanced() {
         emergency_contact_name: "",
         emergency_contact_phone: "",
         allergies: "",
-        medical_history: ""
+        medical_history: "",
+        assigned_doctor: selectedDoctor,
+        visit_type: visitType,
+        patient_rating: patientRating,
+        department: selectedDepartment,
+        consultation_fee: consultationFee,
+        total_visits: totalVisits
       };
 
       console.log('📤 Sending patient data:', patientData);
