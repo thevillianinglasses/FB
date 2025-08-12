@@ -218,6 +218,8 @@ function NewOPDPage() {
     setSuccessMessage('');
     setErrorMessage('');
 
+    console.log('🔄 Starting patient registration...');
+
     // Validation
     if (!patientName.trim()) {
       setErrorMessage('Patient name is required');
@@ -256,6 +258,9 @@ function NewOPDPage() {
     }
 
     try {
+      const opdNumber = generateOPDNumber();
+      const tokenNumber = generateTokenNumber(selectedDoctor);
+
       const patientData = {
         patient_name: patientName.trim(),
         age: age ? parseInt(age) : null,
@@ -265,28 +270,32 @@ function NewOPDPage() {
         phone_number: phoneNumber.trim(),
         assigned_doctor: selectedDoctor,
         visit_type: visitType,
-        chief_complaint: chiefComplaint.trim(),
         patient_rating: patientRating,
-        opd_number: generateOPDNumber(),
-        token_number: generateTokenNumber(selectedDoctor),
-        created_at: new Date().toISOString()
+        opd_number: opdNumber,
+        token_number: tokenNumber
       };
+
+      console.log('📤 Sending patient data:', patientData);
 
       let result;
       if (patientForEditing) {
         result = await updatePatient(patientForEditing.id, patientData);
         setSuccessMessage('Patient updated successfully!');
+        console.log('✅ Patient updated:', result);
       } else {
         result = await addPatient(patientData);
         setLastRegisteredPatient(result);
-        setSuccessMessage(`Patient registered successfully! OPD Number: ${result.opd_number}, Token: ${result.token_number}`);
+        setSuccessMessage(`Patient registered successfully! OPD: ${result.opd_number}, Token: ${result.token_number}`);
+        console.log('✅ Patient registered:', result);
       }
 
+      // Reload patients to update the list
+      await loadPatients();
       resetForm();
 
     } catch (error) {
-      console.error('Error submitting patient:', error);
-      setErrorMessage(`Error: ${error.message || 'Failed to register patient. Please try again.'}`);
+      console.error('❌ Registration error:', error);
+      setErrorMessage(`Registration failed: ${error.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }
