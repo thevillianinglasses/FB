@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from './AppContext';
 
 function NewOPDPage() {
-  const { addPatient, updatePatient, doctors, patientForEditing, setPatientForEditing, isLoading } = useAppContext();
+  const { addPatient, updatePatient, doctors, loadDoctors, patients, loadPatients, patientForEditing, setPatientForEditing, isLoading } = useAppContext();
 
   const [patientName, setPatientName] = useState('');
   const [age, setAge] = useState('');
@@ -17,13 +17,44 @@ function NewOPDPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [lastRegisteredPatient, setLastRegisteredPatient] = useState(null);
+  const [patientRating, setPatientRating] = useState(0);
 
-  // Load doctors on component mount
+  // Load doctors and patients on component mount
   useEffect(() => {
-    if (!doctors || doctors.length === 0) {
-      // Load doctors if not already loaded
-    }
-  }, [doctors]);
+    loadDoctors();
+    loadPatients();
+  }, []);
+
+  // Generate next OPD number in 001/25 format
+  const generateOPDNumber = () => {
+    const currentYear = new Date().getFullYear();
+    const yearSuffix = currentYear.toString().slice(-2); // Get last 2 digits of year
+    
+    // Find highest OPD number for current year
+    const currentYearPatients = patients.filter(p => p.opd_number?.endsWith(`/${yearSuffix}`));
+    let maxNumber = 0;
+    
+    currentYearPatients.forEach(patient => {
+      const numberPart = parseInt(patient.opd_number.split('/')[0]);
+      if (numberPart > maxNumber) {
+        maxNumber = numberPart;
+      }
+    });
+    
+    const nextNumber = maxNumber + 1;
+    return `${nextNumber.toString().padStart(3, '0')}/${yearSuffix}`;
+  };
+
+  // Generate token number
+  const generateTokenNumber = (doctorId) => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayPatients = patients.filter(p => {
+      const patientDate = new Date(p.created_at).toISOString().split('T')[0];
+      return patientDate === today && p.assigned_doctor === doctorId;
+    });
+    
+    return todayPatients.length + 1;
+  };
 
   // Populate form if editing existing patient
   useEffect(() => {
@@ -37,6 +68,7 @@ function NewOPDPage() {
       setSelectedDoctor(patientForEditing.assigned_doctor || '');
       setVisitType(patientForEditing.visit_type || 'New');
       setChiefComplaint(patientForEditing.chief_complaint || '');
+      setPatientRating(patientForEditing.patient_rating || 0);
     }
   }, [patientForEditing]);
 
@@ -72,10 +104,11 @@ function NewOPDPage() {
     setSelectedDoctor('');
     setVisitType('New');
     setChiefComplaint('');
+    setPatientRating(0);
     setPatientForEditing(null);
   };
 
-  // Print OPD function
+  // Print OPD function with Kerala formatting
   const printOPD = (patientData) => {
     const printWindow = window.open('', '_blank');
     const currentDate = new Date();
@@ -99,77 +132,31 @@ function NewOPDPage() {
       <html>
       <head>
         <title>OPD Registration - ${patientData.opd_number}</title>
+        <meta charset="UTF-8">
         <style>
           @page { size: A5; margin: 10mm; }
-          body { 
-            font-family: Arial, sans-serif; 
-            font-size: 12px; 
-            line-height: 1.4;
-            margin: 0;
-            padding: 0;
-          }
-          .header {
-            text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-          }
-          .clinic-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c5aa0;
-          }
-          .clinic-subtitle {
-            font-size: 10px;
-            color: #666;
-            margin-top: 2px;
-          }
-          .opd-info {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            padding: 8px;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-          }
-          .patient-details {
-            margin: 15px 0;
-          }
-          .detail-row {
-            display: flex;
-            padding: 3px 0;
-            border-bottom: 1px dotted #ccc;
-          }
-          .label {
-            font-weight: bold;
-            width: 120px;
-            flex-shrink: 0;
-          }
-          .value {
-            flex-grow: 1;
-          }
-          .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 10px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-          }
-          .visit-type {
-            display: inline-block;
-            padding: 2px 8px;
-            background: ${patientData.visit_type === 'New' ? '#28a745' : '#17a2b8'};
-            color: white;
-            border-radius: 3px;
-            font-size: 10px;
-          }
+          body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4; margin: 0; padding: 0; }
+          .header { text-align: center; border-bottom: 2px solid #2c5aa0; padding-bottom: 10px; margin-bottom: 15px; }
+          .clinic-name { font-size: 18px; font-weight: bold; color: #2c5aa0; }
+          .clinic-subtitle { font-size: 11px; color: #666; margin-top: 2px; }
+          .kerala-text { font-size: 10px; color: #e74c3c; font-style: italic; }
+          .opd-info { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; }
+          .patient-details { margin: 15px 0; }
+          .detail-row { display: flex; padding: 3px 0; border-bottom: 1px dotted #ccc; }
+          .label { font-weight: bold; width: 120px; flex-shrink: 0; }
+          .value { flex-grow: 1; }
+          .footer { margin-top: 20px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ccc; padding-top: 10px; }
+          .visit-type { display: inline-block; padding: 2px 8px; background: ${patientData.visit_type === 'New' ? '#28a745' : '#17a2b8'}; color: white; border-radius: 3px; font-size: 10px; }
+          .token { font-size: 14px; font-weight: bold; color: #e74c3c; }
+          .inr { color: #2c5aa0; font-weight: bold; }
+          .rating { font-size: 10px; color: ${patientData.patient_rating >= 0 ? '#28a745' : '#e74c3c'}; }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="clinic-name">UNICARE POLYCLINIC</div>
           <div class="clinic-subtitle">Electronic Health Record System</div>
+          <div class="kerala-text">Kerala, India • ക്ലിനിക് രജിസ്ട്രേഷൻ</div>
         </div>
 
         <div class="opd-info">
@@ -180,12 +167,13 @@ function NewOPDPage() {
           <div>
             <strong>Time:</strong> ${formattedTime}<br>
             <span class="visit-type">${patientData.visit_type}</span>
+            ${patientData.token_number ? `<br><span class="token">Token: ${patientData.token_number}</span>` : ''}
           </div>
         </div>
 
         <div class="patient-details">
           <div class="detail-row">
-            <div class="label">Patient Name:</div>
+            <div class="label">Patient:</div>
             <div class="value">${patientData.patient_name}</div>
           </div>
           <div class="detail-row">
@@ -197,24 +185,31 @@ function NewOPDPage() {
             <div class="value">${patientData.phone_number}</div>
           </div>
           <div class="detail-row">
+            <div class="label">Doctor:</div>
+            <div class="value">Dr. ${doctorName}</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Rating:</div>
+            <div class="value rating">Patient Rating: ${patientData.patient_rating}/10</div>
+          </div>
+          ${patientData.address ? `
+          <div class="detail-row">
             <div class="label">Address:</div>
             <div class="value">${patientData.address}</div>
           </div>
-          <div class="detail-row">
-            <div class="label">Doctor:</div>
-            <div class="value">${doctorName}</div>
-          </div>
+          ` : ''}
           ${patientData.chief_complaint ? `
           <div class="detail-row">
-            <div class="label">Chief Complaint:</div>
+            <div class="label">Complaint:</div>
             <div class="value">${patientData.chief_complaint}</div>
           </div>
           ` : ''}
         </div>
 
         <div class="footer">
+          <p>കോൺസൾട്ടേഷൻ ഫീസ് • Consultation Fee: <span class="inr">₹150</span></p>
           <p>Please keep this slip for your records</p>
-          <p>Generated on ${formattedDate} at ${formattedTime}</p>
+          <p>Asia/Kolkata: ${formattedDate} ${formattedTime}</p>
         </div>
       </body>
       </html>
@@ -279,7 +274,11 @@ function NewOPDPage() {
         phone_number: phoneNumber.trim(),
         assigned_doctor: selectedDoctor,
         visit_type: visitType,
-        chief_complaint: chiefComplaint.trim()
+        chief_complaint: chiefComplaint.trim(),
+        patient_rating: patientRating,
+        opd_number: generateOPDNumber(),
+        token_number: generateTokenNumber(selectedDoctor),
+        created_at: new Date().toISOString()
       };
 
       let result;
@@ -289,7 +288,7 @@ function NewOPDPage() {
       } else {
         result = await addPatient(patientData);
         setLastRegisteredPatient(result);
-        setSuccessMessage(`Patient registered successfully! OPD Number: ${result.opd_number}`);
+        setSuccessMessage(`Patient registered successfully! OPD Number: ${result.opd_number}, Token: ${result.token_number}`);
       }
 
       resetForm();
@@ -308,10 +307,10 @@ function NewOPDPage() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-bold text-charcoal-grey">
-              {patientForEditing ? 'Edit Patient' : 'New OPD Registration'}
+              {patientForEditing ? 'Edit Patient' : 'New OPD Registration — Kerala'}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Register new patient or update existing patient information
+            <p className="text-sm text-coral-red italic mt-1">
+              പുതിയ വിസിറ്റ് രജിസ്ട്രേഷൻ • OPD Format: 001/25 • Asia/Kolkata • INR Currency
             </p>
           </div>
           {lastRegisteredPatient && (
@@ -427,6 +426,19 @@ function NewOPDPage() {
                   required
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                  placeholder="Patient address..."
+                />
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -481,16 +493,34 @@ function NewOPDPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Patient Rating (-10 to +10)
                 </label>
-                <textarea
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
-                  placeholder="Patient address..."
-                />
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="-10"
+                    max="10"
+                    value={patientRating}
+                    onChange={(e) => setPatientRating(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #ef4444 0%, #fbbf24 50%, #10b981 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>-10 (Poor)</span>
+                    <span className="font-bold text-lg">{patientRating}</span>
+                    <span>+10 (Excellent)</span>
+                  </div>
+                  <div className={`text-center text-sm font-medium ${
+                    patientRating >= 5 ? 'text-green-600' : 
+                    patientRating >= 0 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {patientRating >= 5 ? 'Excellent Patient' : 
+                     patientRating >= 0 ? 'Good Patient' : 'Difficult Patient'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
