@@ -195,12 +195,6 @@ function NewOPDPage() {
             <div class="value">${patientData.address}</div>
           </div>
           ` : ''}
-          ${patientData.chief_complaint ? `
-          <div class="detail-row">
-            <div class="label">Complaint:</div>
-            <div class="value">${patientData.chief_complaint}</div>
-          </div>
-          ` : ''}
         </div>
 
         <div class="footer">
