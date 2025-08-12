@@ -691,11 +691,11 @@ function NewOPDPageEnhanced() {
                   required
                 >
                   <option value="">Select Doctor</option>
-                  {doctors && doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.id}>
-                      Dr. {doctor.name} - {doctor.specialty}
-                    </option>
-                  ))}
+                    {doctors && doctors.map((doctor) => (
+                      <option key={doctor.id} value={doctor.id}>
+                        Dr. {doctor.name} - {doctor.specialty}
+                      </option>
+                    ))}
                 </select>
               </div>
 
