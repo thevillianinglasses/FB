@@ -698,12 +698,18 @@ function BillingSystem() {
                           <p className="text-sm font-medium text-blue-900">
                             {selectedPatient.patient_name} • {selectedPatient.age} years, {selectedPatient.sex}
                           </p>
-                          <p className="text-sm text-blue-700">{selectedPatient.phone_number}</p>
+                          <p className="text-sm text-blue-700">
+                            {selectedPatient.phone_number} • OPD: {selectedPatient.opd_number || 'Not assigned'}
+                          </p>
+                          <p className="text-xs text-blue-600">
+                            Address: {selectedPatient.address || 'Not provided'}
+                          </p>
                         </div>
                         <button
                           onClick={() => {
                             setSelectedPatient(null);
                             setCurrentBill(prev => ({ ...prev, patientName: '', phoneNumber: '', patientId: '' }));
+                            setShowPatientSelector(false);
                           }}
                           className="text-blue-600 hover:text-blue-800"
                         >
