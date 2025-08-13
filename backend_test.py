@@ -1253,10 +1253,321 @@ class UnicareEHRTester:
             print("\n✅ No critical timezone bugs detected in patient registration")
             return True
 
+    def test_appointment_checkin_workflow(self):
+        """Test the critical bug: Appointment Check-in Workflow not properly adding to 24-hour patient log"""
+        print("\n🚨 CRITICAL BUG TEST #2: Appointment Check-in Workflow")
+        print("Issue: When users click 'Check In' in appointments, it should:")
+        print("1. Create a new patient record via POST /api/patients (using appointment data)")
+        print("2. Add the patient to the 24-hour patient log")
+        print("3. The appointment should change status to 'Checked In'")
+        print("=" * 70)
+        
+        # Login as reception (who can create patients)
+        if not self.test_login(role="reception"):
+            print("❌ Failed to login as reception")
+            return False
+            
+        # Get doctors first for assignment
+        success, doctors_response = self.run_test(
+            "Get Doctors for Appointment Assignment",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success or not doctors_response:
+            print("❌ Failed to get doctors")
+            return False
+            
+        doctor_id = doctors_response[0]['id']
+        doctor_name = doctors_response[0]['name']
+        
+        print(f"✅ Using doctor: {doctor_name} (ID: {doctor_id})")
+        
+        # Test 1: Simulate appointment check-in with the specific test data from review request
+        print("\n📝 Test 1: Simulate appointment check-in with provided test data")
+        
+        # This is the exact appointment data structure from the review request
+        appointment_data = {
+            'patientName': 'Priya Nair',
+            'phoneNumber': '9876543211',
+            'patientDetails': { 
+                'age': 28, 
+                'sex': 'Female', 
+                'address': '456 Marine Drive, Ernakulam, Kerala' 
+            },
+            'doctorId': doctor_id,
+            'appointmentType': 'Follow-up'
+        }
+        
+        print(f"   📋 Appointment Data:")
+        print(f"      Patient: {appointment_data['patientName']}")
+        print(f"      Phone: {appointment_data['phoneNumber']}")
+        print(f"      Age/Sex: {appointment_data['patientDetails']['age']}/{appointment_data['patientDetails']['sex']}")
+        print(f"      Address: {appointment_data['patientDetails']['address']}")
+        print(f"      Doctor: {doctor_name}")
+        print(f"      Type: {appointment_data['appointmentType']}")
+        
+        # Test 2: Convert appointment data to patient data (as frontend does)
+        print("\n🔄 Test 2: Convert appointment data to patient data for API call")
+        
+        # This mimics the conversion logic in AppointmentSchedulingEnhanced.jsx handleCheckIn function
+        patient_data = {
+            "patient_name": appointment_data['patientName'],
+            "phone_number": appointment_data['phoneNumber'],
+            "age": str(appointment_data['patientDetails']['age']),
+            "dob": '',  # Not provided in appointment
+            "sex": appointment_data['patientDetails']['sex'],
+            "address": appointment_data['patientDetails']['address'],
+            "email": '',
+            "emergency_contact_name": '',
+            "emergency_contact_phone": '',
+            "allergies": '',
+            "medical_history": '',
+            "assigned_doctor": appointment_data['doctorId'],
+            "visit_type": appointment_data['appointmentType'],
+            "patient_rating": 0
+        }
+        
+        print(f"   📋 Converted Patient Data for API:")
+        for key, value in patient_data.items():
+            print(f"      {key}: {value}")
+        
+        # Test 3: Call POST /api/patients to create patient from appointment check-in
+        print("\n🏥 Test 3: POST /api/patients - Create patient from appointment check-in")
+        
+        success, patient_response = self.run_test(
+            "Create Patient from Appointment Check-in",
+            "POST",
+            "api/patients",
+            200,
+            data=patient_data
+        )
+        
+        if not success:
+            print("❌ Failed to create patient from appointment check-in")
+            return False
+            
+        created_patient_id = patient_response.get('id')
+        opd_number = patient_response.get('opd_number')
+        token_number = patient_response.get('token_number')
+        
+        print(f"   ✅ Patient created successfully:")
+        print(f"      Patient ID: {created_patient_id}")
+        print(f"      OPD Number: {opd_number}")
+        print(f"      Token Number: {token_number}")
+        print(f"      Created At: {patient_response.get('created_at')}")
+        
+        # Test 4: Verify patient appears in GET /api/patients (24-hour log)
+        print("\n📊 Test 4: Verify patient appears in 24-hour patient log")
+        
+        success, all_patients = self.run_test(
+            "Get All Patients (24-hour log)",
+            "GET",
+            "api/patients",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get patients list")
+            return False
+            
+        # Find our checked-in patient
+        checked_in_patient = None
+        for patient in all_patients:
+            if patient.get('id') == created_patient_id:
+                checked_in_patient = patient
+                break
+                
+        if not checked_in_patient:
+            print(f"❌ Checked-in patient {created_patient_id} not found in patients list")
+            return False
+            
+        print(f"   ✅ Checked-in patient found in 24-hour log:")
+        print(f"      Name: {checked_in_patient.get('patient_name')}")
+        print(f"      Phone: {checked_in_patient.get('phone_number')}")
+        print(f"      OPD: {checked_in_patient.get('opd_number')}")
+        print(f"      Token: {checked_in_patient.get('token_number')}")
+        print(f"      Doctor: {checked_in_patient.get('assigned_doctor')}")
+        print(f"      Visit Type: {checked_in_patient.get('visit_type')}")
+        
+        # Test 5: Verify data structure matches appointment data
+        print("\n🔍 Test 5: Verify patient data matches original appointment data")
+        
+        data_matches = True
+        mismatches = []
+        
+        # Check key fields
+        if checked_in_patient.get('patient_name') != appointment_data['patientName']:
+            data_matches = False
+            mismatches.append(f"Name: expected '{appointment_data['patientName']}', got '{checked_in_patient.get('patient_name')}'")
+            
+        if checked_in_patient.get('phone_number') != appointment_data['phoneNumber']:
+            data_matches = False
+            mismatches.append(f"Phone: expected '{appointment_data['phoneNumber']}', got '{checked_in_patient.get('phone_number')}'")
+            
+        if str(checked_in_patient.get('age')) != str(appointment_data['patientDetails']['age']):
+            data_matches = False
+            mismatches.append(f"Age: expected '{appointment_data['patientDetails']['age']}', got '{checked_in_patient.get('age')}'")
+            
+        if checked_in_patient.get('sex') != appointment_data['patientDetails']['sex']:
+            data_matches = False
+            mismatches.append(f"Sex: expected '{appointment_data['patientDetails']['sex']}', got '{checked_in_patient.get('sex')}'")
+            
+        if checked_in_patient.get('address') != appointment_data['patientDetails']['address']:
+            data_matches = False
+            mismatches.append(f"Address: expected '{appointment_data['patientDetails']['address']}', got '{checked_in_patient.get('address')}'")
+            
+        if checked_in_patient.get('assigned_doctor') != appointment_data['doctorId']:
+            data_matches = False
+            mismatches.append(f"Doctor: expected '{appointment_data['doctorId']}', got '{checked_in_patient.get('assigned_doctor')}'")
+            
+        if checked_in_patient.get('visit_type') != appointment_data['appointmentType']:
+            data_matches = False
+            mismatches.append(f"Visit Type: expected '{appointment_data['appointmentType']}', got '{checked_in_patient.get('visit_type')}'")
+        
+        if data_matches:
+            print("   ✅ All appointment data correctly transferred to patient record")
+        else:
+            print("   ❌ Data mismatches found:")
+            for mismatch in mismatches:
+                print(f"      • {mismatch}")
+                
+        # Test 6: Check if patient appears in today's filtered list (timezone test)
+        print("\n🕐 Test 6: Check if patient appears in today's filtered list (timezone test)")
+        
+        from datetime import datetime, timezone
+        import pytz
+        
+        # Get current time in Asia/Kolkata timezone
+        kolkata_tz = pytz.timezone('Asia/Kolkata')
+        current_time_kolkata = datetime.now(kolkata_tz)
+        current_date_kolkata = current_time_kolkata.date()
+        
+        # Filter today's patients
+        today_patients = []
+        for patient in all_patients:
+            patient_created_at = patient.get('created_at')
+            if patient_created_at:
+                try:
+                    if patient_created_at.endswith('Z'):
+                        patient_utc = datetime.fromisoformat(patient_created_at.replace('Z', '+00:00'))
+                    elif '+' in patient_created_at:
+                        patient_utc = datetime.fromisoformat(patient_created_at)
+                    else:
+                        patient_utc = datetime.fromisoformat(patient_created_at).replace(tzinfo=timezone.utc)
+                        
+                    patient_kolkata = patient_utc.astimezone(kolkata_tz)
+                    patient_date_kolkata = patient_kolkata.date()
+                    
+                    if patient_date_kolkata == current_date_kolkata:
+                        today_patients.append(patient)
+                except:
+                    pass
+                    
+        checked_in_patient_in_today = any(p.get('id') == created_patient_id for p in today_patients)
+        
+        if checked_in_patient_in_today:
+            print(f"   ✅ Checked-in patient appears in today's filtered list ({len(today_patients)} total today)")
+        else:
+            print(f"   ❌ Checked-in patient NOT in today's filtered list")
+            print(f"   📊 Today's patients: {len(today_patients)}")
+            print(f"   🔍 Looking for patient ID: {created_patient_id}")
+            
+        # Test 7: Test the complete workflow simulation
+        print("\n🔄 Test 7: Complete appointment check-in workflow simulation")
+        
+        workflow_success = True
+        workflow_issues = []
+        
+        # Step 1: Patient creation ✅ (already tested above)
+        if not success:
+            workflow_success = False
+            workflow_issues.append("Patient creation via POST /api/patients failed")
+            
+        # Step 2: Patient added to 24-hour log ✅ (already tested above)
+        if not checked_in_patient:
+            workflow_success = False
+            workflow_issues.append("Patient not found in 24-hour patient log")
+            
+        # Step 3: Data integrity ✅ (already tested above)
+        if not data_matches:
+            workflow_success = False
+            workflow_issues.append("Appointment data not correctly transferred to patient record")
+            
+        # Step 4: Timezone handling ✅ (already tested above)
+        if not checked_in_patient_in_today:
+            workflow_success = False
+            workflow_issues.append("Patient not appearing in today's filtered list (timezone issue)")
+            
+        # Step 5: OPD and Token generation ✅
+        if not opd_number or not token_number:
+            workflow_success = False
+            workflow_issues.append("OPD or Token number not generated")
+            
+        print("\n" + "=" * 70)
+        print("🔍 APPOINTMENT CHECK-IN WORKFLOW ANALYSIS:")
+        print(f"   • Patient creation via POST /api/patients: {'✅' if success else '❌'}")
+        print(f"   • Patient added to 24-hour log: {'✅' if checked_in_patient else '❌'}")
+        print(f"   • Data integrity (appointment → patient): {'✅' if data_matches else '❌'}")
+        print(f"   • Timezone handling (today's list): {'✅' if checked_in_patient_in_today else '❌'}")
+        print(f"   • OPD/Token generation: {'✅' if opd_number and token_number else '❌'}")
+        
+        if workflow_success:
+            print("\n✅ APPOINTMENT CHECK-IN WORKFLOW WORKING CORRECTLY")
+            print("   The backend API properly handles appointment check-in data conversion")
+            print("   Patients from appointment check-in appear in 24-hour patient log")
+            print("   All data fields are correctly transferred and stored")
+        else:
+            print("\n❌ APPOINTMENT CHECK-IN WORKFLOW ISSUES DETECTED:")
+            for issue in workflow_issues:
+                print(f"   • {issue}")
+                
+        # Test 8: Check for missing appointment persistence (the real issue)
+        print("\n🚨 Test 8: Check for appointment persistence issue")
+        
+        # Try to find appointment APIs
+        appointment_apis_exist = False
+        
+        # Test if there are appointment endpoints
+        appointment_endpoints_to_test = [
+            "api/appointments",
+            "api/appointment",
+            "api/appointments/today",
+            "api/schedule/appointments"
+        ]
+        
+        print("   🔍 Testing for appointment API endpoints:")
+        for endpoint in appointment_endpoints_to_test:
+            success, response = self.run_test(
+                f"Test {endpoint}",
+                "GET",
+                endpoint,
+                200  # We expect 200 if endpoint exists
+            )
+            if success:
+                appointment_apis_exist = True
+                print(f"      ✅ {endpoint} exists")
+            else:
+                print(f"      ❌ {endpoint} not found")
+                
+        if not appointment_apis_exist:
+            print("\n🚨 CRITICAL ISSUE IDENTIFIED:")
+            print("   • No appointment APIs found in backend")
+            print("   • Appointments are only stored in frontend local state")
+            print("   • Appointment status changes (like 'Checked In') are not persisted")
+            print("   • On page refresh, appointment status reverts to original state")
+            print("\n💡 ROOT CAUSE:")
+            print("   • Frontend handles appointment check-in correctly (creates patient)")
+            print("   • But appointment status change is only in local React state")
+            print("   • Backend needs appointment APIs to persist appointment data")
+            
+        return workflow_success and not appointment_apis_exist  # Return True if patient workflow works but appointments aren't persisted
+
 def main():
-    print("🏥 Starting Critical Bug Test: Patient Registration → 24-Hour Log")
-    print("🎯 Focus: Patient registration not adding to 24-hour patient log")
-    print("🚨 Issue: After registration, patients not appearing in patient log")
+    print("🏥 Starting Critical Bug Test #2: Appointment Check-in Workflow")
+    print("🎯 Focus: Appointment check-in not properly adding to 24-hour patient log")
+    print("🚨 Issue: When users click 'Check In', should create patient and update appointment status")
     print("=" * 70)
     
     # Get backend URL from frontend .env file
@@ -1273,8 +1584,8 @@ def main():
         # Create test users if needed
         tester.test_create_test_users,
         
-        # Main focus: Critical bug testing
-        tester.test_patient_24hour_log_critical_bug,
+        # Main focus: Critical bug #2 testing
+        tester.test_appointment_checkin_workflow,
     ]
     
     for test in tests:
