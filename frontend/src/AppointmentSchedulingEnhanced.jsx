@@ -277,53 +277,64 @@ function AppointmentSchedulingEnhanced() {
   };
 
   // Handle check-in (convert appointment to live visit)
-  const handleCheckIn = (appointment) => {
+  const handleCheckIn = async (appointment) => {
     const confirmCheckIn = window.confirm(
       `Check in ${appointment.patientName} for their appointment?\n\n` +
       `This will:\n` +
-      `• Create a new OPD visit (${generateOPDNumber()})\n` +
+      `• Create a new OPD visit\n` +
       `• Add them to today's Patient Log (24-hour)\n` +
       `• Generate token number\n` +
       `• Update appointment status to "Checked In"`
     );
     
     if (confirmCheckIn) {
-      // Generate OPD and token numbers
-      const opdNumber = generateOPDNumber();
-      const tokenNumber = generateTokenNumber(appointment.doctorId);
-      
-      // Create patient record for Patient Log
-      const patientLogEntry = {
-        id: `checkin-${Date.now()}`,
-        patient_name: appointment.patientName,
-        phone_number: appointment.phoneNumber,
-        age: appointment.patientDetails?.age || 'N/A',
-        sex: appointment.patientDetails?.sex || 'N/A',
-        address: appointment.patientDetails?.address || '',
-        assigned_doctor: appointment.doctorId,
-        visit_type: appointment.type,
-        opd_number: opdNumber,
-        token_number: tokenNumber,
-        created_at: new Date().toISOString(),
-        status: 'Active'
-      };
-      
-      // Add to patients list (this would normally go to backend)
-      // For now, we'll store in localStorage to simulate adding to Patient Log
-      const existingPatients = JSON.parse(localStorage.getItem('checkedInPatients') || '[]');
-      existingPatients.push(patientLogEntry);
-      localStorage.setItem('checkedInPatients', JSON.stringify(existingPatients));
-      
-      // Update appointment status
-      handleStatusChange(appointment.id, 'Checked In');
-      
-      alert(
-        `✅ ${appointment.patientName} checked in successfully!\n\n` +
-        `OPD Number: ${opdNumber}\n` +
-        `Token Number: ${tokenNumber}\n` +
-        `Doctor: ${getDoctorName(appointment.doctorId)}\n\n` +
-        `Patient has been added to today's Patient Log.`
-      );
+      try {
+        // Create patient record through proper backend API
+        const patientData = {
+          patient_name: appointment.patientName,
+          phone_number: appointment.phoneNumber,
+          age: appointment.patientDetails?.age?.toString() || '30',
+          dob: appointment.patientDetails?.dob || '',
+          sex: appointment.patientDetails?.sex || 'Male',
+          address: appointment.patientDetails?.address || '',
+          email: '',
+          emergency_contact_name: '',
+          emergency_contact_phone: '',
+          allergies: '',
+          medical_history: '',
+          assigned_doctor: appointment.doctorId,
+          visit_type: appointment.type || 'Consultation',
+          patient_rating: 0
+        };
+
+        console.log('🔄 Checking in patient via backend API:', patientData);
+
+        // Use the proper addPatient function from AppContext
+        const { addPatient } = useAppContext();
+        const result = await addPatient(patientData);
+        
+        console.log('✅ Patient checked in successfully:', result);
+
+        // Update appointment status
+        handleStatusChange(appointment.id, 'Checked In');
+        
+        // Reload patients to update all lists
+        await loadPatients();
+        
+        alert(
+          `✅ ${appointment.patientName} checked in successfully!\n\n` +
+          `OPD Number: ${result.opd_number || 'Generated'}\n` +
+          `Token Number: ${result.token_number || 'Generated'}\n` +
+          `Doctor: ${getDoctorName(appointment.doctorId)}\n\n` +
+          `Patient has been added to today's Patient Log.`
+        );
+      } catch (error) {
+        console.error('❌ Error during check-in:', error);
+        alert(
+          `❌ Check-in failed: ${error.message || 'Please try again.'}\n\n` +
+          `The appointment status has not been changed. Please contact reception.`
+        );
+      }
     }
   };
 
