@@ -52,69 +52,25 @@ function AppointmentSchedulingEnhanced() {
   useEffect(() => {
     loadPatients();
     loadDoctors();
-    loadAppointments();
+    loadRealAppointments();
   }, [selectedDate, dateRange]);
 
-  // Enhanced appointment data with more realistic entries
-  const loadAppointments = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    
-    const sampleAppointments = [
-      {
-        id: '1',
-        patientName: 'Arjun Menon',
-        phoneNumber: '9876543210',
-        patientDetails: { age: 32, sex: 'Male', address: '123 MG Road, Kochi, Kerala' },
-        doctorId: doctors.length > 0 ? doctors[0].id : '',
-        appointmentDate: today,
-        appointmentTime: '10:00',
-        duration: '30',
-        reason: 'Regular checkup',
-        type: 'Consultation',
-        status: 'Scheduled'
-      },
-      {
-        id: '2',
-        patientName: 'Priya Nair',
-        phoneNumber: '9876543211',
-        patientDetails: { age: 28, sex: 'Female', address: '456 Marine Drive, Ernakulam, Kerala' },
-        doctorId: doctors.length > 1 ? doctors[1].id : '',
-        appointmentDate: today,
-        appointmentTime: '14:30',
-        duration: '45',
-        reason: 'Follow-up consultation',
-        type: 'Follow-up',
-        status: 'Confirmed'
-      },
-      {
-        id: '3',
-        patientName: 'Ravi Kumar',
-        phoneNumber: '9876543212',
-        patientDetails: { age: 45, sex: 'Male', address: '789 Fort Kochi, Kerala' },
-        doctorId: doctors.length > 0 ? doctors[0].id : '',
-        appointmentDate: tomorrow,
-        appointmentTime: '09:30',
-        duration: '30',
-        reason: 'Chest pain consultation',
-        type: 'Consultation',
-        status: 'Scheduled'
-      },
-      {
-        id: '4',
-        patientName: 'Kavya Nair',
-        phoneNumber: '9876543213',
-        patientDetails: { age: 26, sex: 'Female', address: '321 Kottayam, Kerala' },
-        doctorId: doctors.length > 1 ? doctors[1].id : '',
-        appointmentDate: today,
-        appointmentTime: '16:00',
-        duration: '30',
-        reason: 'Heart check-up',
-        type: 'Consultation',
-        status: 'Confirmed'
+  // Load real appointments from backend instead of sample data
+  const loadRealAppointments = async () => {
+    try {
+      // Load appointments with date filter if needed
+      const filters = {};
+      if (view === 'day') {
+        filters.date = selectedDate;
       }
-    ];
-    setAppointments(sampleAppointments);
+      
+      const appointmentsData = await loadAppointments(filters);
+      setAppointments(appointmentsData || []);
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+      // If loading fails, initialize with empty array
+      setAppointments([]);
+    }
   };
 
   // Filter appointments by doctor search
