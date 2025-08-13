@@ -155,9 +155,9 @@ function AppointmentSchedulingEnhanced() {
   // Check if time slot is available
   const isTimeSlotAvailable = (date, time, doctorId) => {
     return !appointments.some(apt => 
-      apt.appointmentDate === date && 
-      apt.appointmentTime === time && 
-      apt.doctorId === doctorId &&
+      apt.appointment_date === date && 
+      apt.appointment_time === time && 
+      apt.doctor_id === doctorId &&
       apt.status !== 'Cancelled'
     );
   };
