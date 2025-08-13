@@ -33,7 +33,7 @@ function AppointmentSchedulingEnhanced() {
     duration: '30',
     reason: '',
     type: 'Consultation',
-    status: 'Scheduled'
+    notes: ''
   });
 
   // Time slots for appointments (9 AM to 6 PM)
