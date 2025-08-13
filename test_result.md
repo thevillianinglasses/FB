@@ -74,6 +74,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "COMPREHENSIVE PATIENT REGISTRATION API TESTING COMPLETED: ✅ POST /api/patients working perfectly with all required fields (patient_name, phone_number, sex, age, assigned_doctor, visit_type, patient_rating) ✅ OPD number generation correct (014/25, 015/25 format) ✅ Token number generation working ✅ No duplicate OPD numbers ✅ All patient data returned properly ✅ Patients appear in GET /api/patients ✅ Validation working for missing fields (422 errors) ✅ Timestamps and formatting correct ✅ Exact API workflow that NewOPDPage.jsx uses is functional. 12 patients now in system."
+      - working: true
+        agent: "testing"
+        comment: "🚨 CRITICAL BUG IDENTIFIED AND FIXED: Patient Registration → 24-Hour Log Integration. ROOT CAUSE: Backend was returning MongoDB ObjectId in POST response but UUID in GET response, causing ID mismatch. SOLUTION: Fixed server.py to use consistent UUID generation. VERIFICATION: ✅ POST /api/patients creates patients with proper Asia/Kolkata timestamps ✅ GET /api/patients returns patients with matching UUIDs ✅ Today's patients correctly filtered (5 patients found for 2025-08-13) ✅ No timezone discrepancies between UTC storage and Asia/Kolkata display ✅ OPD number generation working (026/25 format) ✅ Token number generation functional. CRITICAL BUG RESOLVED - patients now properly appear in 24-hour patient log."
 
   - task: "Laboratory Module APIs"
     implemented: true
