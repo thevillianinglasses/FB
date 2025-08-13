@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from './AppContext';
 
 function AppointmentSchedulingEnhanced() {
-  const { patients, loadPatients, doctors, loadDoctors, isLoading, addPatient } = useAppContext();
+  const { 
+    patients, loadPatients, doctors, loadDoctors, isLoading, addPatient,
+    appointments, loadAppointments, addAppointment, updateAppointmentStatus,
+    getTodaysAppointments
+  } = useAppContext();
   
   // State management
   const [view, setView] = useState('day'); // 'day', 'week', 'today-appointments'
