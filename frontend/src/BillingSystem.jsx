@@ -1089,22 +1089,31 @@ function BillingSystem() {
                 </div>
               </div>
 
-              {/* Collection Summary */}
+              {/* Collection Summary - Dynamic Daily Data */}
               <div className="grid md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white border rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">₹12,450</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    ₹{getTodaysCollection().total}
+                  </div>
                   <div className="text-sm text-gray-600">Today's Collection</div>
+                  <div className="text-xs text-gray-500">{new Date().toLocaleDateString()}</div>
                 </div>
                 <div className="bg-white border rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">₹8,200</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    ₹{getTodaysCollection().consultations}
+                  </div>
                   <div className="text-sm text-gray-600">Consultations</div>
                 </div>
                 <div className="bg-white border rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">₹2,800</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    ₹{getTodaysCollection().procedures}
+                  </div>
                   <div className="text-sm text-gray-600">Procedures</div>
                 </div>
                 <div className="bg-white border rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600">₹1,450</div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    ₹{getTodaysCollection().medications}
+                  </div>
                   <div className="text-sm text-gray-600">Medications</div>
                 </div>
               </div>
