@@ -437,24 +437,29 @@ function BillingSystem() {
     );
   };
 
-  // Handle refund
+  // Handle refund - Move to pending bills
   const handleRefund = (bill) => {
     const confirmRefund = window.confirm(
       `Issue refund for ${bill.patientName}?\n\n` +
       `Bill: ${bill.billNumber}\n` +
       `Amount: ${formatCurrency(bill.total)}\n\n` +
-      `This will change the status back to "Refunded" and reverse the payment.`
+      `This will move the bill back to "Pending" status for reprocessing.`
     );
     
     if (confirmRefund) {
       setBills(prev => 
         prev.map(b => 
           b.id === bill.id 
-            ? { ...b, status: 'Refunded', refundedAt: new Date().toISOString() }
+            ? { 
+                ...b, 
+                status: 'Pending', 
+                refundedAt: new Date().toISOString(),
+                paidAt: null // Clear paid timestamp
+              }
             : b
         )
       );
-      alert(`Refund of ${formatCurrency(bill.total)} processed for ${bill.patientName}`);
+      alert(`Refund processed. ${bill.billNumber} moved to Pending Bills for reprocessing.`);
     }
   };
 
