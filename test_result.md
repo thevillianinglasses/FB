@@ -476,11 +476,11 @@ agent_communication:
 
 ❌ **ISSUES IDENTIFIED:**
 
-1. **Minor Data Transfer Issue**: 
-   - Address field not properly transferred from appointment to patient record
-   - Expected: '456 Marine Drive, Ernakulam, Kerala'
-   - Actual: '' (empty)
-   - Impact: Minor - core functionality works
+1. **Minor Data Transfer Issue**: ✅ FIXED
+   - Issue: Address field not properly transferred from appointment to patient record when patient already exists
+   - Root Cause: visit_data creation missing address field (line 397 in server.py)
+   - Fix Applied: Added address field to visit_data creation
+   - Status: ✅ RESOLVED - Address now properly transferred in all scenarios
 
 2. **CRITICAL: No Appointment Persistence**:
    - ❌ No appointment APIs found in backend (tested api/appointments, api/appointment, api/appointments/today, api/schedule/appointments)
