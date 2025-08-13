@@ -413,6 +413,7 @@ async def add_patient(patient: Patient, current_user: dict = Depends(get_current
         else:
             # Create new patient
             patient_dict = patient.dict()
+            patient_dict["id"] = str(uuid.uuid4())  # Generate UUID for id field
             patient_dict["opd_number"] = await get_next_opd_number()
             patient_dict["token_number"] = await get_next_token_number()
             patient_dict["status"] = "Active"
@@ -420,9 +421,8 @@ async def add_patient(patient: Patient, current_user: dict = Depends(get_current
             patient_dict["updated_at"] = datetime.utcnow()
             
             result = await database.patients.insert_one(patient_dict)
-            created_patient = await database.patients.find_one({"_id": result.inserted_id})
-            created_patient["id"] = str(created_patient["_id"])
-            return created_patient
+            # Return the patient data with the UUID id, not MongoDB _id
+            return Patient(**patient_dict)
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding patient: {str(e)}")
