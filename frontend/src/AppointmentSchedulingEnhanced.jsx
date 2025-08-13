@@ -310,7 +310,6 @@ function AppointmentSchedulingEnhanced() {
         console.log('🔄 Checking in patient via backend API:', patientData);
 
         // Use the proper addPatient function from AppContext
-        const { addPatient } = useAppContext();
         const result = await addPatient(patientData);
         
         console.log('✅ Patient checked in successfully:', result);
