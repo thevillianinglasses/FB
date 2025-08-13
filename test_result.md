@@ -400,7 +400,7 @@ agent_communication:
 ## 🚨 CRITICAL BUGS IDENTIFIED - IMMEDIATE FIXES REQUIRED
 
 **Issues reported by user in Chat Message 291:**
-1. ❌ **Patient Registration → 24-Hour Log Integration**: After registration, patients not appearing in patient log
+1. ✅ **Patient Registration → 24-Hour Log Integration**: FIXED - Backend ID mismatch bug resolved
 2. ❌ **Appointment Check-in Workflow**: Check-in process not properly adding to 24-hour patient log
 3. ❌ **All Patient Log Buttons**: View History, Edit, Delete buttons not functioning
 4. ❌ **Refund Functionality**: Need partial payment option and proper refund to pending bills
@@ -410,6 +410,28 @@ agent_communication:
 8. ❌ **Patient Info Access**: Patient info not accessible from 24-hour log in billing
 9. ❌ **Sorting/Searching**: All Patient List needs visit sorting and rating search
 
-**Current Status: FIXING IN PROGRESS**
-- Main Agent working on systematic fixes starting with most critical issues
-- Priority: Patient Registration → 24-Hour Log integration first
+**Current Status: CRITICAL BUG #1 FIXED**
+- ✅ Patient Registration → 24-Hour Log integration RESOLVED
+- Backend ID consistency bug fixed - patients now properly appear in 24-hour log
+- Timezone handling verified - Asia/Kolkata timezone working correctly
+
+## 🔧 CRITICAL BUG FIX DETAILS - Patient Registration Issue
+
+**Root Cause Identified and Fixed:**
+- **Issue**: Backend was returning MongoDB ObjectId in POST response but UUID in GET response
+- **Impact**: Patients appeared to be created but couldn't be found in patient lists
+- **Fix Applied**: Consistent UUID generation for patient ID field
+- **Status**: ✅ RESOLVED
+
+**Technical Details:**
+- Fixed server.py lines 409-412 and 422-425
+- Ensured consistent UUID usage across patient creation and retrieval
+- Verified timezone handling (UTC storage with Asia/Kolkata display)
+- Confirmed OPD and token number generation working correctly
+
+**Test Results:**
+- ✅ POST /api/patients creates patients with proper timestamps
+- ✅ GET /api/patients returns patients with matching IDs
+- ✅ Today's patients correctly filtered by Asia/Kolkata timezone
+- ✅ No timezone discrepancies detected
+- ✅ Patient registration workflow fully functional
