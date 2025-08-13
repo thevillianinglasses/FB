@@ -256,4 +256,56 @@ export const healthAPI = {
   }
 };
 
+// Appointments API
+export const appointmentsAPI = {
+  getAll: async (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.date) params.append('date', filters.date);
+    if (filters.doctor_id) params.append('doctor_id', filters.doctor_id);
+    if (filters.status) params.append('status', filters.status);
+    
+    const url = params.toString() ? `/api/appointments?${params.toString()}` : '/api/appointments';
+    const response = await api.get(url);
+    return response.data;
+  },
+  
+  getById: async (id) => {
+    const response = await api.get(`/api/appointments/${id}`);
+    return response.data;
+  },
+  
+  create: async (appointmentData) => {
+    const response = await api.post('/api/appointments', appointmentData);
+    return response.data;
+  },
+  
+  update: async (id, appointmentData) => {
+    const response = await api.put(`/api/appointments/${id}`, appointmentData);
+    return response.data;
+  },
+  
+  updateStatus: async (id, status) => {
+    const response = await api.put(`/api/appointments/${id}/status?status=${status}`);
+    return response.data;
+  },
+  
+  delete: async (id) => {
+    const response = await api.delete(`/api/appointments/${id}`);
+    return response.data;
+  },
+  
+  getToday: async () => {
+    const response = await api.get('/api/appointments/today');
+    return response.data;
+  },
+  
+  getByDoctor: async (doctorId, date = null) => {
+    const url = date 
+      ? `/api/appointments/doctor/${doctorId}?date=${date}`
+      : `/api/appointments/doctor/${doctorId}`;
+    const response = await api.get(url);
+    return response.data;
+  }
+};
+
 export default api;
