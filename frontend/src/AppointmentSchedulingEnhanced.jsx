@@ -91,10 +91,10 @@ function AppointmentSchedulingEnhanced() {
   };
 
   // Get today's appointments with contact details
-  const getTodaysAppointments = () => {
+  const getFilteredTodaysAppointments = () => {
     const today = new Date().toISOString().split('T')[0];
-    return appointments.filter(apt => apt.appointmentDate === today)
-      .sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime));
+    return appointments.filter(apt => apt.appointment_date === today)
+      .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
   };
 
   // Get week dates
