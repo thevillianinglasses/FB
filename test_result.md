@@ -439,3 +439,58 @@ agent_communication:
 - ✅ Today's patients correctly filtered by Asia/Kolkata timezone
 - ✅ No timezone discrepancies detected
 - ✅ Patient registration workflow fully functional
+
+## 🔧 CRITICAL BUG #2 TEST RESULTS - Appointment Check-in Workflow
+
+**Issue Tested**: "Appointment Check-in Workflow not properly adding to 24-hour patient log"
+
+**Test Data Used** (as specified in review request):
+- patientName: 'Priya Nair'
+- phoneNumber: '9876543211' 
+- patientDetails: { age: 28, sex: 'Female', address: '456 Marine Drive, Ernakulam, Kerala' }
+- doctorId: (valid doctor ID)
+- appointmentType: 'Follow-up'
+
+**COMPREHENSIVE TEST RESULTS:**
+
+✅ **WORKING COMPONENTS:**
+- ✅ POST /api/patients API call works with appointment data
+- ✅ Patient creation successful (ID: 5c62d982-ab5f-4d91-9300-547cb366f8b6)
+- ✅ OPD Number generated correctly (028/25)
+- ✅ Token Number generated correctly (7)
+- ✅ Patient appears in GET /api/patients (24-hour log)
+- ✅ Timezone handling correct (patient appears in today's filtered list)
+- ✅ Patient data structure correct (name, phone, age, sex, doctor, visit_type)
+
+❌ **ISSUES IDENTIFIED:**
+
+1. **Minor Data Transfer Issue**: 
+   - Address field not properly transferred from appointment to patient record
+   - Expected: '456 Marine Drive, Ernakulam, Kerala'
+   - Actual: '' (empty)
+   - Impact: Minor - core functionality works
+
+2. **CRITICAL: No Appointment Persistence**:
+   - ❌ No appointment APIs found in backend (tested api/appointments, api/appointment, api/appointments/today, api/schedule/appointments)
+   - ❌ Appointments only stored in frontend local state
+   - ❌ Appointment status changes (like 'Checked In') not persisted in backend
+   - ❌ On page refresh, appointment status reverts to original state
+
+**ROOT CAUSE ANALYSIS:**
+- Frontend AppointmentSchedulingEnhanced.jsx correctly calls addPatient() API
+- Patient creation and 24-hour log integration works perfectly
+- BUT: Appointments are hardcoded sample data in frontend, not stored in backend
+- Appointment status changes only exist in React component state
+
+**TECHNICAL FINDINGS:**
+- Backend server.py has NO appointment-related endpoints
+- Frontend uses sample appointment data (lines 59-113 in AppointmentSchedulingEnhanced.jsx)
+- handleCheckIn function (lines 280-338) correctly creates patients via API
+- But appointment status update (line 318) only affects local state
+
+**IMPACT ASSESSMENT:**
+- 🟢 LOW IMPACT: Patient creation from appointment check-in works correctly
+- 🔴 HIGH IMPACT: Appointment status changes are lost on page refresh
+- 🔴 HIGH IMPACT: No appointment data persistence or management
+
+**STATUS**: ⚠️ PARTIALLY WORKING - Patient creation works, appointment persistence missing
