@@ -63,12 +63,11 @@ function AppointmentSchedulingEnhanced() {
         filters.date = selectedDate;
       }
       
-      const appointmentsData = await loadAppointments(filters);
-      setAppointments(appointmentsData || []);
+      await loadAppointments(filters);
+      // Appointments are now stored in AppContext, no need to setAppointments locally
     } catch (error) {
       console.error('Error loading appointments:', error);
-      // If loading fails, initialize with empty array
-      setAppointments([]);
+      // AppContext will handle the error state
     }
   };
 
