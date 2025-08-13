@@ -540,14 +540,14 @@ function AppointmentSchedulingEnhanced() {
                     >
                       <div className="flex items-center space-x-4">
                         <div className="text-lg font-bold text-cornflower-blue min-w-16">
-                          {appointment.appointmentTime}
+                          {appointment.appointment_time}
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {appointment.patientName}
+                            {appointment.patient_name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {appointment.phoneNumber} • {getDoctorName(appointment.doctorId)}
+                            {appointment.phone_number} • {getDoctorName(appointment.doctor_id)}
                           </div>
                           <div className="text-sm text-gray-500">
                             {appointment.reason}
