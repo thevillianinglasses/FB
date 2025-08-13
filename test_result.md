@@ -151,7 +151,7 @@ backend:
     status_history:
       - working: false
         agent: "testing"
-        comment: "CRITICAL BUG #2 TESTED: Appointment check-in workflow partially working. ✅ Patient creation from appointment data works perfectly (POST /api/patients creates patient with OPD 028/25, Token 7, appears in 24-hour log). ❌ CRITICAL ISSUE: No appointment APIs in backend - appointments only stored in frontend local state, status changes lost on page refresh. ROOT CAUSE: Backend missing appointment endpoints (api/appointments, api/appointment, etc.), frontend uses hardcoded sample data. IMPACT: Patient creation works, appointment persistence completely missing. Backend needs appointment APIs for full functionality."
+        comment: "CRITICAL BUG #2 TESTED: Appointment check-in workflow partially working. ✅ Patient creation from appointment data works perfectly (POST /api/patients creates patient with OPD 031/25, Token 10, appears in 24-hour log). ✅ MINOR FIX APPLIED: Address field now properly transferred from appointment to patient record (fixed visit_data creation in server.py line 397). ❌ CRITICAL ISSUE: No appointment APIs in backend - appointments only stored in frontend local state, status changes lost on page refresh. ROOT CAUSE: Backend missing appointment endpoints, frontend uses hardcoded sample data. IMPACT: Patient creation fully working, appointment persistence completely missing."
 
 frontend:
   - task: "Login Page Functionality"
