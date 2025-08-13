@@ -141,17 +141,17 @@ backend:
         agent: "testing"
         comment: "Error handling working correctly. Invalid login returns 401. Unauthorized access returns 403. Proper error messages returned for all failure scenarios."
 
-  - task: "Appointment Check-in Workflow"
-    implemented: false
-    working: false
+  - task: "Appointment Management APIs"
+    implemented: true
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
-      - working: false
+      - working: true
         agent: "testing"
-        comment: "CRITICAL BUG #2 TESTED: Appointment check-in workflow partially working. ✅ Patient creation from appointment data works perfectly (POST /api/patients creates patient with OPD 031/25, Token 10, appears in 24-hour log). ✅ MINOR FIX APPLIED: Address field now properly transferred from appointment to patient record (fixed visit_data creation in server.py line 397). ❌ CRITICAL ISSUE: No appointment APIs in backend - appointments only stored in frontend local state, status changes lost on page refresh. ROOT CAUSE: Backend missing appointment endpoints, frontend uses hardcoded sample data. IMPACT: Patient creation fully working, appointment persistence completely missing."
+        comment: "🎉 COMPREHENSIVE APPOINTMENT MANAGEMENT API TESTING COMPLETED SUCCESSFULLY! All 8 appointment APIs implemented and working: ✅ POST /api/appointments (Create new appointment) ✅ GET /api/appointments (Get all appointments with filtering) ✅ GET /api/appointments/{id} (Get specific appointment) ✅ PUT /api/appointments/{id} (Update appointment) ✅ PUT /api/appointments/{id}/status (Update status: Scheduled → Confirmed → Checked In) ✅ DELETE /api/appointments/{id} (Delete appointment) ✅ GET /api/appointments/today (Get today's appointments) ✅ GET /api/appointments/doctor/{doctor_id} (Get doctor appointments) ✅ Filtering by date, doctor, status working ✅ UUID generation and data persistence working ✅ Realistic test data used (Priya Nair, 9876543211, 28/Female, Marine Drive Kerala, Follow-up consultation) ✅ Status progression tested (Scheduled → Confirmed → Checked In) 🚨 CRITICAL BUG RESOLVED: Appointment status changes are now persisted in backend, no longer lost on page refresh. The appointment management system is FULLY FUNCTIONAL!"
 
 frontend:
   - task: "Login Page Functionality"
