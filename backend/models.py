@@ -30,12 +30,13 @@ class PrescriptionStatus(str, Enum):
     CANCELLED = "cancelled"
 
 class AppointmentStatus(str, Enum):
-    SCHEDULED = "scheduled"
-    CONFIRMED = "confirmed"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-    NO_SHOW = "no_show"
+    SCHEDULED = "Scheduled"
+    CONFIRMED = "Confirmed" 
+    CHECKED_IN = "Checked In"
+    IN_PROGRESS = "In Progress"
+    COMPLETED = "Completed"
+    CANCELLED = "Cancelled"
+    NO_SHOW = "No Show"
 
 # User Management Models
 class User(BaseModel):
