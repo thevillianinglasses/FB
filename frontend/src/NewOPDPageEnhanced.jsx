@@ -721,31 +721,50 @@ function NewOPDPageEnhanced() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Patient Rating (-10 to +10)
+                  Patient Rating Adjustment (Optional)
                 </label>
-                <div className="space-y-2">
-                  <input
-                    type="range"
-                    min="-10"
-                    max="10"
-                    value={patientRating}
-                    onChange={(e) => setPatientRating(parseInt(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, #ef4444 0%, #fbbf24 50%, #10b981 100%)`
-                    }}
-                  />
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>-10 (Poor)</span>
-                    <span className="font-bold text-lg">{patientRating}</span>
-                    <span>+10 (Excellent)</span>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center space-x-4">
+                    <button
+                      type="button"
+                      onClick={() => setPatientRating(Math.max(-10, patientRating - 1))}
+                      className="w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-full text-xl font-bold"
+                    >
+                      -1
+                    </button>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">{patientRating}</div>
+                      <div className="text-sm text-gray-600">Current Rating</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPatientRating(Math.min(10, patientRating + 1))}
+                      className="w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full text-xl font-bold"
+                    >
+                      +1
+                    </button>
                   </div>
+                  
+                  {patientRating !== 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Reason for Rating Adjustment (Optional)
+                      </label>
+                      <textarea
+                        rows="2"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
+                        placeholder="Enter reason for rating adjustment..."
+                      />
+                    </div>
+                  )}
+
                   <div className={`text-center text-sm font-medium ${
                     patientRating >= 5 ? 'text-green-600' : 
                     patientRating >= 0 ? 'text-yellow-600' : 'text-red-600'
                   }`}>
                     {patientRating >= 5 ? 'Excellent Patient' : 
-                     patientRating >= 0 ? 'Good Patient' : 'Difficult Patient'}
+                     patientRating >= 0 ? 'Good Patient' : 
+                     patientRating >= -5 ? 'Difficult Patient' : 'Problem Patient'}
                   </div>
                 </div>
               </div>
