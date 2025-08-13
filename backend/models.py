@@ -115,16 +115,44 @@ class Doctor(BaseModel):
 # Appointment Models
 class Appointment(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
+    patient_name: str
+    phone_number: str
+    patient_details: Optional[dict] = {"age": "", "sex": "", "address": ""}
     doctor_id: str
-    appointment_date: datetime
-    appointment_time: str
-    visit_reason: str = ""
-    appointment_type: str = "in_person"  # in_person, teleconsult
+    appointment_date: str  # YYYY-MM-DD format
+    appointment_time: str  # HH:MM format
+    duration: str = "30"  # minutes
+    reason: str = ""
+    type: str = "Consultation"  # Consultation, Follow-up, Procedure
     status: AppointmentStatus = AppointmentStatus.SCHEDULED
     notes: str = ""
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+class AppointmentCreate(BaseModel):
+    patient_name: str
+    phone_number: str
+    patient_details: Optional[dict] = {"age": "", "sex": "", "address": ""}
+    doctor_id: str
+    appointment_date: str
+    appointment_time: str
+    duration: str = "30"
+    reason: str = ""
+    type: str = "Consultation"
+    notes: str = ""
+    
+class AppointmentUpdate(BaseModel):
+    patient_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    patient_details: Optional[dict] = None
+    doctor_id: Optional[str] = None
+    appointment_date: Optional[str] = None
+    appointment_time: Optional[str] = None
+    duration: Optional[str] = None
+    reason: Optional[str] = None
+    type: Optional[str] = None
+    status: Optional[AppointmentStatus] = None
+    notes: Optional[str] = None
 
 # Laboratory Models
 class LabTest(BaseModel):
