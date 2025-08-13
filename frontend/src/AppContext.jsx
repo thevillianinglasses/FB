@@ -9,6 +9,7 @@ export const AppProvider = ({ children }) => {
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [users, setUsers] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [patientForEditing, setPatientForEditing] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
