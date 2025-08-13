@@ -964,10 +964,258 @@ class UnicareEHRTester:
         print("\n🎉 Patient Registration Workflow Tests Completed Successfully!")
         return True
 
+    def test_patient_24hour_log_critical_bug(self):
+        """Test the critical bug: Patient registration not adding to 24-hour patient log"""
+        print("\n🚨 CRITICAL BUG TEST: Patient Registration → 24-Hour Log Integration")
+        print("Issue: Patients registered today not appearing in 24-hour patient log")
+        print("=" * 70)
+        
+        # Login as reception
+        if not self.test_login(role="reception"):
+            print("❌ Failed to login as reception")
+            return False
+            
+        # Get doctors first
+        success, doctors_response = self.run_test(
+            "Get Doctors for Assignment",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success or not doctors_response:
+            print("❌ Failed to get doctors")
+            return False
+            
+        doctor_id = doctors_response[0]['id']
+        
+        # Test 1: Create a new patient and check created_at timestamp
+        print("\n📝 Test 1: POST /api/patients - Create patient and check created_at timestamp")
+        
+        from datetime import datetime, timezone
+        import pytz
+        
+        # Get current time in Asia/Kolkata timezone
+        kolkata_tz = pytz.timezone('Asia/Kolkata')
+        current_time_kolkata = datetime.now(kolkata_tz)
+        current_date_kolkata = current_time_kolkata.date()
+        
+        print(f"   Current time in Asia/Kolkata: {current_time_kolkata}")
+        print(f"   Current date in Asia/Kolkata: {current_date_kolkata}")
+        
+        patient_data = {
+            "patient_name": "Timezone Test Patient",
+            "phone_number": "9876543299",
+            "sex": "Male",
+            "age": "30",
+            "assigned_doctor": doctor_id,
+            "visit_type": "New",
+            "patient_rating": 5,
+            "address": "Test Address, Kerala",
+            "dob": "1994-01-01"
+        }
+        
+        success, patient_response = self.run_test(
+            "Create New Patient",
+            "POST",
+            "api/patients",
+            200,
+            data=patient_data
+        )
+        
+        if not success:
+            print("❌ Failed to create patient")
+            return False
+            
+        created_at_str = patient_response.get('created_at')
+        if not created_at_str:
+            print("❌ No created_at timestamp in response")
+            return False
+            
+        print(f"   ✅ Patient created with ID: {patient_response.get('id')}")
+        print(f"   📅 created_at timestamp: {created_at_str}")
+        
+        # Parse the created_at timestamp
+        try:
+            # Handle different timestamp formats
+            if created_at_str.endswith('Z'):
+                created_at_utc = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+            elif '+' in created_at_str or created_at_str.endswith('00:00'):
+                created_at_utc = datetime.fromisoformat(created_at_str)
+            else:
+                # Assume UTC if no timezone info
+                created_at_utc = datetime.fromisoformat(created_at_str).replace(tzinfo=timezone.utc)
+                
+            # Convert to Asia/Kolkata timezone
+            created_at_kolkata = created_at_utc.astimezone(kolkata_tz)
+            created_date_kolkata = created_at_kolkata.date()
+            
+            print(f"   🌍 UTC timestamp: {created_at_utc}")
+            print(f"   🇮🇳 Asia/Kolkata timestamp: {created_at_kolkata}")
+            print(f"   📅 Date in Asia/Kolkata: {created_date_kolkata}")
+            
+            # Check if the date matches today's date in Asia/Kolkata
+            if created_date_kolkata == current_date_kolkata:
+                print("   ✅ Patient created with today's date in Asia/Kolkata timezone")
+            else:
+                print(f"   ❌ Date mismatch! Created: {created_date_kolkata}, Today: {current_date_kolkata}")
+                print("   🚨 CRITICAL BUG: Timezone issue detected!")
+                
+        except Exception as e:
+            print(f"   ❌ Error parsing timestamp: {e}")
+            return False
+            
+        # Test 2: GET /api/patients - Check if today's patients are returned
+        print("\n📊 Test 2: GET /api/patients - Check if today's patients are returned")
+        
+        success, all_patients = self.run_test(
+            "Get All Patients",
+            "GET",
+            "api/patients",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get patients list")
+            return False
+            
+        print(f"   📈 Total patients in system: {len(all_patients)}")
+        
+        # Filter patients created today (in Asia/Kolkata timezone)
+        today_patients = []
+        timezone_issues = []
+        
+        for patient in all_patients:
+            patient_created_at = patient.get('created_at')
+            if not patient_created_at:
+                continue
+                
+            try:
+                # Parse patient timestamp
+                if patient_created_at.endswith('Z'):
+                    patient_utc = datetime.fromisoformat(patient_created_at.replace('Z', '+00:00'))
+                elif '+' in patient_created_at:
+                    patient_utc = datetime.fromisoformat(patient_created_at)
+                else:
+                    patient_utc = datetime.fromisoformat(patient_created_at).replace(tzinfo=timezone.utc)
+                    
+                # Convert to Asia/Kolkata
+                patient_kolkata = patient_utc.astimezone(kolkata_tz)
+                patient_date_kolkata = patient_kolkata.date()
+                
+                if patient_date_kolkata == current_date_kolkata:
+                    today_patients.append({
+                        'name': patient.get('patient_name'),
+                        'id': patient.get('id'),
+                        'created_at_utc': patient_utc,
+                        'created_at_kolkata': patient_kolkata,
+                        'opd_number': patient.get('opd_number')
+                    })
+                else:
+                    # Check if there's a timezone issue
+                    patient_utc_date = patient_utc.date()
+                    if patient_utc_date == current_date_kolkata:
+                        timezone_issues.append({
+                            'name': patient.get('patient_name'),
+                            'utc_date': patient_utc_date,
+                            'kolkata_date': patient_date_kolkata
+                        })
+                        
+            except Exception as e:
+                print(f"   ⚠️ Error parsing timestamp for patient {patient.get('patient_name')}: {e}")
+                
+        print(f"   📅 Patients created today (Asia/Kolkata): {len(today_patients)}")
+        
+        if today_patients:
+            print("   ✅ Today's patients found:")
+            for patient in today_patients:
+                print(f"      • {patient['name']} (OPD: {patient['opd_number']}) - {patient['created_at_kolkata']}")
+        else:
+            print("   ❌ No patients found for today in Asia/Kolkata timezone")
+            print("   🚨 CRITICAL BUG CONFIRMED: Patients not appearing in today's log!")
+            
+        if timezone_issues:
+            print(f"   ⚠️ Potential timezone issues detected ({len(timezone_issues)} patients):")
+            for issue in timezone_issues:
+                print(f"      • {issue['name']}: UTC date {issue['utc_date']} vs Kolkata date {issue['kolkata_date']}")
+                
+        # Test 3: Test date filtering logic simulation
+        print("\n🔍 Test 3: Simulate 24-hour log date filtering logic")
+        
+        # Simulate how PatientLogPageFixed might filter patients
+        # This is likely where the bug occurs
+        
+        # Method 1: Filter by UTC date (WRONG - this is likely the bug)
+        utc_today = datetime.now(timezone.utc).date()
+        utc_filtered = []
+        
+        for patient in all_patients:
+            patient_created_at = patient.get('created_at')
+            if patient_created_at:
+                try:
+                    if patient_created_at.endswith('Z'):
+                        patient_utc = datetime.fromisoformat(patient_created_at.replace('Z', '+00:00'))
+                    else:
+                        patient_utc = datetime.fromisoformat(patient_created_at).replace(tzinfo=timezone.utc)
+                    
+                    if patient_utc.date() == utc_today:
+                        utc_filtered.append(patient.get('patient_name'))
+                except:
+                    pass
+                    
+        print(f"   📊 UTC date filtering (WRONG method): {len(utc_filtered)} patients")
+        
+        # Method 2: Filter by Asia/Kolkata date (CORRECT)
+        kolkata_filtered = len(today_patients)
+        print(f"   📊 Asia/Kolkata date filtering (CORRECT method): {kolkata_filtered} patients")
+        
+        if len(utc_filtered) != kolkata_filtered:
+            print("   🚨 TIMEZONE BUG CONFIRMED: Different results between UTC and Asia/Kolkata filtering!")
+            print(f"      UTC filtering: {len(utc_filtered)} patients")
+            print(f"      Kolkata filtering: {kolkata_filtered} patients")
+            print("   💡 SOLUTION: Frontend should filter by Asia/Kolkata timezone, not UTC")
+        else:
+            print("   ✅ No timezone filtering discrepancy detected")
+            
+        # Test 4: Check if our newly created patient appears in today's log
+        print("\n🎯 Test 4: Verify newly created patient appears in today's log")
+        
+        new_patient_in_today = any(p['id'] == patient_response.get('id') for p in today_patients)
+        
+        if new_patient_in_today:
+            print("   ✅ Newly created patient appears in today's log")
+        else:
+            print("   ❌ Newly created patient NOT in today's log")
+            print("   🚨 CRITICAL BUG CONFIRMED: New patients not appearing in 24-hour log!")
+            
+        # Summary and diagnosis
+        print("\n" + "=" * 70)
+        print("🔍 BUG DIAGNOSIS SUMMARY:")
+        print(f"   • Total patients in system: {len(all_patients)}")
+        print(f"   • Patients created today (Asia/Kolkata): {len(today_patients)}")
+        print(f"   • Patients created today (UTC): {len(utc_filtered)}")
+        print(f"   • Newly created patient in today's log: {'✅' if new_patient_in_today else '❌'}")
+        print(f"   • Timezone issues detected: {'✅' if timezone_issues else '❌'}")
+        
+        if not new_patient_in_today or timezone_issues:
+            print("\n🚨 CRITICAL BUG CONFIRMED:")
+            print("   1. Backend stores timestamps in UTC")
+            print("   2. Frontend likely filters by UTC date instead of Asia/Kolkata date")
+            print("   3. This causes patients registered today to not appear in 24-hour log")
+            print("\n💡 RECOMMENDED FIXES:")
+            print("   1. Frontend should convert UTC timestamps to Asia/Kolkata before date comparison")
+            print("   2. Or backend should store timestamps in Asia/Kolkata timezone")
+            print("   3. Ensure consistent timezone handling across the application")
+            return False
+        else:
+            print("\n✅ No critical timezone bugs detected in patient registration")
+            return True
+
 def main():
-    print("🏥 Starting Comprehensive Unicare EHR Backend API Tests")
-    print("🎯 Focus: Doctors API Endpoint Testing (GET /api/doctors)")
-    print("=" * 60)
+    print("🏥 Starting Critical Bug Test: Patient Registration → 24-Hour Log")
+    print("🎯 Focus: Patient registration not adding to 24-hour patient log")
+    print("🚨 Issue: After registration, patients not appearing in patient log")
+    print("=" * 70)
     
     # Get backend URL from frontend .env file
     backend_url = "http://localhost:8001"  # Default from frontend/.env VITE_BACKEND_URL
@@ -975,21 +1223,16 @@ def main():
     # Initialize tester with correct backend URL
     tester = UnicareEHRTester(backend_url)
     
-    # Run focused doctors API tests as per review request
+    # Run focused tests for the critical bug
     tests = [
-        # Basic connectivity and auth tests
+        # Basic connectivity
         tester.test_health_check,
-        tester.test_login,  # Login as admin first
         
         # Create test users if needed
         tester.test_create_test_users,
         
-        # Main focus: Doctors API Comprehensive Testing
-        tester.test_doctors_api_comprehensive,
-        
-        # Additional verification tests
-        tester.test_role_based_access_control,
-        tester.test_unauthorized_access,
+        # Main focus: Critical bug testing
+        tester.test_patient_24hour_log_critical_bug,
     ]
     
     for test in tests:
@@ -1001,7 +1244,7 @@ def main():
             traceback.print_exc()
     
     # Print final results
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 70)
     print(f"📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
     
     if tester.tests_passed == tester.tests_run:
