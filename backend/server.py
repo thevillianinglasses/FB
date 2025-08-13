@@ -363,18 +363,67 @@ async def add_patient(patient: Patient, current_user: dict = Depends(get_current
         raise HTTPException(status_code=403, detail="Access denied")
     
     try:
-        # Generate OPD and Token numbers
-        opd_number = await get_next_opd_number()
-        token_number = await get_next_token_number()
+        # Check if patient with this phone number already exists
+        existing_patient = await database.patients.find_one({"phone_number": patient.phone_number})
         
-        patient_dict = patient.dict()
-        patient_dict["opd_number"] = opd_number
-        patient_dict["token_number"] = token_number
-        patient_dict["created_at"] = datetime.utcnow()
-        patient_dict["updated_at"] = datetime.utcnow()
-        
-        result = await database.patients.insert_one(patient_dict)
-        return Patient(**patient_dict)
+        if existing_patient:
+            # Update existing patient and create a new visit record
+            patient_id = existing_patient["_id"]
+            
+            # Update patient info (in case of changes)
+            update_data = {
+                "patient_name": patient.patient_name,
+                "age": patient.age,
+                "dob": patient.dob,
+                "sex": patient.sex,
+                "address": patient.address,
+                "email": patient.email,
+                "emergency_contact_name": patient.emergency_contact_name,
+                "emergency_contact_phone": patient.emergency_contact_phone,
+                "allergies": patient.allergies,
+                "medical_history": patient.medical_history,
+                "updated_at": datetime.utcnow()
+            }
+            
+            await database.patients.update_one({"_id": patient_id}, {"$set": update_data})
+            
+            # Create new visit record in visits collection
+            visit_data = {
+                "id": str(uuid.uuid4()),
+                "patient_id": str(patient_id),
+                "patient_name": patient.patient_name,
+                "phone_number": patient.phone_number,
+                "age": patient.age,
+                "sex": patient.sex,
+                "assigned_doctor": patient.assigned_doctor if hasattr(patient, 'assigned_doctor') else "",
+                "visit_type": patient.visit_type if hasattr(patient, 'visit_type') else "Follow-up",
+                "opd_number": f"{str(len(list(await database.patients.find({}))) + 1).zfill(3)}/{datetime.now().year % 100:02d}",
+                "token_number": str(len(list(await database.patients.find({"created_at": {"$gte": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)}}))) + 1),
+                "created_at": datetime.utcnow(),
+                "status": "Active"
+            }
+            
+            # For now, store visit as a new patient record with visit info
+            # In a proper implementation, this would go to a separate visits collection
+            visit_patient = Patient(**visit_data)
+            result = await database.patients.insert_one(visit_patient.dict())
+            created_record = await database.patients.find_one({"_id": result.inserted_id})
+            created_record["id"] = str(created_record["_id"])
+            return created_record
+        else:
+            # Create new patient
+            patient_dict = patient.dict()
+            patient_dict["opd_number"] = f"{str(len(list(await database.patients.find({}))) + 1).zfill(3)}/{datetime.now().year % 100:02d}"
+            patient_dict["token_number"] = "1"
+            patient_dict["status"] = "Active"
+            patient_dict["created_at"] = datetime.utcnow()
+            patient_dict["updated_at"] = datetime.utcnow()
+            
+            result = await database.patients.insert_one(patient_dict)
+            created_patient = await database.patients.find_one({"_id": result.inserted_id})
+            created_patient["id"] = str(created_patient["_id"])
+            return created_patient
+            
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding patient: {str(e)}")
 
