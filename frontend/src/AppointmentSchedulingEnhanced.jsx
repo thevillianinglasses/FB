@@ -178,7 +178,7 @@ function AppointmentSchedulingEnhanced() {
   };
 
   // Handle new appointment submission
-  const handleNewAppointmentSubmit = (e) => {
+  const handleNewAppointmentSubmit = async (e) => {
     e.preventDefault();
     
     // Validation
@@ -193,36 +193,58 @@ function AppointmentSchedulingEnhanced() {
       return;
     }
 
-    // Add appointment
-    const appointment = {
-      ...newAppointment,
-      id: Date.now().toString(),
-      status: 'Scheduled',
-      patientDetails: {
-        age: newAppointment.selectedPatient?.age || 'N/A',
-        sex: newAppointment.selectedPatient?.sex || 'N/A',
-        address: newAppointment.selectedPatient?.address || 'N/A'
-      }
-    };
+    try {
+      // Create appointment data in the format expected by backend
+      const appointmentData = {
+        patient_name: newAppointment.patientName,
+        phone_number: newAppointment.phoneNumber,
+        patient_details: {
+          age: newAppointment.selectedPatient?.age || '',
+          sex: newAppointment.selectedPatient?.sex || '',
+          address: newAppointment.selectedPatient?.address || ''
+        },
+        doctor_id: newAppointment.doctorId,
+        appointment_date: newAppointment.appointmentDate,
+        appointment_time: newAppointment.appointmentTime,
+        duration: newAppointment.duration,
+        reason: newAppointment.reason,
+        type: newAppointment.type,
+        notes: newAppointment.notes || ''
+      };
 
-    setAppointments(prev => [...prev, appointment]);
-    
-    // Reset form
-    setNewAppointment({
-      patientName: '',
-      phoneNumber: '',
-      selectedPatient: null,
-      doctorId: '',
-      appointmentDate: new Date().toISOString().split('T')[0],
-      appointmentTime: '',
-      duration: '30',
-      reason: '',
-      type: 'Consultation',
-      status: 'Scheduled'
-    });
-    
-    setShowNewAppointment(false);
-    alert('Appointment scheduled successfully!');
+      console.log('Creating appointment:', appointmentData);
+
+      // Use AppContext addAppointment function to save to backend
+      const createdAppointment = await addAppointment(appointmentData);
+      
+      console.log('Appointment created successfully:', createdAppointment);
+      
+      // Reset form
+      setNewAppointment({
+        patientName: '',
+        phoneNumber: '',
+        selectedPatient: null,
+        doctorId: '',
+        appointmentDate: new Date().toISOString().split('T')[0],
+        appointmentTime: '',
+        duration: '30',
+        reason: '',
+        type: 'Consultation',
+        notes: ''
+      });
+      
+      // Close the modal
+      setShowNewAppointment(false);
+      
+      // Reload appointments to show the new one
+      await loadRealAppointments();
+      
+      alert(`✅ Appointment scheduled successfully!\n\nPatient: ${appointmentData.patient_name}\nDate: ${appointmentData.appointment_date}\nTime: ${appointmentData.appointment_time}\nDoctor: ${getDoctorName(appointmentData.doctor_id)}`);
+      
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      alert(`❌ Failed to create appointment: ${error.message || 'Please try again.'}`);
+    }
   };
 
   // Handle appointment status change
