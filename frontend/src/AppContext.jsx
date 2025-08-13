@@ -135,10 +135,106 @@ export const AppProvider = ({ children }) => {
     setError(null);
   };
 
+  // Appointment management functions
+  const loadAppointments = async (filters = {}) => {
+    try {
+      const appointmentsData = await appointmentsAPI.getAll(filters);
+      setAppointments(appointmentsData);
+      return appointmentsData;
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+      throw error;
+    }
+  };
+
+  const addAppointment = async (appointmentData) => {
+    try {
+      setIsLoading(true);
+      const newAppointment = await appointmentsAPI.create(appointmentData);
+      setAppointments(prevAppointments => [newAppointment, ...prevAppointments]);
+      return newAppointment;
+    } catch (error) {
+      console.error('Error adding appointment:', error);
+      setError('Failed to add appointment');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateAppointment = async (appointmentId, appointmentData) => {
+    try {
+      setIsLoading(true);
+      const updatedAppointment = await appointmentsAPI.update(appointmentId, appointmentData);
+      setAppointments(prevAppointments => 
+        prevAppointments.map(a => a.id === appointmentId ? updatedAppointment : a)
+      );
+      return updatedAppointment;
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      setError('Failed to update appointment');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateAppointmentStatus = async (appointmentId, status) => {
+    try {
+      setIsLoading(true);
+      const updatedAppointment = await appointmentsAPI.updateStatus(appointmentId, status);
+      setAppointments(prevAppointments => 
+        prevAppointments.map(a => a.id === appointmentId ? updatedAppointment : a)
+      );
+      return updatedAppointment;
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      setError('Failed to update appointment status');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteAppointment = async (appointmentId) => {
+    try {
+      setIsLoading(true);
+      await appointmentsAPI.delete(appointmentId);
+      setAppointments(prevAppointments => prevAppointments.filter(a => a.id !== appointmentId));
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      setError('Failed to delete appointment');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTodaysAppointments = async () => {
+    try {
+      const todaysAppointments = await appointmentsAPI.getToday();
+      return todaysAppointments;
+    } catch (error) {
+      console.error('Error getting today\'s appointments:', error);
+      throw error;
+    }
+  };
+
+  const getDoctorAppointments = async (doctorId, date = null) => {
+    try {
+      const doctorAppointments = await appointmentsAPI.getByDoctor(doctorId, date);
+      return doctorAppointments;
+    } catch (error) {
+      console.error('Error getting doctor appointments:', error);
+      throw error;
+    }
+  };
+
   const contextValue = {
     patients,
     doctors,
     users,
+    appointments,
     patientForEditing,
     setPatientForEditing,
     isLoading,
@@ -152,6 +248,13 @@ export const AppProvider = ({ children }) => {
     loadPatients,
     loadDoctors,
     loadUsers,
+    loadAppointments,
+    addAppointment,
+    updateAppointment,
+    updateAppointmentStatus,
+    deleteAppointment,
+    getTodaysAppointments,
+    getDoctorAppointments,
     clearError
   };
 
