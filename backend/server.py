@@ -395,6 +395,7 @@ async def add_patient(patient: Patient, current_user: dict = Depends(get_current
                 "phone_number": patient.phone_number,
                 "age": patient.age,
                 "sex": patient.sex,
+                "address": patient.address,  # Include address field for appointment check-in
                 "assigned_doctor": patient.assigned_doctor if hasattr(patient, 'assigned_doctor') else "",
                 "visit_type": patient.visit_type if hasattr(patient, 'visit_type') else "Follow-up",
                 "opd_number": await get_next_opd_number(),
