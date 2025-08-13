@@ -655,9 +655,9 @@ function AppointmentSchedulingEnhanced() {
                     </tr>
                   </thead>
                   <tbody>
-                    {getTodaysAppointments()
-                      .filter(apt => selectedDoctor ? apt.doctorId === selectedDoctor : true)
-                      .sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime))
+                    {getFilteredTodaysAppointments()
+                      .filter(apt => selectedDoctor ? apt.doctor_id === selectedDoctor : true)
+                      .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time))
                       .map(appointment => (
                       <tr key={appointment.id} className="hover:bg-gray-50">
                         <td className="border p-3 font-medium text-cornflower-blue">
