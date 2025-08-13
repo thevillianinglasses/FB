@@ -415,9 +415,9 @@ agent_communication:
 8. ❌ **Patient Info Access**: Patient info not accessible from 24-hour log in billing
 9. ❌ **Sorting/Searching**: All Patient List needs visit sorting and rating search
 
-**Current Status: FIXING IN PROGRESS**
+**Current Status: CRITICAL BUG #2 TESTED**
 - ✅ CRITICAL BUG #1 RESOLVED: Patient Registration → 24-Hour Log integration working perfectly
-- 🔧 Next Priority: Appointment Check-in Workflow (#2)
+- 🔧 CRITICAL BUG #2 PARTIALLY WORKING: Appointment Check-in Workflow tested - patient creation works, but appointment persistence missing
 
 ## 🔧 CRITICAL BUG FIX DETAILS - Patient Registration Issue
 
