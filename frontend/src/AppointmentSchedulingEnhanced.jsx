@@ -76,7 +76,7 @@ function AppointmentSchedulingEnhanced() {
     let filtered = appointments;
     
     if (selectedDoctor) {
-      filtered = filtered.filter(apt => apt.doctorId === selectedDoctor);
+      filtered = filtered.filter(apt => apt.doctor_id === selectedDoctor);
     }
     
     return filtered;
