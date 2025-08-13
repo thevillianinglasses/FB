@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
-import { patientsAPI, doctorsAPI, authAPI, usersAPI } from './api';
+import { patientsAPI, doctorsAPI, authAPI, usersAPI, appointmentsAPI } from './api';
 
 const AppContext = createContext();
 
