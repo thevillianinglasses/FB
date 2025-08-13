@@ -1731,7 +1731,7 @@ class UnicareEHRTester:
                 "PUT",
                 f"api/appointments/{created_appointment_id}/status",
                 200,
-                data={"status": new_status}  # Send status in request body
+                data=new_status  # Send status value directly
             )
             
             if success:
