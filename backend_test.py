@@ -1729,9 +1729,8 @@ class UnicareEHRTester:
             success, updated_appointment = self.run_test(
                 f"Update Status to {new_status}",
                 "PUT",
-                f"api/appointments/{created_appointment_id}/status",
-                200,
-                data=new_status  # Send status value directly
+                f"api/appointments/{created_appointment_id}/status?status={new_status}",
+                200
             )
             
             if success:
