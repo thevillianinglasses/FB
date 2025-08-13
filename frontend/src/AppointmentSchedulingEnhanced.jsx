@@ -708,7 +708,7 @@ function AppointmentSchedulingEnhanced() {
                   </tbody>
                 </table>
                 
-                {getTodaysAppointments().filter(apt => selectedDoctor ? apt.doctorId === selectedDoctor : true).length === 0 && (
+                {getFilteredTodaysAppointments().filter(apt => selectedDoctor ? apt.doctor_id === selectedDoctor : true).length === 0 && (
                   <tr>
                     <td colSpan="8" className="text-center py-8 text-gray-500">
                       {selectedDoctor ? 
