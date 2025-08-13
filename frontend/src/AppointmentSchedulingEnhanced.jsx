@@ -228,12 +228,14 @@ function AppointmentSchedulingEnhanced() {
   };
 
   // Handle appointment status change
-  const handleStatusChange = (appointmentId, newStatus) => {
-    setAppointments(prev => 
-      prev.map(apt => 
-        apt.id === appointmentId ? { ...apt, status: newStatus } : apt
-      )
-    );
+  const handleStatusChange = async (appointmentId, newStatus) => {
+    try {
+      await updateAppointmentStatus(appointmentId, newStatus);
+      // The appointment state will be updated by the updateAppointmentStatus function in AppContext
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      alert('Failed to update appointment status. Please try again.');
+    }
   };
 
   // Handle check-in (convert appointment to live visit)
