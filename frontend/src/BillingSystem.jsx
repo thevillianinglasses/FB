@@ -90,17 +90,34 @@ function BillingSystem() {
     alert(`Product "${newProduct.name}" updated successfully!`);
   };
 
-  // Delete product
-  const deleteProduct = (product) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${product.name}"?\n\n` +
-      `This action cannot be undone.`
-    );
-    
-    if (confirmDelete) {
-      setProducts(prev => prev.filter(p => p.id !== product.id));
-      alert(`Product "${product.name}" deleted successfully!`);
-    }
+  // Get today's collection data (dynamic)
+  const getTodaysCollection = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const todaysBills = bills.filter(bill => {
+      const billDate = new Date(bill.createdAt).toISOString().split('T')[0];
+      return billDate === today && bill.status === 'Completed';
+    });
+
+    const consultations = todaysBills
+      .filter(bill => bill.items.some(item => item.category === 'Consultation'))
+      .reduce((sum, bill) => sum + bill.total, 0);
+
+    const procedures = todaysBills
+      .filter(bill => bill.items.some(item => item.category === 'Procedure'))
+      .reduce((sum, bill) => sum + bill.total, 0);
+
+    const medications = todaysBills
+      .filter(bill => bill.items.some(item => item.category === 'Medication'))
+      .reduce((sum, bill) => sum + bill.total, 0);
+
+    const total = todaysBills.reduce((sum, bill) => sum + bill.total, 0);
+
+    return {
+      total: total.toFixed(2),
+      consultations: consultations.toFixed(2),
+      procedures: procedures.toFixed(2),
+      medications: medications.toFixed(2)
+    };
   };
 
   // Add new product
