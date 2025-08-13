@@ -1047,38 +1047,3 @@ async def update_appointment_status(appointment_id: str, status: AppointmentStat
         return Appointment(**updated_appointment)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating appointment status: {str(e)}")
-
-@app.get("/api/appointments/today", response_model=List[Appointment])
-async def get_todays_appointments(current_user: dict = Depends(get_current_user)):
-    """Get all appointments for today"""
-    if not has_reception_access(current_user["role"]):
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    try:
-        today = datetime.utcnow().date().isoformat()
-        appointments_cursor = database.appointments.find({"appointment_date": today}).sort("appointment_time", 1)
-        appointments = []
-        async for appointment in appointments_cursor:
-            appointments.append(Appointment(**appointment))
-        return appointments
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching today's appointments: {str(e)}")
-
-@app.get("/api/appointments/doctor/{doctor_id}", response_model=List[Appointment])
-async def get_doctor_appointments(doctor_id: str, date: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    """Get all appointments for a specific doctor, optionally filtered by date"""
-    if not has_reception_access(current_user["role"]):
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    try:
-        query = {"doctor_id": doctor_id}
-        if date:
-            query["appointment_date"] = date
-            
-        appointments_cursor = database.appointments.find(query).sort("appointment_date", 1).sort("appointment_time", 1)
-        appointments = []
-        async for appointment in appointments_cursor:
-            appointments.append(Appointment(**appointment))
-        return appointments
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching doctor appointments: {str(e)}")
