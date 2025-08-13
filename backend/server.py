@@ -397,8 +397,8 @@ async def add_patient(patient: Patient, current_user: dict = Depends(get_current
                 "sex": patient.sex,
                 "assigned_doctor": patient.assigned_doctor if hasattr(patient, 'assigned_doctor') else "",
                 "visit_type": patient.visit_type if hasattr(patient, 'visit_type') else "Follow-up",
-                "opd_number": f"{str(len(list(await database.patients.find({}))) + 1).zfill(3)}/{datetime.now().year % 100:02d}",
-                "token_number": str(len(list(await database.patients.find({"created_at": {"$gte": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)}}))) + 1),
+                "opd_number": await get_next_opd_number(),
+                "token_number": await get_next_token_number(),
                 "created_at": datetime.utcnow(),
                 "status": "Active"
             }
