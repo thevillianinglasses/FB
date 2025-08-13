@@ -141,6 +141,18 @@ backend:
         agent: "testing"
         comment: "Error handling working correctly. Invalid login returns 401. Unauthorized access returns 403. Proper error messages returned for all failure scenarios."
 
+  - task: "Appointment Check-in Workflow"
+    implemented: false
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL BUG #2 TESTED: Appointment check-in workflow partially working. ✅ Patient creation from appointment data works perfectly (POST /api/patients creates patient with OPD 028/25, Token 7, appears in 24-hour log). ❌ CRITICAL ISSUE: No appointment APIs in backend - appointments only stored in frontend local state, status changes lost on page refresh. ROOT CAUSE: Backend missing appointment endpoints (api/appointments, api/appointment, etc.), frontend uses hardcoded sample data. IMPACT: Patient creation works, appointment persistence completely missing. Backend needs appointment APIs for full functionality."
+
 frontend:
   - task: "Login Page Functionality"
     implemented: true
