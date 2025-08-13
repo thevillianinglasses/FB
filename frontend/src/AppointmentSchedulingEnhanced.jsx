@@ -15,7 +15,6 @@ function AppointmentSchedulingEnhanced() {
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 days from now
   });
-  const [appointments, setAppointments] = useState([]);
   const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
