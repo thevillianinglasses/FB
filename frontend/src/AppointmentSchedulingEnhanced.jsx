@@ -634,7 +634,7 @@ function AppointmentSchedulingEnhanced() {
                     </div>
                   </div>
                   <div className="text-sm text-gray-600">
-                    {getTodaysAppointments().filter(apt => selectedDoctor ? apt.doctorId === selectedDoctor : true).length} appointments
+                    {getFilteredTodaysAppointments().filter(apt => selectedDoctor ? apt.doctor_id === selectedDoctor : true).length} appointments
                     {selectedDoctor && ` for ${getDoctorName(selectedDoctor)}`}
                   </div>
                 </div>
