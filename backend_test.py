@@ -1959,9 +1959,9 @@ class UnicareEHRTester:
         return True
 
 def main():
-    print("🏥 Starting Critical Bug Test #2: Appointment Check-in Workflow")
-    print("🎯 Focus: Appointment check-in not properly adding to 24-hour patient log")
-    print("🚨 Issue: When users click 'Check In', should create patient and update appointment status")
+    print("🏥 COMPREHENSIVE APPOINTMENT MANAGEMENT API TESTING")
+    print("🎯 Testing all appointment APIs implemented by main agent")
+    print("🚨 Focus: Verify appointment management system is fully functional")
     print("=" * 70)
     
     # Get backend URL from frontend .env file
@@ -1970,7 +1970,7 @@ def main():
     # Initialize tester with correct backend URL
     tester = UnicareEHRTester(backend_url)
     
-    # Run focused tests for the critical bug
+    # Run comprehensive appointment API tests
     tests = [
         # Basic connectivity
         tester.test_health_check,
@@ -1978,8 +1978,8 @@ def main():
         # Create test users if needed
         tester.test_create_test_users,
         
-        # Main focus: Critical bug #2 testing
-        tester.test_appointment_checkin_workflow,
+        # Main focus: Comprehensive appointment API testing
+        tester.test_appointment_management_apis,
     ]
     
     for test in tests:
@@ -1992,13 +1992,16 @@ def main():
     
     # Print final results
     print("\n" + "=" * 70)
-    print(f"📊 Final Results: {tester.tests_passed}/{tester.tests_run} tests passed")
+    print(f"📊 Final Results:")
+    print(f"   Tests run: {tester.tests_run}")
+    print(f"   Tests passed: {tester.tests_passed}")
+    print(f"   Success rate: {(tester.tests_passed/tester.tests_run*100):.1f}%")
     
     if tester.tests_passed == tester.tests_run:
         print("🎉 All tests passed!")
         return 0
     else:
-        print(f"⚠️  {tester.tests_run - tester.tests_passed} tests failed")
+        print("❌ Some tests failed - check output above")
         return 1
 
 if __name__ == "__main__":
