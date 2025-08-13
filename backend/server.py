@@ -413,8 +413,8 @@ async def add_patient(patient: Patient, current_user: dict = Depends(get_current
         else:
             # Create new patient
             patient_dict = patient.dict()
-            patient_dict["opd_number"] = f"{str(len(list(await database.patients.find({}))) + 1).zfill(3)}/{datetime.now().year % 100:02d}"
-            patient_dict["token_number"] = "1"
+            patient_dict["opd_number"] = await get_next_opd_number()
+            patient_dict["token_number"] = await get_next_token_number()
             patient_dict["status"] = "Active"
             patient_dict["created_at"] = datetime.utcnow()
             patient_dict["updated_at"] = datetime.utcnow()
