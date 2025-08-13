@@ -86,7 +86,7 @@ function NewOPDPageEnhanced() {
     return todayDoctorPatients.length + 1;
   };
 
-  // Handle phone number change with auto-fill logic
+  // Handle phone number change with auto-fill logic - FIXED
   const handlePhoneChange = (e) => {
     const phone = e.target.value.replace(/\D/g, '').slice(0, 10);
     setPhoneNumber(phone);
@@ -96,13 +96,14 @@ function NewOPDPageEnhanced() {
       const matches = patients.filter(p => p.phone_number === phone);
       
       if (matches.length === 1) {
-        // Single match - auto-fill immediately
+        // Single match - show option to use existing data or create new
         const patient = matches[0];
-        fillPatientData(patient);
-        setSelectedPatientForAutofill(patient);
+        setMatchingPatients([patient]);
+        setShowPatientSelector(true);
       } else if (matches.length > 1) {
-        // Multiple matches - show selector
-        setMatchingPatients(matches);
+        // Multiple matches - show selector with unique patients only
+        const uniquePatients = getUniquePatientsByPhone(matches);
+        setMatchingPatients(uniquePatients);
         setShowPatientSelector(true);
       } else {
         // No matches - clear auto-fill
@@ -111,6 +112,20 @@ function NewOPDPageEnhanced() {
     } else {
       clearAutoFill();
     }
+  };
+
+  // Get unique patients by phone (avoid duplicates)
+  const getUniquePatientsByPhone = (matches) => {
+    const phoneGroups = {};
+    
+    matches.forEach(patient => {
+      const phone = patient.phone_number;
+      if (!phoneGroups[phone] || new Date(patient.created_at) > new Date(phoneGroups[phone].created_at)) {
+        phoneGroups[phone] = patient;
+      }
+    });
+    
+    return Object.values(phoneGroups);
   };
 
   // Fill patient data from selected patient
