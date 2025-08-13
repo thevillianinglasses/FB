@@ -1592,7 +1592,10 @@ class UnicareEHRTester:
         
         print(f"✅ Using doctor: {doctor_name} (ID: {doctor_id})")
         
-        # Test data as specified in review request
+        # Test data as specified in review request - use today's date
+        from datetime import datetime
+        today = datetime.utcnow().date().isoformat()
+        
         appointment_data = {
             "patient_name": "John Doe Test Patient",
             "phone_number": "9876543210",
@@ -1602,7 +1605,7 @@ class UnicareEHRTester:
                 "address": "Test Address"
             },
             "doctor_id": doctor_id,
-            "appointment_date": "2025-01-13",  # Today's date
+            "appointment_date": today,  # Use actual today's date
             "appointment_time": "14:30",
             "duration": "30",
             "reason": "Testing appointment creation",
