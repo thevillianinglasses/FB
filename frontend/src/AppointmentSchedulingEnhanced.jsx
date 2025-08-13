@@ -279,14 +279,71 @@ function AppointmentSchedulingEnhanced() {
   // Handle check-in (convert appointment to live visit)
   const handleCheckIn = (appointment) => {
     const confirmCheckIn = window.confirm(
-      `Check in ${appointment.patientName} for their appointment?\n\nThis will create a new OPD visit and add them to All Patient Log.`
+      `Check in ${appointment.patientName} for their appointment?\n\n` +
+      `This will:\n` +
+      `• Create a new OPD visit (${generateOPDNumber()})\n` +
+      `• Add them to today's Patient Log (24-hour)\n` +
+      `• Generate token number\n` +
+      `• Update appointment status to "Checked In"`
     );
     
     if (confirmCheckIn) {
-      // Here you would normally add to patient log
-      alert(`${appointment.patientName} has been checked in. OPD visit created and added to Patient Log.`);
+      // Generate OPD and token numbers
+      const opdNumber = generateOPDNumber();
+      const tokenNumber = generateTokenNumber(appointment.doctorId);
+      
+      // Create patient record for Patient Log
+      const patientLogEntry = {
+        id: `checkin-${Date.now()}`,
+        patient_name: appointment.patientName,
+        phone_number: appointment.phoneNumber,
+        age: appointment.patientDetails?.age || 'N/A',
+        sex: appointment.patientDetails?.sex || 'N/A',
+        address: appointment.patientDetails?.address || '',
+        assigned_doctor: appointment.doctorId,
+        visit_type: appointment.type,
+        opd_number: opdNumber,
+        token_number: tokenNumber,
+        created_at: new Date().toISOString(),
+        status: 'Active'
+      };
+      
+      // Add to patients list (this would normally go to backend)
+      // For now, we'll store in localStorage to simulate adding to Patient Log
+      const existingPatients = JSON.parse(localStorage.getItem('checkedInPatients') || '[]');
+      existingPatients.push(patientLogEntry);
+      localStorage.setItem('checkedInPatients', JSON.stringify(existingPatients));
+      
+      // Update appointment status
       handleStatusChange(appointment.id, 'Checked In');
+      
+      alert(
+        `✅ ${appointment.patientName} checked in successfully!\n\n` +
+        `OPD Number: ${opdNumber}\n` +
+        `Token Number: ${tokenNumber}\n` +
+        `Doctor: ${getDoctorName(appointment.doctorId)}\n\n` +
+        `Patient has been added to today's Patient Log.`
+      );
     }
+  };
+
+  // Generate OPD number for check-in
+  const generateOPDNumber = () => {
+    const currentYear = new Date().getFullYear();
+    const yearSuffix = currentYear.toString().slice(-2);
+    const randomNumber = Math.floor(Math.random() * 900) + 100; // Random 3-digit number
+    return `${randomNumber}/${yearSuffix}`;
+  };
+
+  // Generate token number for check-in
+  const generateTokenNumber = (doctorId) => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayAppointments = appointments.filter(apt => 
+      apt.appointmentDate === today && 
+      apt.doctorId === doctorId && 
+      apt.status === 'Checked In'
+    );
+    return todayAppointments.length + 1;
   };
 
   // Get doctor name
