@@ -85,8 +85,8 @@ function AppointmentSchedulingEnhanced() {
   // Get appointments for date range
   const getAppointmentsForDateRange = () => {
     return appointments.filter(apt => 
-      apt.appointmentDate >= dateRange.startDate && 
-      apt.appointmentDate <= dateRange.endDate
+      apt.appointment_date >= dateRange.startDate && 
+      apt.appointment_date <= dateRange.endDate
     );
   };
 
