@@ -405,11 +405,10 @@ async def add_patient(patient: Patient, current_user: dict = Depends(get_current
             
             # For now, store visit as a new patient record with visit info
             # In a proper implementation, this would go to a separate visits collection
-            visit_patient = Patient(**visit_data)
-            result = await database.patients.insert_one(visit_patient.dict())
-            created_record = await database.patients.find_one({"_id": result.inserted_id})
-            created_record["id"] = str(created_record["_id"])
-            return created_record
+            visit_patient_dict = visit_data
+            result = await database.patients.insert_one(visit_patient_dict)
+            # Return the visit data with the UUID id, not MongoDB _id
+            return Patient(**visit_patient_dict)
         else:
             # Create new patient
             patient_dict = patient.dict()
