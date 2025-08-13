@@ -1186,7 +1186,49 @@ class UnicareEHRTester:
             print("   ✅ Newly created patient appears in today's log")
         else:
             print("   ❌ Newly created patient NOT in today's log")
-            print("   🚨 CRITICAL BUG CONFIRMED: New patients not appearing in 24-hour log!")
+            print(f"   🔍 Looking for patient ID: {patient_response.get('id')}")
+            print(f"   🔍 Today's patient IDs: {[p['id'] for p in today_patients]}")
+            
+            # Check if the patient exists in all patients but not in today's list
+            all_patient_ids = [p.get('id') for p in all_patients]
+            if patient_response.get('id') in all_patient_ids:
+                print("   ✅ Patient exists in all patients list")
+                # Find the patient and check its timestamp
+                for patient in all_patients:
+                    if patient.get('id') == patient_response.get('id'):
+                        patient_created_at = patient.get('created_at')
+                        print(f"   📅 Patient created_at: {patient_created_at}")
+                        
+                        try:
+                            if patient_created_at.endswith('Z'):
+                                patient_utc = datetime.fromisoformat(patient_created_at.replace('Z', '+00:00'))
+                            else:
+                                patient_utc = datetime.fromisoformat(patient_created_at).replace(tzinfo=timezone.utc)
+                            
+                            patient_kolkata = patient_utc.astimezone(kolkata_tz)
+                            patient_date_kolkata = patient_kolkata.date()
+                            
+                            print(f"   🇮🇳 Patient date in Kolkata: {patient_date_kolkata}")
+                            print(f"   📅 Current date in Kolkata: {current_date_kolkata}")
+                            
+                            if patient_date_kolkata == current_date_kolkata:
+                                print("   ✅ Patient was created today - adding to today's list")
+                                today_patients.append({
+                                    'name': patient.get('patient_name'),
+                                    'id': patient.get('id'),
+                                    'created_at_utc': patient_utc,
+                                    'created_at_kolkata': patient_kolkata,
+                                    'opd_number': patient.get('opd_number')
+                                })
+                                new_patient_in_today = True
+                            else:
+                                print("   ❌ Patient was NOT created today")
+                        except Exception as e:
+                            print(f"   ❌ Error parsing patient timestamp: {e}")
+                        break
+            else:
+                print("   ❌ Patient not found in all patients list - serious bug!")
+                return False
             
         # Summary and diagnosis
         print("\n" + "=" * 70)
