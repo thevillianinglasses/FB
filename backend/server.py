@@ -884,3 +884,166 @@ async def get_patient_consultations(patient_id: str, current_user: dict = Depend
         return consultations
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching patient consultations: {str(e)}")
+
+# ===================
+# APPOINTMENT MANAGEMENT APIS
+# ===================
+
+@app.get("/api/appointments", response_model=List[Appointment])
+async def get_appointments(
+    date: Optional[str] = None,
+    doctor_id: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get appointments with optional filtering by date, doctor, or status"""
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Build query filters
+        query = {}
+        if date:
+            query["appointment_date"] = date
+        if doctor_id:
+            query["doctor_id"] = doctor_id
+        if status:
+            query["status"] = status
+            
+        appointments_cursor = database.appointments.find(query).sort("appointment_date", 1).sort("appointment_time", 1)
+        appointments = []
+        async for appointment in appointments_cursor:
+            appointments.append(Appointment(**appointment))
+        return appointments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching appointments: {str(e)}")
+
+@app.post("/api/appointments", response_model=Appointment)
+async def create_appointment(appointment: AppointmentCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new appointment"""
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        appointment_dict = appointment.dict()
+        appointment_dict["id"] = str(uuid.uuid4())
+        appointment_dict["status"] = AppointmentStatus.SCHEDULED
+        appointment_dict["created_at"] = datetime.utcnow()
+        appointment_dict["updated_at"] = datetime.utcnow()
+        
+        result = await database.appointments.insert_one(appointment_dict)
+        return Appointment(**appointment_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating appointment: {str(e)}")
+
+@app.get("/api/appointments/{appointment_id}", response_model=Appointment)
+async def get_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a specific appointment by ID"""
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        appointment = await database.appointments.find_one({"id": appointment_id})
+        if not appointment:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        return Appointment(**appointment)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching appointment: {str(e)}")
+
+@app.put("/api/appointments/{appointment_id}", response_model=Appointment)
+async def update_appointment(appointment_id: str, appointment_update: AppointmentUpdate, current_user: dict = Depends(get_current_user)):
+    """Update an existing appointment"""
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        update_dict = appointment_update.dict(exclude_unset=True)
+        if update_dict:
+            update_dict["updated_at"] = datetime.utcnow()
+            
+            result = await database.appointments.update_one(
+                {"id": appointment_id},
+                {"$set": update_dict}
+            )
+            
+            if result.matched_count == 0:
+                raise HTTPException(status_code=404, detail="Appointment not found")
+        
+        updated_appointment = await database.appointments.find_one({"id": appointment_id})
+        return Appointment(**updated_appointment)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating appointment: {str(e)}")
+
+@app.delete("/api/appointments/{appointment_id}")
+async def delete_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete an appointment"""
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        result = await database.appointments.delete_one({"id": appointment_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        return {"message": "Appointment deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting appointment: {str(e)}")
+
+@app.put("/api/appointments/{appointment_id}/status")
+async def update_appointment_status(appointment_id: str, status: AppointmentStatus, current_user: dict = Depends(get_current_user)):
+    """Update appointment status (Scheduled, Confirmed, Checked In, etc.)"""
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        update_data = {
+            "status": status,
+            "updated_at": datetime.utcnow()
+        }
+        
+        result = await database.appointments.update_one(
+            {"id": appointment_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        
+        updated_appointment = await database.appointments.find_one({"id": appointment_id})
+        return Appointment(**updated_appointment)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating appointment status: {str(e)}")
+
+@app.get("/api/appointments/today", response_model=List[Appointment])
+async def get_todays_appointments(current_user: dict = Depends(get_current_user)):
+    """Get all appointments for today"""
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        today = datetime.utcnow().date().isoformat()
+        appointments_cursor = database.appointments.find({"appointment_date": today}).sort("appointment_time", 1)
+        appointments = []
+        async for appointment in appointments_cursor:
+            appointments.append(Appointment(**appointment))
+        return appointments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching today's appointments: {str(e)}")
+
+@app.get("/api/appointments/doctor/{doctor_id}", response_model=List[Appointment])
+async def get_doctor_appointments(doctor_id: str, date: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get all appointments for a specific doctor, optionally filtered by date"""
+    if not has_reception_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        query = {"doctor_id": doctor_id}
+        if date:
+            query["appointment_date"] = date
+            
+        appointments_cursor = database.appointments.find(query).sort("appointment_date", 1).sort("appointment_time", 1)
+        appointments = []
+        async for appointment in appointments_cursor:
+            appointments.append(Appointment(**appointment))
+        return appointments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching doctor appointments: {str(e)}")
