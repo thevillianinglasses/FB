@@ -321,6 +321,18 @@ test_plan:
   appointment_apis_tested: true
   appointment_management_functional: true
 
+  - task: "Admin Doctor Management APIs"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "🎉 ADMIN DOCTOR MANAGEMENT APIs COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY! ✅ PUT /api/admin/doctors/{doctor_id} - Update doctor details: WORKING (Status 200) ✅ DELETE /api/admin/doctors/{doctor_id} - Delete doctor: WORKING (Status 200) ✅ POST /api/admin/doctors/{doctor_id}/upload-document - Upload documents: WORKING (PDF/JPG/PNG files uploaded successfully) ✅ GET /api/admin/doctors/{doctor_id}/documents/{filename} - Download documents: WORKING (All file types downloaded successfully) ✅ DELETE /api/admin/doctors/{doctor_id}/documents/{certificate_id} - Delete documents: WORKING (Documents deleted successfully) ✅ POST /api/admin/doctors/{doctor_id}/generate-pdf - Generate profile PDF: WORKING (HTML content generated with doctor info) ✅ File upload validation: WORKING (5MB size limit enforced, file type restrictions active) ✅ Admin role-based access control: WORKING (Reception users blocked from admin APIs with 403 status) ✅ All CRUD operations functional with proper UUID generation ✅ Data persistence verified across all operations ✅ Test data used: Dr. Emily Carter, Dr. John Adebayo as specified in review request ✅ Admin login with admin/admin_007 successful ✅ Mock files tested: medical_degree.pdf, license.jpg, certificate.png ✅ All validation rules working (file size limits, file type restrictions) 🏆 ALL ADMIN DOCTOR MANAGEMENT APIs ARE FULLY FUNCTIONAL AND READY FOR PRODUCTION USE!"
+
 agent_communication:
   - agent: "testing"
     message: "Comprehensive backend testing completed. All critical functionality for desktop deployment is working. System ready for user deployment with proper MongoDB setup instructions."
