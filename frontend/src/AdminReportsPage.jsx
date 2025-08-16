@@ -3,6 +3,7 @@ import { useAppContext } from './AppContext';
 
 function AdminReportsPage() {
   const { doctors, loadDoctors, isLoading } = useAppContext();
+  const [activeReportTab, setActiveReportTab] = useState('doctors-info');
   const [departments, setDepartments] = useState([]);
   const [showDoctorProfile, setShowDoctorProfile] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -16,6 +17,14 @@ function AdminReportsPage() {
   });
   const [editingDoctorId, setEditingDoctorId] = useState(null);
   const [editingDoctor, setEditingDoctor] = useState({});
+
+  // Report tabs
+  const reportTabs = [
+    { id: 'doctors-info', name: 'Doctors Info', icon: '👨‍⚕️' },
+    { id: 'department-stats', name: 'Department Stats', icon: '🏥' },
+    { id: 'monthly-reports', name: 'Monthly Reports', icon: '📊' },
+    { id: 'system-analytics', name: 'System Analytics', icon: '📈' }
+  ];
 
   // Load departments and doctors on mount
   useEffect(() => {
