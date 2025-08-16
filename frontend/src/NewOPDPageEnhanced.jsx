@@ -34,8 +34,15 @@ function NewOPDPageEnhanced() {
   const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
   const [doctorSearchTerm, setDoctorSearchTerm] = useState('');
   const [departmentSearchTerm, setDepartmentSearchTerm] = useState('');
-  const [customDoctorName, setCustomDoctorName] = useState('');
-  const [customDepartmentName, setCustomDepartmentName] = useState('');
+  const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
+  const [newDoctorForm, setNewDoctorForm] = useState({
+    name: '',
+    specialty: '',
+    qualification: '',
+    default_fee: '500',
+    phone: '',
+    email: ''
+  });
 
   // Enhanced departments list with auto-save capability
   const [departmentsList, setDepartmentsList] = useState([
