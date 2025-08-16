@@ -28,9 +28,17 @@ function NewOPDPageEnhanced() {
   const [showPatientSelector, setShowPatientSelector] = useState(false);
   const [matchingPatients, setMatchingPatients] = useState([]);
   const [selectedPatientForAutofill, setSelectedPatientForAutofill] = useState(null);
+  
+  // Floating dropdown states
+  const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
+  const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
+  const [doctorSearchTerm, setDoctorSearchTerm] = useState('');
+  const [departmentSearchTerm, setDepartmentSearchTerm] = useState('');
+  const [customDoctorName, setCustomDoctorName] = useState('');
+  const [customDepartmentName, setCustomDepartmentName] = useState('');
 
-  // Departments list
-  const departments = [
+  // Enhanced departments list with auto-save capability
+  const [departmentsList, setDepartmentsList] = useState([
     'General Medicine',
     'Cardiology', 
     'Dermatology',
@@ -41,7 +49,7 @@ function NewOPDPageEnhanced() {
     'Ophthalmology',
     'Psychiatry',
     'Emergency'
-  ];
+  ]);
 
   // Load doctors and patients on component mount
   useEffect(() => {
