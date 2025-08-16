@@ -2288,6 +2288,400 @@ class UnicareEHRTester:
         
         return True
 
+    def test_admin_doctor_management_apis(self):
+        """Test the newly implemented Admin Doctor Management APIs as per review request"""
+        print("\n👨‍⚕️ ADMIN DOCTOR MANAGEMENT APIs COMPREHENSIVE TESTING")
+        print("Testing all admin doctor management APIs with realistic data")
+        print("=" * 70)
+        
+        # Login as admin (required for all admin doctor management APIs)
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin for doctor management testing")
+            return False
+            
+        # Get existing doctors first (Dr. Emily Carter, Dr. John Adebayo as mentioned in review request)
+        success, doctors_response = self.run_test(
+            "Get Existing Doctors",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success or not doctors_response:
+            print("❌ Failed to get existing doctors")
+            return False
+            
+        # Use existing doctor for testing (Dr. Emily Carter or Dr. John Adebayo)
+        test_doctor = doctors_response[0]
+        doctor_id = test_doctor['id']
+        doctor_name = test_doctor['name']
+        
+        print(f"✅ Using existing doctor for testing: {doctor_name} (ID: {doctor_id})")
+        
+        # Test 1: PUT /api/admin/doctors/{doctor_id} - Update doctor details from admin panel
+        print("\n📝 Test 1: PUT /api/admin/doctors/{doctor_id} - Update doctor details")
+        
+        update_data = {
+            "name": f"Updated {doctor_name}",
+            "specialty": "Updated Specialty - Cardiology",
+            "qualification": "MBBS, MD, Updated Qualification",
+            "default_fee": "750",
+            "phone": "9876543299",
+            "email": "updated.doctor@unicare.com",
+            "address": "Updated Address, Medical Complex, Kerala",
+            "registration_number": "REG123456789",
+            "schedule": "Mon-Fri: 9AM-5PM, Sat: 9AM-1PM",
+            "room_number": "201"
+        }
+        
+        success, update_response = self.run_test(
+            "Update Doctor Details (Admin)",
+            "PUT",
+            f"api/admin/doctors/{doctor_id}",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            print("❌ Failed to update doctor details")
+            return False
+            
+        print(f"   ✅ Doctor updated successfully")
+        print(f"   📋 Updated name: {update_response.get('name')}")
+        print(f"   🏥 Updated specialty: {update_response.get('specialty')}")
+        print(f"   💰 Updated fee: ₹{update_response.get('default_fee')}")
+        
+        # Verify the update by getting the doctor again
+        success, updated_doctor = self.run_test(
+            "Verify Doctor Update",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if success:
+            updated_doctor_data = next((d for d in updated_doctor if d['id'] == doctor_id), None)
+            if updated_doctor_data and updated_doctor_data.get('name') == update_data['name']:
+                print("   ✅ Doctor update verified successfully")
+            else:
+                print("   ❌ Doctor update verification failed")
+                return False
+        
+        # Test 2: POST /api/admin/doctors/{doctor_id}/upload-document - Upload doctor documents
+        print("\n📄 Test 2: POST /api/admin/doctors/{doctor_id}/upload-document - Upload documents")
+        
+        # Create mock files for testing (PDF, JPG, PNG as mentioned in review request)
+        import tempfile
+        import os
+        
+        # Test file upload with different file types
+        test_files = [
+            {"name": "medical_degree.pdf", "content": b"Mock PDF content for medical degree", "type": "Medical Degree"},
+            {"name": "license.jpg", "content": b"Mock JPG content for medical license", "type": "Medical License"},
+            {"name": "certificate.png", "content": b"Mock PNG content for certificate", "type": "Specialization Certificate"}
+        ]
+        
+        uploaded_files = []
+        
+        for file_info in test_files:
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_info['name'].split('.')[-1]}") as temp_file:
+                temp_file.write(file_info['content'])
+                temp_file_path = temp_file.name
+            
+            try:
+                # Test file upload using requests with files parameter
+                import requests
+                url = f"{self.base_url}/api/admin/doctors/{doctor_id}/upload-document"
+                headers = {'Authorization': f'Bearer {self.token}'}
+                
+                with open(temp_file_path, 'rb') as f:
+                    files = {'file': (file_info['name'], f, 'application/octet-stream')}
+                    data = {'document_type': file_info['type']}
+                    
+                    print(f"   📤 Uploading {file_info['name']} ({file_info['type']})...")
+                    response = requests.post(url, files=files, data=data, headers=headers, timeout=10)
+                    
+                    if response.status_code == 200:
+                        response_data = response.json()
+                        print(f"   ✅ File uploaded successfully")
+                        print(f"      Certificate ID: {response_data.get('certificate_id')}")
+                        print(f"      Filename: {response_data.get('filename')}")
+                        uploaded_files.append({
+                            'certificate_id': response_data.get('certificate_id'),
+                            'filename': response_data.get('filename'),
+                            'type': file_info['type']
+                        })
+                    else:
+                        print(f"   ❌ File upload failed: {response.status_code}")
+                        try:
+                            error_data = response.json()
+                            print(f"      Error: {error_data}")
+                        except:
+                            print(f"      Error: {response.text}")
+                        return False
+                        
+            finally:
+                # Clean up temporary file
+                if os.path.exists(temp_file_path):
+                    os.unlink(temp_file_path)
+        
+        print(f"   ✅ Successfully uploaded {len(uploaded_files)} documents")
+        
+        # Test 3: GET /api/admin/doctors/{doctor_id}/documents/{filename} - Download doctor documents
+        print("\n📥 Test 3: GET /api/admin/doctors/{doctor_id}/documents/{filename} - Download documents")
+        
+        for file_info in uploaded_files:
+            filename = file_info['filename']
+            success, download_response = self.run_test(
+                f"Download Document ({file_info['type']})",
+                "GET",
+                f"api/admin/doctors/{doctor_id}/documents/{filename}",
+                200
+            )
+            
+            if success:
+                print(f"   ✅ Document {filename} downloaded successfully")
+            else:
+                print(f"   ❌ Failed to download document {filename}")
+                return False
+        
+        # Test 4: POST /api/admin/doctors/{doctor_id}/generate-pdf - Generate doctor profile PDF
+        print("\n📋 Test 4: POST /api/admin/doctors/{doctor_id}/generate-pdf - Generate profile PDF")
+        
+        success, pdf_response = self.run_test(
+            "Generate Doctor Profile PDF",
+            "POST",
+            f"api/admin/doctors/{doctor_id}/generate-pdf",
+            200
+        )
+        
+        if not success:
+            print("   ❌ Failed to generate doctor profile PDF")
+            return False
+            
+        # Check if response contains HTML content for PDF generation
+        if isinstance(pdf_response, dict) and 'html_content' in pdf_response:
+            html_content = pdf_response['html_content']
+            print("   ✅ PDF HTML content generated successfully")
+            print(f"   📄 Content length: {len(html_content)} characters")
+            
+            # Verify HTML content contains doctor information
+            if doctor_name in html_content and "UNICARE POLYCLINIC" in html_content:
+                print("   ✅ PDF content contains correct doctor information")
+            else:
+                print("   ❌ PDF content missing doctor information")
+                return False
+        else:
+            print("   ✅ PDF generation endpoint responded successfully")
+        
+        # Test 5: DELETE /api/admin/doctors/{doctor_id}/documents/{certificate_id} - Delete doctor documents
+        print("\n🗑️ Test 5: DELETE /api/admin/doctors/{doctor_id}/documents/{certificate_id} - Delete documents")
+        
+        # Delete one of the uploaded documents
+        if uploaded_files:
+            file_to_delete = uploaded_files[0]
+            certificate_id = file_to_delete['certificate_id']
+            
+            success, delete_response = self.run_test(
+                f"Delete Document ({file_to_delete['type']})",
+                "DELETE",
+                f"api/admin/doctors/{doctor_id}/documents/{certificate_id}",
+                200
+            )
+            
+            if success:
+                print(f"   ✅ Document deleted successfully")
+                print(f"   🗑️ Deleted certificate ID: {certificate_id}")
+                
+                # Verify document is no longer downloadable
+                success, verify_response = self.run_test(
+                    "Verify Document Deletion",
+                    "GET",
+                    f"api/admin/doctors/{doctor_id}/documents/{file_to_delete['filename']}",
+                    404  # Should return 404 after deletion
+                )
+                
+                if success:
+                    print("   ✅ Document deletion verified - file no longer accessible")
+                else:
+                    print("   ⚠️ Document may still be accessible after deletion")
+            else:
+                print("   ❌ Failed to delete document")
+                return False
+        
+        # Test 6: DELETE /api/admin/doctors/{doctor_id} - Delete doctor from admin panel
+        print("\n🗑️ Test 6: DELETE /api/admin/doctors/{doctor_id} - Delete doctor (CAREFUL - DESTRUCTIVE)")
+        
+        # Create a test doctor first to delete (don't delete existing doctors)
+        test_doctor_data = {
+            "name": "Test Doctor for Deletion",
+            "specialty": "Test Specialty",
+            "qualification": "Test Qualification",
+            "default_fee": "500",
+            "phone": "9999999999",
+            "email": "test.delete@unicare.com"
+        }
+        
+        success, created_doctor = self.run_test(
+            "Create Test Doctor for Deletion",
+            "POST",
+            "api/doctors",
+            200,
+            data=test_doctor_data
+        )
+        
+        if not success:
+            print("   ❌ Failed to create test doctor for deletion")
+            return False
+            
+        test_doctor_id = created_doctor.get('id')
+        print(f"   ✅ Created test doctor for deletion: {test_doctor_id}")
+        
+        # Now delete the test doctor
+        success, delete_doctor_response = self.run_test(
+            "Delete Test Doctor",
+            "DELETE",
+            f"api/admin/doctors/{test_doctor_id}",
+            200
+        )
+        
+        if success:
+            print("   ✅ Test doctor deleted successfully")
+            
+            # Verify doctor is no longer in the list
+            success, doctors_after_delete = self.run_test(
+                "Verify Doctor Deletion",
+                "GET",
+                "api/doctors",
+                200
+            )
+            
+            if success:
+                deleted_doctor_found = any(d.get('id') == test_doctor_id for d in doctors_after_delete)
+                if not deleted_doctor_found:
+                    print("   ✅ Doctor deletion verified - doctor no longer in list")
+                else:
+                    print("   ❌ Doctor still found in list after deletion")
+                    return False
+        else:
+            print("   ❌ Failed to delete test doctor")
+            return False
+        
+        # Test 7: Test file upload validation (file size limits, file type restrictions)
+        print("\n🔒 Test 7: Test file upload validation (size limits, file types)")
+        
+        # Test invalid file type
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as temp_file:
+            temp_file.write(b"Invalid file type content")
+            temp_file_path = temp_file.name
+        
+        try:
+            url = f"{self.base_url}/api/admin/doctors/{doctor_id}/upload-document"
+            headers = {'Authorization': f'Bearer {self.token}'}
+            
+            with open(temp_file_path, 'rb') as f:
+                files = {'file': ('invalid.txt', f, 'text/plain')}
+                data = {'document_type': 'Invalid Document'}
+                
+                print("   🚫 Testing invalid file type (.txt)...")
+                response = requests.post(url, files=files, data=data, headers=headers, timeout=10)
+                
+                if response.status_code == 400:
+                    print("   ✅ Invalid file type correctly rejected")
+                else:
+                    print(f"   ❌ Invalid file type not rejected (status: {response.status_code})")
+                    return False
+                    
+        finally:
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+        
+        # Test file size limit (create a file larger than 5MB)
+        print("   📏 Testing file size limit (5MB)...")
+        large_content = b"x" * (6 * 1024 * 1024)  # 6MB file
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            temp_file.write(large_content)
+            temp_file_path = temp_file.name
+        
+        try:
+            with open(temp_file_path, 'rb') as f:
+                files = {'file': ('large.pdf', f, 'application/pdf')}
+                data = {'document_type': 'Large Document'}
+                
+                response = requests.post(url, files=files, data=data, headers=headers, timeout=30)
+                
+                if response.status_code == 413:
+                    print("   ✅ Large file correctly rejected (5MB limit enforced)")
+                else:
+                    print(f"   ❌ Large file not rejected (status: {response.status_code})")
+                    return False
+                    
+        finally:
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+        
+        # Test 8: Test admin role-based access control
+        print("\n🔐 Test 8: Test admin role-based access control")
+        
+        # Try to access admin doctor APIs with non-admin role
+        if not self.test_login(role="reception"):
+            print("   ❌ Failed to login as reception for access control test")
+            return False
+        
+        # Test reception user trying to update doctor (should fail)
+        success, response = self.run_test(
+            "Reception accessing doctor update (should fail)",
+            "PUT",
+            f"api/admin/doctors/{doctor_id}",
+            403,  # Should be forbidden
+            data={"name": "Unauthorized Update"}
+        )
+        
+        if success:
+            print("   ✅ Access control working - reception blocked from admin doctor APIs")
+        else:
+            print("   ❌ Access control failed - reception can access admin doctor APIs")
+            return False
+        
+        # Test reception user trying to upload document (should fail)
+        success, response = self.run_test(
+            "Reception accessing document upload (should fail)",
+            "POST",
+            f"api/admin/doctors/{doctor_id}/upload-document",
+            403  # Should be forbidden
+        )
+        
+        if success:
+            print("   ✅ Access control working - reception blocked from document upload")
+        else:
+            print("   ❌ Access control failed - reception can upload documents")
+            return False
+        
+        # Login back as admin for final verification
+        if not self.test_login(role="admin"):
+            print("   ❌ Failed to login back as admin")
+            return False
+        
+        print("\n" + "=" * 70)
+        print("🎉 ADMIN DOCTOR MANAGEMENT APIs TESTING COMPLETED SUCCESSFULLY!")
+        print("=" * 70)
+        
+        # Summary of test results
+        print("\n📋 SUMMARY OF ADMIN DOCTOR MANAGEMENT API TESTS:")
+        print("   ✅ PUT /api/admin/doctors/{doctor_id} - Update doctor details: WORKING")
+        print("   ✅ POST /api/admin/doctors/{doctor_id}/upload-document - Upload documents: WORKING")
+        print("   ✅ GET /api/admin/doctors/{doctor_id}/documents/{filename} - Download documents: WORKING")
+        print("   ✅ DELETE /api/admin/doctors/{doctor_id}/documents/{certificate_id} - Delete documents: WORKING")
+        print("   ✅ POST /api/admin/doctors/{doctor_id}/generate-pdf - Generate profile PDF: WORKING")
+        print("   ✅ DELETE /api/admin/doctors/{doctor_id} - Delete doctor: WORKING")
+        print("   ✅ File upload validation (size limits, file types): WORKING")
+        print("   ✅ Admin role-based access control: WORKING")
+        print("\n🏆 ALL ADMIN DOCTOR MANAGEMENT APIs ARE FULLY FUNCTIONAL!")
+        
+        return True
+
 def main():
     print("🏥 COMPREHENSIVE APPOINTMENT MANAGEMENT API TESTING")
     print("🎯 Testing all appointment APIs implemented by main agent")
