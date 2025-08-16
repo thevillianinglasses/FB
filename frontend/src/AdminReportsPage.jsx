@@ -205,6 +205,77 @@ function AdminReportsPage() {
     }
   };
 
+  // Add new doctor from admin panel
+  const addNewDoctorAdmin = async (doctorName = null, department = null) => {
+    try {
+      const name = doctorName || prompt('Enter new doctor name:');
+      const dept = department || prompt('Enter department:');
+      
+      if (!name || !dept) {
+        alert('Both doctor name and department are required');
+        return;
+      }
+
+      console.log('🔄 Adding new doctor from admin:', name, 'to department:', dept);
+
+      const { addDoctor } = useAppContext();
+      const newDoctorData = {
+        name: name.replace(/^Dr\.?\s*/i, ''), // Remove Dr. prefix
+        specialty: dept,
+        qualification: '',
+        default_fee: '500',
+        phone: '',
+        email: ''
+      };
+      
+      console.log('🔄 Sending doctor data:', newDoctorData);
+      
+      const savedDoctor = await addDoctor(newDoctorData);
+      console.log('✅ New doctor saved from admin:', savedDoctor);
+      
+      // Reload data
+      await loadDoctors();
+      await loadDepartmentsReport();
+      
+      alert(`✅ Doctor added successfully!\n\nDoctor: Dr. ${savedDoctor.name}\nDepartment: ${dept}\n\nThe doctor is now available in the system.`);
+      
+      return savedDoctor;
+    } catch (error) {
+      console.error('❌ Error adding doctor from admin:', error);
+      alert(`❌ Error adding doctor: ${error.message || 'Please try again.'}`);
+    }
+  };
+
+  // Add new department
+  const addNewDepartmentAdmin = async (departmentName = null) => {
+    try {
+      const name = departmentName || prompt('Enter new department name:');
+      
+      if (!name || !name.trim()) {
+        alert('Department name is required');
+        return;
+      }
+
+      console.log('🔄 Adding new department from admin:', name.trim());
+      
+      // For now, we'll just add it to the departments list
+      // In a full implementation, this would save to backend
+      const newDepartment = {
+        department: name.trim(),
+        doctors: [],
+        total_doctors: 0
+      };
+      
+      setDepartments(prev => [...prev, newDepartment]);
+      
+      alert(`✅ Department added successfully!\n\nDepartment: ${name.trim()}\n\nYou can now add doctors to this department.`);
+      
+    } catch (error) {
+      console.error('❌ Error adding department from admin:', error);
+      alert(`❌ Error adding department: ${error.message || 'Please try again.'}`);
+    }
+  };
+
   // Remove certificate
   const removeCertificate = (certificateId) => {
     setDoctorProfile(prev => ({
