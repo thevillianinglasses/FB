@@ -132,7 +132,7 @@ function DoctorsDirectory({ onBackToAdmin }) {
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 py-3 text-sm">
             <button 
-              onClick={() => setCurrentScreen('dashboard')}
+              onClick={onBackToAdmin}
               className="text-cornflower-blue hover:text-blue-700 font-medium"
             >
               Admin Dashboard
