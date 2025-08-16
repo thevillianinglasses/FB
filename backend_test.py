@@ -133,6 +133,173 @@ class UnicareEHRTester:
             return True
         return False
 
+    def test_doctor_creation_api(self):
+        """Test doctor creation API with exact data structure from review request"""
+        print("\n👨‍⚕️ TESTING DOCTOR CREATION API (POST /api/doctors)")
+        print("Testing with exact data structure that frontend DoctorEditor is sending")
+        print("=" * 70)
+        
+        # Login as admin to access doctor creation API
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin for doctor creation testing")
+            return False
+            
+        # Test data exactly as specified in the review request
+        doctor_test_data = {
+            "name": "Test Doctor New",
+            "specialty": "GENERAL MEDICINE", 
+            "qualification": "MBBS, MD",
+            "default_fee": "500",
+            "phone": "9876543210",
+            "email": "testnew@example.com",
+            "registration_number": "REG123456",
+            "address": "Test Address, Kerala",
+            "availability_note": "Mon-Fri 9AM-5PM"
+        }
+        
+        print(f"📋 Test Data:")
+        for key, value in doctor_test_data.items():
+            print(f"   {key}: {value}")
+            
+        # Test 1: Create doctor with POST /api/doctors
+        print(f"\n🏥 Test 1: POST /api/doctors - Create new doctor")
+        
+        success, doctor_response = self.run_test(
+            "Create New Doctor",
+            "POST",
+            "api/doctors",
+            200,
+            data=doctor_test_data
+        )
+        
+        if not success:
+            print("❌ Failed to create doctor")
+            return False
+            
+        created_doctor_id = doctor_response.get('id')
+        if not created_doctor_id:
+            print("❌ No doctor ID returned in response")
+            return False
+            
+        print(f"✅ Doctor created successfully with ID: {created_doctor_id}")
+        
+        # Test 2: Verify all fields are properly stored and returned
+        print(f"\n🔍 Test 2: Verify all fields properly stored and returned")
+        
+        required_fields = ['id', 'name', 'specialty', 'qualification', 'default_fee', 'phone', 'email']
+        missing_fields = [field for field in required_fields if field not in doctor_response]
+        
+        if missing_fields:
+            print(f"❌ Missing required fields in response: {missing_fields}")
+            return False
+            
+        print("✅ All required fields present in response")
+        
+        # Verify field values match input
+        field_matches = True
+        for field, expected_value in doctor_test_data.items():
+            if field in doctor_response:
+                actual_value = doctor_response[field]
+                if str(actual_value) != str(expected_value):
+                    print(f"❌ Field '{field}': expected '{expected_value}', got '{actual_value}'")
+                    field_matches = False
+                else:
+                    print(f"✅ Field '{field}': {actual_value}")
+            else:
+                print(f"⚠️ Field '{field}' not in response (may be optional)")
+                
+        if not field_matches:
+            print("❌ Some field values don't match input data")
+            return False
+            
+        # Test 3: Verify UUID generation
+        print(f"\n🆔 Test 3: Verify UUID generation")
+        
+        import uuid
+        try:
+            uuid.UUID(created_doctor_id)
+            print(f"✅ Valid UUID generated: {created_doctor_id}")
+        except ValueError:
+            print(f"❌ Invalid UUID format: {created_doctor_id}")
+            return False
+            
+        # Test 4: Verify doctor appears in GET /api/doctors list
+        print(f"\n📊 Test 4: Verify doctor appears in GET /api/doctors list")
+        
+        success, doctors_list = self.run_test(
+            "Get All Doctors",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get doctors list")
+            return False
+            
+        # Find our created doctor in the list
+        created_doctor_found = None
+        for doctor in doctors_list:
+            if doctor.get('id') == created_doctor_id:
+                created_doctor_found = doctor
+                break
+                
+        if not created_doctor_found:
+            print(f"❌ Created doctor {created_doctor_id} not found in doctors list")
+            return False
+            
+        print(f"✅ Created doctor found in doctors list ({len(doctors_list)} total doctors)")
+        print(f"   Name: {created_doctor_found.get('name')}")
+        print(f"   Specialty: {created_doctor_found.get('specialty')}")
+        print(f"   Fee: {created_doctor_found.get('default_fee')}")
+        
+        # Test 5: Verify data consistency between POST response and GET response
+        print(f"\n🔄 Test 5: Verify data consistency between POST and GET responses")
+        
+        consistency_check = True
+        for field in ['name', 'specialty', 'qualification', 'default_fee', 'phone', 'email']:
+            post_value = doctor_response.get(field)
+            get_value = created_doctor_found.get(field)
+            
+            if post_value != get_value:
+                print(f"❌ Inconsistency in '{field}': POST='{post_value}', GET='{get_value}'")
+                consistency_check = False
+            else:
+                print(f"✅ Consistent '{field}': {post_value}")
+                
+        if not consistency_check:
+            print("❌ Data inconsistency detected between POST and GET responses")
+            return False
+            
+        # Test 6: Test default_fee field type (critical for frontend)
+        print(f"\n💰 Test 6: Verify default_fee field type (critical for frontend)")
+        
+        default_fee = created_doctor_found.get('default_fee')
+        if not isinstance(default_fee, str):
+            print(f"❌ default_fee is {type(default_fee).__name__}, frontend expects string")
+            return False
+        else:
+            print(f"✅ default_fee is string type: '{default_fee}'")
+            
+        # Verify it's a valid numeric string
+        try:
+            float(default_fee)
+            print(f"✅ default_fee is valid numeric string")
+        except ValueError:
+            print(f"❌ default_fee '{default_fee}' is not a valid numeric string")
+            return False
+            
+        print(f"\n🎉 DOCTOR CREATION API TESTING COMPLETED SUCCESSFULLY!")
+        print(f"📋 SUMMARY:")
+        print(f"   • Doctor created with ID: {created_doctor_id}")
+        print(f"   • All fields properly stored and returned")
+        print(f"   • UUID generated correctly")
+        print(f"   • Doctor appears in GET /api/doctors list")
+        print(f"   • Data consistency verified")
+        print(f"   • default_fee field is string type (frontend compatible)")
+        
+        return True
+
     def test_doctors_api_comprehensive(self):
         """Comprehensive test for doctors API endpoint as per review request"""
         print("\n👨‍⚕️ Testing Doctors API Endpoint Comprehensively...")
