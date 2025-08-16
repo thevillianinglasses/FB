@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
-
 // Unified API endpoints
 export const api = axios.create({
   baseURL: process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL,
