@@ -1,29 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppProvider } from './AppContext';
-import AppLayout from './components/AppLayout';
-import LoginPage from './LoginPage';
-import AdminDashboard from './pages/AdminDashboard';
-import DoctorsPage from './pages/DoctorsPage';
-import UsersPage from './pages/UsersPage';
-import ReceptionDashboard from './components/ReceptionDashboard';
 import { authAPI } from './api';
+import LoginPage from './LoginPage';
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000, // 60 seconds
-      refetchOnWindowFocus: false,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+// Simple working components
+import ReceptionDashboard from './components/ReceptionDashboard';
+import AdminDashboard from './components/AdminDashboard';
+import LaboratoryDashboard from './components/LaboratoryDashboard';
+import PharmacyDashboard from './components/PharmacyDashboard';
+import NursingDashboard from './components/NursingDashboard';
+import DoctorDashboard from './components/DoctorDashboard';
 
-function AppContent() {
+function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -71,8 +58,6 @@ function AppContent() {
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
-    // Clear React Query cache on logout
-    queryClient.clear();
   };
 
   // Show loading while checking authentication
@@ -91,74 +76,30 @@ function AppContent() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  return (
-    <Router>
-      <Routes>
-        {/* Admin Routes */}
-        {user?.role === 'admin' && (
-          <Route 
-            path="/admin" 
-            element={<AppLayout user={user} onLogout={handleLogout} />}
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="doctors" element={<DoctorsPage />} />
-            <Route path="users" element={<UsersPage />} />
-          </Route>
-        )}
-        
-        {/* Reception Routes */}
-        {user?.role === 'reception' && (
-          <>
-            <Route 
-              path="/reception" 
-              element={<AppLayout user={user} onLogout={handleLogout} />}
-            >
-              <Route index element={<ReceptionDashboard />} />
-            </Route>
-          </>
-        )}
+  // Simple role-based rendering (working version)
+  const renderDashboard = () => {
+    switch (user?.role) {
+      case 'admin':
+        return <AdminDashboard onLogout={handleLogout} userName={user.username} />;
+      case 'reception':
+        return <ReceptionDashboard onLogout={handleLogout} userName={user.username} />;
+      case 'laboratory':
+        return <LaboratoryDashboard onLogout={handleLogout} userName={user.username} />;
+      case 'pharmacy':
+        return <PharmacyDashboard onLogout={handleLogout} userName={user.username} />;
+      case 'nursing':
+        return <NursingDashboard onLogout={handleLogout} userName={user.username} />;
+      case 'doctor':
+        return <DoctorDashboard onLogout={handleLogout} userName={user.username} />;
+      default:
+        return <AdminDashboard onLogout={handleLogout} userName={user.username} />;
+    }
+  };
 
-        {/* Default redirects based on role */}
-        <Route 
-          path="/" 
-          element={
-            <Navigate 
-              to={
-                user?.role === 'admin' ? '/admin' : 
-                user?.role === 'reception' ? '/reception' :
-                '/admin'
-              } 
-              replace 
-            />
-          } 
-        />
-        
-        {/* Fallback redirect */}
-        <Route 
-          path="*" 
-          element={
-            <Navigate 
-              to={
-                user?.role === 'admin' ? '/admin' : 
-                user?.role === 'reception' ? '/reception' :
-                '/admin'
-              } 
-              replace 
-            />
-          } 
-        />
-      </Routes>
-    </Router>
-  );
-}
-
-function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
-    </QueryClientProvider>
+    <div className="App">
+      {renderDashboard()}
+    </div>
   );
 }
 
