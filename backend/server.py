@@ -1308,3 +1308,236 @@ async def get_patient_vitals_by_opd_for_doctor(opd_number: str, current_user: di
         return vitals
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching patient vitals by OPD: {str(e)}")
+
+# ===================
+# FILE UPLOAD APIS
+# ===================
+
+@app.post("/api/admin/doctors/{doctor_id}/upload-document")
+async def upload_doctor_document(
+    doctor_id: str,
+    file: UploadFile = File(...),
+    document_type: str = "Other Document",
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload a document for a doctor"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Validate file size
+        file_content = await file.read()
+        if len(file_content) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail="File size exceeds 5MB limit")
+        
+        # Reset file pointer
+        await file.seek(0)
+        
+        # Validate file extension
+        file_extension = Path(file.filename).suffix.lower()
+        if file_extension not in ALLOWED_EXTENSIONS:
+            raise HTTPException(status_code=400, detail="Invalid file type. Only PDF, JPG, PNG allowed")
+        
+        # Generate unique filename
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        unique_filename = f"{doctor_id}_{document_type}_{timestamp}{file_extension}"
+        file_path = UPLOAD_DIR / unique_filename
+        
+        # Save file
+        async with aiofiles.open(file_path, 'wb') as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Create certificate record
+        certificate = {
+            "id": str(uuid.uuid4()),
+            "certificate_name": document_type,
+            "file_path": str(file_path),
+            "file_name": file.filename,
+            "unique_filename": unique_filename,
+            "uploaded_at": datetime.utcnow()
+        }
+        
+        # Update doctor profile with certificate
+        await database.doctor_profiles.update_one(
+            {"doctor_id": doctor_id},
+            {"$push": {"certificates": certificate}},
+            upsert=True
+        )
+        
+        return {
+            "message": "Document uploaded successfully",
+            "certificate_id": certificate["id"],
+            "filename": unique_filename
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading document: {str(e)}")
+
+@app.get("/api/admin/doctors/{doctor_id}/documents/{filename}")
+async def download_doctor_document(
+    doctor_id: str, 
+    filename: str, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Download a doctor's document"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        file_path = UPLOAD_DIR / filename
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type='application/octet-stream'
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading document: {str(e)}")
+
+@app.delete("/api/admin/doctors/{doctor_id}/documents/{certificate_id}")
+async def delete_doctor_document(
+    doctor_id: str,
+    certificate_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a doctor's document"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Find and remove certificate from profile
+        profile = await database.doctor_profiles.find_one({"doctor_id": doctor_id})
+        if not profile:
+            raise HTTPException(status_code=404, detail="Doctor profile not found")
+        
+        # Find certificate to delete
+        certificate_to_delete = None
+        for cert in profile.get("certificates", []):
+            if cert["id"] == certificate_id:
+                certificate_to_delete = cert
+                break
+        
+        if not certificate_to_delete:
+            raise HTTPException(status_code=404, detail="Certificate not found")
+        
+        # Delete file from filesystem
+        file_path = Path(certificate_to_delete["file_path"])
+        if file_path.exists():
+            file_path.unlink()
+        
+        # Remove from database
+        await database.doctor_profiles.update_one(
+            {"doctor_id": doctor_id},
+            {"$pull": {"certificates": {"id": certificate_id}}}
+        )
+        
+        return {"message": "Document deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting document: {str(e)}")
+
+# ===================
+# PDF GENERATION API
+# ===================
+
+@app.post("/api/admin/doctors/{doctor_id}/generate-pdf")
+async def generate_doctor_profile_pdf(
+    doctor_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate PDF for doctor profile"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Get doctor details
+        doctor = await database.doctors.find_one({"id": doctor_id})
+        if not doctor:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+        
+        # Get doctor profile
+        profile = await database.doctor_profiles.find_one({"doctor_id": doctor_id})
+        
+        # For now, return the HTML content that can be used for PDF generation
+        # In a full implementation, this would use a library like WeasyPrint or Playwright
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>UNICARE POLYCLINIC - Doctor Profile</title>
+            <style>
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; }}
+                .header {{ text-align: center; margin-bottom: 30px; border-bottom: 2px solid #6495ED; padding-bottom: 20px; }}
+                .header h1 {{ color: #6495ED; margin: 0; font-size: 28px; }}
+                .header p {{ color: #36454F; margin: 5px 0; }}
+                .section {{ margin-bottom: 20px; }}
+                .section h3 {{ color: #36454F; border-bottom: 2px solid #6495ED; padding-bottom: 5px; }}
+                .field {{ margin-bottom: 10px; }}
+                .field strong {{ color: #36454F; }}
+                .documents {{ background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px; }}
+                .footer {{ text-align: center; margin-top: 40px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }}
+                .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
+                @media print {{ body {{ margin: 0; }} }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>UNICARE POLYCLINIC</h1>
+                <p>Complete Doctor Profile Report</p>
+                <p>Generated on: {datetime.utcnow().strftime('%d/%m/%Y %H:%M')} IST</p>
+            </div>
+
+            <div class="section">
+                <h3>Basic Information</h3>
+                <div class="grid">
+                    <div class="field"><strong>Name:</strong> Dr. {doctor.get('name', 'N/A')}</div>
+                    <div class="field"><strong>Degree:</strong> {doctor.get('qualification', 'N/A')}</div>
+                    <div class="field"><strong>Department:</strong> {doctor.get('specialty', 'N/A')}</div>
+                    <div class="field"><strong>Registration No:</strong> {doctor.get('registration_number', 'N/A')}</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Contact Information</h3>
+                <div class="grid">
+                    <div class="field"><strong>Phone:</strong> {doctor.get('phone', 'N/A')}</div>
+                    <div class="field"><strong>Email:</strong> {doctor.get('email', 'N/A')}</div>
+                </div>
+                <div class="field"><strong>Address:</strong> {doctor.get('address', 'N/A')}</div>
+            </div>
+
+            <div class="section">
+                <h3>Professional Details</h3>
+                <div class="grid">
+                    <div class="field"><strong>Consultation Fee:</strong> ₹{doctor.get('default_fee', 'N/A')}</div>
+                    <div class="field"><strong>Room Number:</strong> {doctor.get('room_number', 'N/A')}</div>
+                </div>
+                <div class="field"><strong>Schedule:</strong> {doctor.get('schedule', 'N/A')}</div>
+            </div>
+
+            {f'''
+            <div class="section">
+                <h3>Uploaded Documents</h3>
+                <div class="documents">
+                    {chr(10).join([f'<div class="field">• {cert.get("certificate_name", "Unknown")}: {cert.get("file_name", "N/A")} (Uploaded: {cert.get("uploaded_at", datetime.utcnow()).strftime("%d/%m/%Y") if isinstance(cert.get("uploaded_at"), datetime) else "N/A"})</div>' for cert in profile.get("certificates", [])])}
+                </div>
+            </div>
+            ''' if profile and profile.get("certificates") else ''}
+
+            <div class="footer">
+                <p>This is a computer-generated document from Unicare Polyclinic EHR System</p>
+                <p>Address: Unicare Polyclinic, Kerala, India • Phone: +91-XXXX-XXXX • Email: info@unicarepolyclinic.com</p>
+                <p>Generated by: {current_user.get('username', 'System')} on {datetime.utcnow().strftime('%d/%m/%Y at %H:%M IST')}</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return {
+            "message": "PDF content generated successfully",
+            "html_content": html_content,
+            "doctor_name": doctor.get('name', 'Unknown'),
+            "generated_at": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
