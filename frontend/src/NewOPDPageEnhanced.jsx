@@ -57,6 +57,19 @@ function NewOPDPageEnhanced() {
     loadPatients();
   }, []);
 
+  // Click outside handler for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown-container')) {
+        setShowDoctorDropdown(false);
+        setShowDepartmentDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Generate next OPD number in 001/25 format (daily)
   const generateOPDNumber = () => {
     const currentYear = new Date().getFullYear();
