@@ -72,18 +72,13 @@ function DepartmentEditor({ onClose, onSave }) {
         head_of_department: formData.head_of_department.trim(),
         location: formData.location.trim(),
         contact_number: formData.contact_number.trim(),
-        email: formData.email.trim(),
-        created_at: new Date().toISOString(),
-        status: 'active'
+        email: formData.email.trim()
       };
 
-      console.log('🔄 Saving department with data:', departmentData);
+      console.log('🔄 Creating department with data:', departmentData);
 
-      // For now, we'll just simulate the save since we don't have a backend endpoint yet
-      // In a real implementation, this would call an API
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the real API to create department
+      const response = await departmentsAPI.create(departmentData);
       
       // Show success toast
       setShowSuccessToast(true);
@@ -91,12 +86,21 @@ function DepartmentEditor({ onClose, onSave }) {
 
       // Call onSave callback after short delay
       setTimeout(() => {
-        onSave && onSave(departmentData);
+        onSave && onSave(response.department);
       }, 1000);
 
     } catch (error) {
       console.error('Error saving department:', error);
-      alert(`❌ Error saving department: ${error.message || 'Please try again.'}`);
+      
+      // Handle specific error messages
+      let errorMessage = 'Please try again.';
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`❌ Error creating department: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
