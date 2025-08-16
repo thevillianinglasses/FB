@@ -9,7 +9,7 @@ import LaboratoryDashboard from './components/LaboratoryDashboard';
 import PharmacyDashboard from './components/PharmacyDashboard';
 import NursingDashboard from './components/NursingDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
-import AdminDashboard from './components/AdminDashboard';
+import AdminDashboardNew from './AdminDashboardNew';
 
 function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
