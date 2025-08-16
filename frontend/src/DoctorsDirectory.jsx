@@ -313,7 +313,7 @@ function DoctorsDirectory({ onBackToAdmin }) {
             {/* Breadcrumbs */}
             <nav className="flex items-center space-x-2 text-sm">
               <button 
-                onClick={onBack}
+                onClick={onBackToAdmin}
                 className="text-cornflower-blue hover:text-blue-700 font-medium"
               >
                 Admin Dashboard
