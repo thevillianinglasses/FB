@@ -226,136 +226,210 @@ function AdminReportsPage() {
       {/* Header */}
       <div className="border-b border-gray-200 pb-4">
         <h1 className="text-3xl font-bold text-charcoal-grey">Admin Reports</h1>
-        <p className="text-gray-600 mt-2">Department-wise doctor management and profiles</p>
+        <p className="text-gray-600 mt-2">Comprehensive system reports and analytics</p>
       </div>
 
-      {/* Department Cards */}
-      <div className="grid gap-6">
-        {departments.map((department) => (
-          <div key={department.department} className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            {/* Department Header */}
-            <div className="bg-cornflower-blue text-white px-6 py-4 rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">{department.department}</h2>
-                <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
-                  {department.total_doctors} doctors
-                </div>
-              </div>
-            </div>
+      {/* Report Tabs */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8 px-6" aria-label="Report Tabs">
+            {reportTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveReportTab(tab.id)}
+                className={`${
+                  activeReportTab === tab.id
+                    ? 'border-cornflower-blue text-cornflower-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.name}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
 
-            {/* Doctors List */}
-            <div className="p-6">
-              {department.doctors.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No doctors in this department</p>
+        {/* Tab Content */}
+        <div className="p-6">
+          {/* Doctors Info Tab */}
+          {activeReportTab === 'doctors-info' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-charcoal-grey">Department-wise Doctor Management</h2>
+                <button
+                  onClick={() => {
+                    const newDoctorName = prompt('Enter new doctor name:');
+                    const department = prompt('Enter department:');
+                    if (newDoctorName && department) {
+                      // Add new doctor logic here
+                      console.log('Adding new doctor:', newDoctorName, department);
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm"
+                >
+                  + Add New Doctor
+                </button>
+              </div>
+
+              {isLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-lg text-gray-600">Loading departments...</div>
+                </div>
               ) : (
-                <div className="space-y-4">
-                  {department.doctors.map((doctor) => (
-                    <div key={doctor.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                      {editingDoctorId === doctor.id ? (
-                        // Edit Mode
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <input
-                              type="text"
-                              value={editingDoctor.name}
-                              onChange={(e) => setEditingDoctor({...editingDoctor, name: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                              placeholder="Doctor name"
-                            />
-                            <input
-                              type="text"
-                              value={editingDoctor.specialty}
-                              onChange={(e) => setEditingDoctor({...editingDoctor, specialty: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                              placeholder="Specialty"
-                            />
-                            <input
-                              type="text"
-                              value={editingDoctor.qualification}
-                              onChange={(e) => setEditingDoctor({...editingDoctor, qualification: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                              placeholder="Qualification"
-                            />
-                            <input
-                              type="text"
-                              value={editingDoctor.default_fee}
-                              onChange={(e) => setEditingDoctor({...editingDoctor, default_fee: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                              placeholder="Default fee"
-                            />
-                            <input
-                              type="tel"
-                              value={editingDoctor.phone}
-                              onChange={(e) => setEditingDoctor({...editingDoctor, phone: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                              placeholder="Phone number"
-                            />
-                            <input
-                              type="email"
-                              value={editingDoctor.email}
-                              onChange={(e) => setEditingDoctor({...editingDoctor, email: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                              placeholder="Email"
-                            />
-                          </div>
-                          <div className="flex space-x-3">
-                            <button
-                              onClick={() => saveDoctor(doctor.id)}
-                              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={() => setEditingDoctorId(null)}
-                              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        // Display Mode
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Department Boxes */}
+                  {departments.map((department) => (
+                    <div key={department.department} className="bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      {/* Department Header */}
+                      <div className="bg-cornflower-blue text-white px-4 py-3 rounded-t-lg">
                         <div className="flex items-center justify-between">
-                          <div 
-                            className="flex-1 cursor-pointer"
-                            onDoubleClick={() => handleDoctorProfile(doctor)}
-                            title="Double-click to view detailed profile"
-                          >
-                            <h3 className="text-lg font-semibold text-gray-900">Dr. {doctor.name}</h3>
-                            <div className="text-sm text-gray-600 space-y-1">
-                              <p><span className="font-medium">Qualification:</span> {doctor.qualification || 'Not specified'}</p>
-                              <p><span className="font-medium">Fee:</span> ₹{doctor.default_fee}</p>
-                              <p><span className="font-medium">Phone:</span> {doctor.phone || 'Not provided'}</p>
-                              {doctor.has_profile && (
-                                <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                  Profile Complete
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEditDoctor(doctor)}
-                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 focus:outline-none"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => deleteDoctor(doctor)}
-                              className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 focus:outline-none"
-                            >
-                              Delete
-                            </button>
+                          <h3 className="text-lg font-semibold">{department.department}</h3>
+                          <div className="bg-white bg-opacity-20 px-2 py-1 rounded-full text-xs">
+                            {department.total_doctors} doctors
                           </div>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Doctors List */}
+                      <div className="p-4">
+                        {department.doctors.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <p className="text-sm">No doctors in this department</p>
+                            <button
+                              onClick={() => {
+                                const newDoctorName = prompt(`Add new doctor to ${department.department}:`);
+                                if (newDoctorName) {
+                                  console.log('Adding doctor to', department.department, newDoctorName);
+                                }
+                              }}
+                              className="mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
+                            >
+                              + Add Doctor
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {department.doctors.map((doctor) => (
+                              <div
+                                key={doctor.id}
+                                className="p-3 bg-gray-50 rounded-md hover:bg-gray-100 cursor-pointer transition-colors"
+                                onDoubleClick={() => handleDoctorProfile(doctor)}
+                                title="Double-click to view detailed profile"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-gray-900 text-sm">Dr. {doctor.name}</p>
+                                    <p className="text-xs text-gray-600">
+                                      {doctor.qualification || 'Not specified'} • ₹{doctor.default_fee}
+                                    </p>
+                                    <p className="text-xs text-gray-500">{doctor.phone || 'No phone'}</p>
+                                  </div>
+                                  <div className="flex flex-col space-y-1">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditDoctor(doctor);
+                                      }}
+                                      className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded hover:bg-blue-200"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirm(`Print profile for Dr. ${doctor.name}?`)) {
+                                          // Print functionality here
+                                          window.print();
+                                        }
+                                      }}
+                                      className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded hover:bg-gray-200"
+                                    >
+                                      Print
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
+
+                  {/* Add New Department Box */}
+                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div className="p-8 text-center">
+                      <div className="text-gray-400 text-4xl mb-4">+</div>
+                      <h3 className="text-lg font-medium text-gray-700 mb-2">Add New Department</h3>
+                      <button
+                        onClick={() => {
+                          const newDepartment = prompt('Enter new department name:');
+                          if (newDepartment && newDepartment.trim()) {
+                            // Add new department logic here
+                            console.log('Adding new department:', newDepartment);
+                          }
+                        }}
+                        className="bg-cornflower-blue hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
+                      >
+                        Create Department
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
-        ))}
+          )}
+
+          {/* Department Stats Tab */}
+          {activeReportTab === 'department-stats' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-charcoal-grey">Department Statistics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-blue-50 p-6 rounded-lg">
+                  <h3 className="font-semibold text-blue-900 text-lg">Total Departments</h3>
+                  <p className="text-3xl font-bold text-blue-700">{departments.length}</p>
+                </div>
+                <div className="bg-green-50 p-6 rounded-lg">
+                  <h3 className="font-semibold text-green-900 text-lg">Total Doctors</h3>
+                  <p className="text-3xl font-bold text-green-700">{doctors.length}</p>
+                </div>
+                <div className="bg-purple-50 p-6 rounded-lg">
+                  <h3 className="font-semibold text-purple-900 text-lg">Avg Doctors/Dept</h3>
+                  <p className="text-3xl font-bold text-purple-700">
+                    {departments.length > 0 ? Math.round(doctors.length / departments.length) : 0}
+                  </p>
+                </div>
+                <div className="bg-orange-50 p-6 rounded-lg">
+                  <h3 className="font-semibold text-orange-900 text-lg">Active Profiles</h3>
+                  <p className="text-3xl font-bold text-orange-700">
+                    {doctors.filter(d => d.has_profile).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Monthly Reports Tab */}
+          {activeReportTab === 'monthly-reports' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-charcoal-grey">Monthly Reports</h2>
+              <div className="bg-gray-50 p-8 rounded-lg text-center">
+                <p className="text-gray-600">Monthly reports functionality coming soon...</p>
+              </div>
+            </div>
+          )}
+
+          {/* System Analytics Tab */}
+          {activeReportTab === 'system-analytics' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-charcoal-grey">System Analytics</h2>
+              <div className="bg-gray-50 p-8 rounded-lg text-center">
+                <p className="text-gray-600">System analytics functionality coming soon...</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Doctor Profile Modal */}
