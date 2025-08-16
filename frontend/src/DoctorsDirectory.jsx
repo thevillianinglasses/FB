@@ -64,6 +64,10 @@ function DoctorsDirectory({ onBack }) {
     setShowDoctorEditor(true);
   };
 
+  const handleAddNewDepartment = () => {
+    setShowDepartmentEditor(true);
+  };
+
   const handleDeleteDoctor = async (doctor) => {
     const confirmText = `Delete Dr ${doctor.name}? This cannot be undone.`;
     
