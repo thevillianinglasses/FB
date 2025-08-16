@@ -3164,9 +3164,9 @@ class UnicareEHRTester:
         # Test 3: Test duplicate department name validation
         print("\n🔒 Test 3: Test duplicate department name validation")
         
-        # Try to create duplicate CARDIOLOGY department
+        # Try to create duplicate CARDIOLOGY_TEST department
         duplicate_dept_data = {
-            "name": "CARDIOLOGY",  # This should already exist
+            "name": "CARDIOLOGY_TEST",  # This should already exist
             "description": "Duplicate Cardiology Department",
             "head_of_department": "Dr. Duplicate Head",
             "location": "Duplicate Wing",
@@ -3174,7 +3174,7 @@ class UnicareEHRTester:
             "email": "duplicate@unicare.com"
         }
         
-        print(f"   🚫 Attempting to create duplicate department: CARDIOLOGY")
+        print(f"   🚫 Attempting to create duplicate department: CARDIOLOGY_TEST")
         success, duplicate_response = self.run_test(
             "Create Duplicate Department - CARDIOLOGY",
             "POST",
