@@ -324,6 +324,8 @@ metadata:
   integration_testing_completed: true
   kerala_localization_tested: true
   production_ready: true
+  department_management_apis_tested: true
+  department_management_functional: true
 
 test_plan:
   current_focus:
