@@ -170,32 +170,32 @@ function DoctorEditor({ doctor, onClose, onSave }) {
         .filter(part => part.trim());
       const fullAddress = addressParts.join(', ');
 
-      // Prepare doctor data
+      // Prepare doctor data according to backend API expectations
       const doctorData = {
         name: formData.name.trim(),
         specialty: formData.department,
         qualification: formData.degree.trim(),
         default_fee: formData.consultation_fee || '500',
         phone: formData.phone.trim(),
-        email: formData.email.trim(),
-        registration_number: formData.registration_number.trim(),
-        address: fullAddress,
-        availability_note: formData.availability_note.trim(),
-        // For now, we'll store file info as metadata
-        documents: uploadedFiles.map(file => ({
-          type: file.type,
-          name: file.name,
-          uploadedAt: file.uploadedAt
-        }))
+        email: formData.email.trim()
       };
+
+      // Add optional fields only if they have values
+      if (formData.registration_number.trim()) {
+        doctorData.registration_number = formData.registration_number.trim();
+      }
+      if (fullAddress) {
+        doctorData.address = fullAddress;
+      }
+
+      console.log('🔄 Saving doctor with data:', doctorData);
 
       let savedDoctor;
       if (doctor?.id) {
         // Update existing doctor
         savedDoctor = await updateDoctor(doctor.id, doctorData);
       } else {
-        // Add new doctor
-        doctorData.id = `doc_${Date.now()}`;
+        // Add new doctor (backend will generate UUID)
         savedDoctor = await addDoctor(doctorData);
       }
 
