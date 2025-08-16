@@ -1,3 +1,96 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CSS Safeguards for bulletproof rendering */
+html, body {
+  background: #FFFFFF !important;
+  color: #36454F !important;
+  height: auto !important;
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+#root {
+  min-height: 100vh;
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure no full-screen blockers */
+* {
+  pointer-events: auto;
+}
+
+/* Override any problematic z-index issues */
+.z-overlay {
+  z-index: 9998 !important;
+}
+
+/* Ensure text is always visible */
+body * {
+  color: inherit;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Skeleton loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom brand colors for Tailwind */
+:root {
+  --color-cornflower-blue: #6495ED;
+  --color-charcoal-grey: #36454F;
+}
+
+.bg-cornflower-blue {
+  background-color: var(--color-cornflower-blue);
+}
+
+.text-cornflower-blue {
+  color: var(--color-cornflower-blue);
+}
+
+.border-cornflower-blue {
+  border-color: var(--color-cornflower-blue);
+}
+
+.ring-cornflower-blue {
+  --tw-ring-color: var(--color-cornflower-blue);
+}
+
+.text-charcoal-grey {
+  color: var(--color-charcoal-grey);
+}
+
+/* Focus styles for accessibility */
+.focus\:outline-none:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus\:ring-2:focus {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
