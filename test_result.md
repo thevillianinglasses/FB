@@ -327,7 +327,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Appointment Management APIs - COMPLETED SUCCESSFULLY"
+    - "Department Management APIs - COMPLETED SUCCESSFULLY"
   stuck_tasks: []
   test_all: true
   test_priority: "completed"
@@ -335,6 +335,8 @@ test_plan:
   all_features_working: true
   appointment_apis_tested: true
   appointment_management_functional: true
+  department_management_apis_tested: true
+  department_management_functional: true
 
   - task: "Admin Doctor Management APIs"
     implemented: true
