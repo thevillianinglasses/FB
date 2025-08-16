@@ -1380,9 +1380,10 @@ async def create_department(department_data: dict, current_user: dict = Depends(
                 "created_at": new_department["created_at"].isoformat()
             }
         }
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 400 for duplicate department)
+        raise
     except Exception as e:
-        if "already exists" in str(e):
-            raise e
         raise HTTPException(status_code=500, detail=f"Error creating department: {str(e)}")
 
 # ===================
