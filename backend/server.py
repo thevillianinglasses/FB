@@ -35,6 +35,12 @@ app.add_middleware(
 # Database configuration
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/unicare_ehr")
 
+# File upload configuration
+UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
+
 # Global variables for database
 mongodb_client: AsyncIOMotorClient = None
 database = None
