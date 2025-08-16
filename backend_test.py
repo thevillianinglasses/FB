@@ -2849,6 +2849,197 @@ class UnicareEHRTester:
         
         return True
 
+    def test_verify_frontend_doctor_creation(self):
+        """Verify if the doctor 'Dr. John Test' was successfully created during frontend testing"""
+        print("\n🔍 VERIFYING FRONTEND DOCTOR CREATION")
+        print("Checking if 'Dr. John Test' was created during frontend testing...")
+        print("=" * 70)
+        
+        # Expected data from review request
+        expected_doctor = {
+            "name": "Dr. John Test",
+            "specialty": "GENERAL MEDICINE",
+            "qualification": "MBBS, MD", 
+            "phone": "9876543210",
+            "email": "testdoctor@test.com",
+            "fee": "600"
+        }
+        
+        print(f"📋 Looking for doctor with expected data:")
+        for key, value in expected_doctor.items():
+            print(f"   {key}: {value}")
+        
+        # Login as admin to access doctors API
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin")
+            return False
+            
+        # Test 1: Get current list of doctors
+        print(f"\n📊 Test 1: GET /api/doctors - Get current doctors list")
+        
+        success, doctors_response = self.run_test(
+            "Get All Doctors",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get doctors list")
+            return False
+            
+        print(f"   ✅ Successfully retrieved {len(doctors_response)} doctors")
+        
+        # Test 2: Look for doctor with name containing "John Test"
+        print(f"\n🔍 Test 2: Search for doctor with name containing 'John Test'")
+        
+        john_test_doctors = []
+        for doctor in doctors_response:
+            doctor_name = doctor.get('name', '').lower()
+            if 'john' in doctor_name and 'test' in doctor_name:
+                john_test_doctors.append(doctor)
+                
+        if not john_test_doctors:
+            print("   ❌ No doctors found with name containing 'John Test'")
+            
+            # Show all available doctors for debugging
+            print(f"\n   📋 Available doctors in system:")
+            for i, doctor in enumerate(doctors_response, 1):
+                print(f"      {i}. {doctor.get('name', 'Unknown')} - {doctor.get('specialty', 'Unknown')} - Fee: ₹{doctor.get('default_fee', 'Unknown')}")
+                
+            return False
+        else:
+            print(f"   ✅ Found {len(john_test_doctors)} doctor(s) with name containing 'John Test'")
+            
+        # Test 3: Verify doctor details match expected data
+        print(f"\n🔍 Test 3: Verify doctor details match expected data")
+        
+        best_match = None
+        match_score = 0
+        
+        for doctor in john_test_doctors:
+            current_score = 0
+            print(f"\n   📋 Checking doctor: {doctor.get('name')}")
+            
+            # Check each field
+            doctor_name = doctor.get('name', '')
+            doctor_specialty = doctor.get('specialty', '')
+            doctor_qualification = doctor.get('qualification', '')
+            doctor_phone = doctor.get('phone', '')
+            doctor_email = doctor.get('email', '')
+            doctor_fee = doctor.get('default_fee', '')
+            
+            print(f"      Name: {doctor_name}")
+            print(f"      Specialty: {doctor_specialty}")
+            print(f"      Qualification: {doctor_qualification}")
+            print(f"      Phone: {doctor_phone}")
+            print(f"      Email: {doctor_email}")
+            print(f"      Fee: ₹{doctor_fee}")
+            
+            # Score matching (flexible matching for variations)
+            if 'john' in doctor_name.lower() and 'test' in doctor_name.lower():
+                current_score += 2
+                print(f"      ✅ Name contains 'John Test'")
+            
+            if doctor_specialty.upper() == expected_doctor['specialty'].upper():
+                current_score += 2
+                print(f"      ✅ Specialty matches: {doctor_specialty}")
+            elif 'general' in doctor_specialty.lower() and 'medicine' in doctor_specialty.lower():
+                current_score += 1
+                print(f"      ⚠️ Specialty similar: {doctor_specialty}")
+            
+            if expected_doctor['qualification'].upper() in doctor_qualification.upper():
+                current_score += 1
+                print(f"      ✅ Qualification contains expected: {doctor_qualification}")
+            
+            if doctor_phone == expected_doctor['phone']:
+                current_score += 2
+                print(f"      ✅ Phone matches: {doctor_phone}")
+            
+            if expected_doctor['email'].lower() in doctor_email.lower():
+                current_score += 1
+                print(f"      ✅ Email contains expected: {doctor_email}")
+            
+            if doctor_fee == expected_doctor['fee']:
+                current_score += 2
+                print(f"      ✅ Fee matches exactly: ₹{doctor_fee}")
+            elif doctor_fee and abs(int(doctor_fee) - int(expected_doctor['fee'])) <= 100:
+                current_score += 1
+                print(f"      ⚠️ Fee close to expected: ₹{doctor_fee} (expected: ₹{expected_doctor['fee']})")
+            
+            print(f"      📊 Match score: {current_score}/10")
+            
+            if current_score > match_score:
+                match_score = current_score
+                best_match = doctor
+                
+        # Test 4: Evaluate the best match
+        print(f"\n🎯 Test 4: Evaluate best matching doctor")
+        
+        if not best_match:
+            print("   ❌ No suitable doctor match found")
+            return False
+            
+        print(f"   🏆 Best match found with score {match_score}/10:")
+        print(f"      ID: {best_match.get('id')}")
+        print(f"      Name: {best_match.get('name')}")
+        print(f"      Specialty: {best_match.get('specialty')}")
+        print(f"      Qualification: {best_match.get('qualification')}")
+        print(f"      Phone: {best_match.get('phone')}")
+        print(f"      Email: {best_match.get('email')}")
+        print(f"      Fee: ₹{best_match.get('default_fee')}")
+        print(f"      Created: {best_match.get('created_at', 'Unknown')}")
+        
+        # Test 5: Determine if this is the expected doctor
+        print(f"\n✅ Test 5: Final verification")
+        
+        if match_score >= 6:  # At least 60% match
+            print(f"   ✅ DOCTOR VERIFICATION SUCCESSFUL!")
+            print(f"   🎉 Found doctor matching frontend test data:")
+            print(f"      • Name contains 'John Test': ✅")
+            print(f"      • Specialty: {best_match.get('specialty')} {'✅' if 'general' in best_match.get('specialty', '').lower() else '⚠️'}")
+            print(f"      • Phone: {best_match.get('phone')} {'✅' if best_match.get('phone') == expected_doctor['phone'] else '⚠️'}")
+            print(f"      • Fee: ₹{best_match.get('default_fee')} {'✅' if best_match.get('default_fee') == expected_doctor['fee'] else '⚠️'}")
+            print(f"   📊 Match confidence: {match_score}/10 ({match_score*10}%)")
+            
+            # Additional verification - check if doctor was created recently
+            created_at = best_match.get('created_at')
+            if created_at:
+                try:
+                    from datetime import datetime, timezone
+                    if created_at.endswith('Z'):
+                        created_time = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    else:
+                        created_time = datetime.fromisoformat(created_at).replace(tzinfo=timezone.utc)
+                    
+                    time_diff = datetime.now(timezone.utc) - created_time
+                    hours_ago = time_diff.total_seconds() / 3600
+                    
+                    if hours_ago < 24:
+                        print(f"   🕐 Doctor was created recently ({hours_ago:.1f} hours ago)")
+                        print(f"   ✅ This confirms it was likely created during frontend testing")
+                    else:
+                        print(f"   🕐 Doctor was created {hours_ago:.1f} hours ago")
+                        
+                except Exception as e:
+                    print(f"   ⚠️ Could not parse creation time: {e}")
+            
+            return True
+        else:
+            print(f"   ❌ DOCTOR VERIFICATION FAILED")
+            print(f"   📊 Match confidence too low: {match_score}/10 ({match_score*10}%)")
+            print(f"   💡 The doctor may not have been created successfully during frontend testing")
+            
+            # Show what was expected vs what was found
+            print(f"\n   📋 Expected vs Found:")
+            print(f"      Name: Expected 'Dr. John Test' → Found '{best_match.get('name')}'")
+            print(f"      Specialty: Expected 'GENERAL MEDICINE' → Found '{best_match.get('specialty')}'")
+            print(f"      Phone: Expected '{expected_doctor['phone']}' → Found '{best_match.get('phone')}'")
+            print(f"      Email: Expected '{expected_doctor['email']}' → Found '{best_match.get('email')}'")
+            print(f"      Fee: Expected '₹{expected_doctor['fee']}' → Found '₹{best_match.get('default_fee')}'")
+            
+            return False
+
 def main():
     print("🏥 DOCTOR CREATION API TESTING")
     print("🎯 Testing POST /api/doctors endpoint specifically")
