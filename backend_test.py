@@ -3053,9 +3053,9 @@ class UnicareEHRTester:
             
         # Test data as specified in review request
         departments_to_create = [
-            "CARDIOLOGY",
-            "ORTHOPEDICS", 
-            "NEUROLOGY"
+            "CARDIOLOGY_TEST",
+            "ORTHOPEDICS_TEST", 
+            "NEUROLOGY_TEST"
         ]
         
         print(f"📋 Test Data - Departments to create:")
