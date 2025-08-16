@@ -780,7 +780,7 @@ function NewOPDPageEnhanced() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
                 >
                   <option value="">Select Department</option>
-                  {departments.map((dept) => (
+                  {departmentsList.map((dept) => (
                     <option key={dept} value={dept}>
                       {dept}
                     </option>
