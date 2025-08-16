@@ -277,6 +277,8 @@ export const AppProvider = ({ children }) => {
     updatePatient,
     deletePatient,
     addDoctor,
+    updateDoctor,
+    deleteDoctor,
     addUser,
     loadPatients,
     loadDoctors,
