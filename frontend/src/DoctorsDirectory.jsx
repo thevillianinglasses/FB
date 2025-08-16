@@ -3,7 +3,7 @@ import { useAppContext } from './AppContext';
 import DoctorEditor from './DoctorEditor';
 import DepartmentEditor from './DepartmentEditor';
 
-function DoctorsDirectory({ onBack }) {
+function DoctorsDirectory({ onBackToAdmin }) {
   const { doctors, loadDoctors, deleteDoctor } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [showDoctorEditor, setShowDoctorEditor] = useState(false);
