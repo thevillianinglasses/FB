@@ -115,6 +115,19 @@ export const patientsAPI = {
   }
 };
 
+// Departments API  
+export const departmentsAPI = {
+  getAll: async () => {
+    const response = await api.get('/api/admin/departments');
+    return response.data;
+  },
+  
+  create: async (departmentData) => {
+    const response = await api.post('/api/admin/departments', departmentData);
+    return response.data;
+  }
+};
+
 // Doctors API
 export const doctorsAPI = {
   getAll: async () => {
