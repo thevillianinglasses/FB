@@ -45,6 +45,7 @@ function NursingDashboard({ onLogout, userName }) {
 
   useEffect(() => {
     loadInitialData();
+    loadTodaysPatients(); // Load today's patients for nursing
   }, []);
 
   useEffect(() => {
@@ -52,8 +53,149 @@ function NursingDashboard({ onLogout, userName }) {
       loadVitals();
     } else if (activeTab === 'procedures') {
       loadProcedures();
+    } else if (activeTab === 'today-patients') {
+      loadTodaysPatients();
     }
   }, [activeTab]);
+
+  // Load today's patients from 24-hour registration log
+  const loadTodaysPatients = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.REACT_APP_BACKEND_URL}/api/nursing/patients/today`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const patientsData = await response.json();
+        setTodaysPatients(patientsData);
+        console.log('✅ Today\'s patients loaded for nursing:', patientsData.length);
+      } else {
+        console.error('Error loading today\'s patients for nursing');
+      }
+    } catch (error) {
+      console.error('Error loading today\'s patients:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Get patient by OPD number
+  const getPatientByOpd = async (opdNumber) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.REACT_APP_BACKEND_URL}/api/nursing/patient/by-opd/${opdNumber}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const patientData = await response.json();
+        setPatientByOpd(patientData);
+        setSelectedPatient(patientData);
+        
+        // Auto-populate vital signs form with patient data
+        setNewVitals({
+          ...newVitals,
+          patient_id: patientData.id,
+          patient_name: patientData.patient_name,
+          age: patientData.age,
+          opd_number: opdNumber
+        });
+        
+        console.log('✅ Patient found by OPD:', patientData);
+      } else {
+        alert('❌ Patient not found with this OPD number');
+        setPatientByOpd(null);
+        setSelectedPatient(null);
+      }
+    } catch (error) {
+      console.error('Error getting patient by OPD:', error);
+      alert('❌ Error searching patient by OPD number');
+    }
+  };
+
+  // Handle OPD number entry
+  const handleOpdEntry = async () => {
+    if (opdNumber.trim()) {
+      await getPatientByOpd(opdNumber.trim());
+    }
+  };
+
+  // Record vital signs
+  const recordVitalSigns = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const vitalsData = {
+        patient_id: selectedPatient?.id,
+        patient_name: selectedPatient?.patient_name,
+        age: selectedPatient?.age?.toString(),
+        opd_number: selectedPatient?.opd_number,
+        temperature: newVitals.temperature,
+        blood_pressure_systolic: newVitals.blood_pressure?.split('/')[0] || '',
+        blood_pressure_diastolic: newVitals.blood_pressure?.split('/')[1] || '',
+        heart_rate: newVitals.pulse_rate,
+        respiratory_rate: newVitals.respiratory_rate,
+        oxygen_saturation: newVitals.oxygen_saturation,
+        weight: newVitals.weight,
+        height: newVitals.height,
+        glucose_level: newVitals.glucose_level || '',
+        notes: newVitals.notes,
+        recorded_by: userName || 'Nursing Staff'
+      };
+
+      const response = await fetch(`${import.meta.env.REACT_APP_BACKEND_URL}/api/nursing/vitals`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(vitalsData)
+      });
+
+      if (response.ok) {
+        const savedVitals = await response.json();
+        alert('✅ Vital signs recorded successfully!\n\nThe vitals are now accessible in the Doctor portal.');
+        
+        // Reset form
+        setNewVitals({
+          patient_id: '',
+          temperature: '',
+          blood_pressure: '',
+          pulse_rate: '',
+          respiratory_rate: '',
+          oxygen_saturation: '',
+          weight: '',
+          height: '',
+          bmi: '',
+          pain_scale: '',
+          notes: ''
+        });
+        
+        setSelectedPatient(null);
+        setPatientByOpd(null);
+        setOpdNumber('');
+        setShowRecordVitals(false);
+        
+        // Reload vitals list
+        loadVitals();
+        
+        console.log('✅ Vital signs recorded:', savedVitals);
+      } else {
+        const errorData = await response.json();
+        alert(`❌ Error recording vital signs: ${errorData.detail || 'Please try again'}`);
+      }
+    } catch (error) {
+      console.error('Error recording vital signs:', error);
+      alert('❌ Error recording vital signs. Please try again.');
+    }
+  };
 
   const loadInitialData = async () => {
     try {
