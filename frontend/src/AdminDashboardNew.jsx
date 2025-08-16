@@ -62,6 +62,11 @@ function AdminDashboardNew({ onLogout, userName }) {
     return <DoctorsDirectory onBack={() => setCurrentScreen('dashboard')} />;
   }
 
+  // Handle screen navigation
+  if (currentScreen === 'doctors') {
+    return <DoctorsDirectory onBackToAdmin={() => setCurrentScreen('dashboard')} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Bar */}
