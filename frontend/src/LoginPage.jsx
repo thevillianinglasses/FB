@@ -64,6 +64,7 @@ function LoginPage({ onLoginSuccess }) {
             <input
               type="password"
               id="password"
+              name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-cornflower-blue transition-colors"
