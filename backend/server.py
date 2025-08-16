@@ -1310,6 +1310,82 @@ async def get_patient_vitals_by_opd_for_doctor(opd_number: str, current_user: di
         raise HTTPException(status_code=500, detail=f"Error fetching patient vitals by OPD: {str(e)}")
 
 # ===================
+# DEPARTMENT MANAGEMENT APIS
+# ===================
+
+@app.get("/api/admin/departments", response_model=List[dict])
+async def get_all_departments(current_user: dict = Depends(get_current_user)):
+    """Get all departments for admin management"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        departments_cursor = database.departments.find({})
+        departments = []
+        async for dept in departments_cursor:
+            departments.append({
+                "id": dept.get("id"),
+                "name": dept.get("name"),
+                "description": dept.get("description", ""),
+                "head_of_department": dept.get("head_of_department", ""),
+                "location": dept.get("location", ""),
+                "contact_number": dept.get("contact_number", ""),
+                "email": dept.get("email", ""),
+                "status": dept.get("status", "active"),
+                "created_at": dept.get("created_at")
+            })
+        return departments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching departments: {str(e)}")
+
+@app.post("/api/admin/departments")
+async def create_department(department_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a new department"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Check if department already exists
+        existing_dept = await database.departments.find_one({"name": department_data["name"].upper()})
+        if existing_dept:
+            raise HTTPException(status_code=400, detail="Department with this name already exists")
+        
+        # Create new department
+        new_department = {
+            "id": str(uuid.uuid4()),
+            "name": department_data["name"].upper(),
+            "description": department_data.get("description", ""),
+            "head_of_department": department_data.get("head_of_department", ""),
+            "location": department_data.get("location", ""),
+            "contact_number": department_data.get("contact_number", ""),
+            "email": department_data.get("email", ""),
+            "status": "active",
+            "created_at": datetime.utcnow(),
+            "created_by": current_user.get("username", "admin")
+        }
+        
+        await database.departments.insert_one(new_department)
+        
+        return {
+            "message": "Department created successfully",
+            "department": {
+                "id": new_department["id"],
+                "name": new_department["name"],
+                "description": new_department["description"],
+                "head_of_department": new_department["head_of_department"],
+                "location": new_department["location"],
+                "contact_number": new_department["contact_number"],
+                "email": new_department["email"],
+                "status": new_department["status"],
+                "created_at": new_department["created_at"].isoformat()
+            }
+        }
+    except Exception as e:
+        if "already exists" in str(e):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error creating department: {str(e)}")
+
+# ===================
 # FILE UPLOAD APIS
 # ===================
 
