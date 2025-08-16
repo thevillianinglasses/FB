@@ -186,9 +186,9 @@ function AdminReportsPage() {
     }
   };
 
-  // Add certificate to doctor profile
-  const addCertificate = () => {
-    const certificateName = prompt('Enter certificate name (e.g., "TCMC Registration", "Postgraduate Certificate"):');
+  // Enhanced add certificate function
+  const addCertificate = (certificateType = null) => {
+    const certificateName = certificateType || prompt('Enter certificate name (e.g., "Medical License", "Specialization Certificate"):');
     if (certificateName) {
       const newCertificate = {
         id: Date.now().toString(),
