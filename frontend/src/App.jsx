@@ -78,7 +78,7 @@ function AppContent() {
   const renderDashboard = () => {
     switch (userRole) {
       case 'admin':
-        return <AdminDashboard onLogout={handleLogout} userName={userName} />;
+        return <AdminDashboardNew onLogout={handleLogout} userName={userName} />;
       case 'reception':
         return <ReceptionDashboard onLogout={handleLogout} userName={userName} />;
       case 'laboratory':
