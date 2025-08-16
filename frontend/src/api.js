@@ -125,6 +125,34 @@ export const doctorsAPI = {
   create: async (doctorData) => {
     const response = await api.post('/api/doctors', doctorData);
     return response.data;
+  },
+
+  update: async (id, doctorData) => {
+    const response = await api.put(`/api/admin/doctors/${id}`, doctorData);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/api/admin/doctors/${id}`);
+    return response.data;
+  },
+
+  uploadDocument: async (doctorId, file, documentType) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('document_type', documentType);
+    
+    const response = await api.post(`/api/admin/doctors/${doctorId}/upload-document`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  generatePDF: async (doctorId) => {
+    const response = await api.post(`/api/admin/doctors/${doctorId}/generate-pdf`);
+    return response.data;
   }
 };
 
