@@ -48,6 +48,18 @@ backend:
         agent: "testing"
         comment: "Health check endpoint /api/health responding correctly with status 200 and timestamp."
 
+  - task: "Add New Doctor Functionality"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "🎉 ADD NEW DOCTOR FUNCTIONALITY COMPREHENSIVE TESTING COMPLETED SUCCESSFULLY! ✅ POST /api/doctors working perfectly with exact test data from review request: Test Doctor (Cardiology, MBBS MD, ₹600, 9876543210, testdoctor@unicare.com) and Emergency Doctor (Emergency Medicine, MBBS, ₹700, 9876543211, emergency@unicare.com) ✅ Both doctors created successfully with proper UUIDs ✅ All doctor data fields correctly stored and retrieved (name, specialty, qualification, default_fee, phone, email) ✅ default_fee field is string type (frontend compatible) - CRITICAL for frontend dropdown functionality ✅ Both doctors appear in GET /api/doctors list (4 total doctors now in system) ✅ Data persistence verified across multiple requests ✅ Data consistency confirmed - doctors appear consistently in all API calls ✅ All required fields present in API responses ✅ Admin role-based access control working correctly ✅ 7/7 tests passed with 100% success rate. The Add New Doctor functionality is working perfectly and resolves the user's issue: 'adding new doctor doesn't work - cannot input name in both department or doctor in both reception and admin page'. Backend API fully supports doctor creation and the data is properly persisted and retrievable."
+
   - task: "Role-based Access Control"
     implemented: true
     working: true
