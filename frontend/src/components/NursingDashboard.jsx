@@ -549,17 +549,8 @@ function NursingDashboard({ onLogout, userName }) {
                 </div>
               )}
             </div>
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-charcoal-grey">Vital Signs</h2>
-              <button
-                onClick={() => setShowRecordVitals(true)}
-                className="bg-cornflower-blue hover:bg-opacity-90 text-white font-semibold py-2 px-4 rounded-lg"
-              >
-                + Record Vitals
-              </button>
-            </div>
 
+            {/* Existing Vital Signs Table */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -610,10 +601,8 @@ function NursingDashboard({ onLogout, userName }) {
                             {vital.pulse_rate || 'N/A'} bpm
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-gray-900">
-                            {vital.oxygen_saturation || 'N/A'}%
-                          </span>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {vital.oxygen_saturation || 'N/A'}%
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDateTime(vital.recorded_at)}
