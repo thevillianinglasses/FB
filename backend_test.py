@@ -3413,9 +3413,9 @@ class UnicareEHRTester:
         return True
 
 def main():
-    print("🏥 FRONTEND DOCTOR VERIFICATION TEST")
-    print("🎯 Verifying if 'Dr. John Test' was created during frontend testing")
-    print("🚨 Focus: Check if doctor exists with expected data from review request")
+    print("🏢 DEPARTMENT MANAGEMENT APIs TESTING")
+    print("🎯 Testing newly implemented Department Management APIs")
+    print("🚨 Focus: Department creation, retrieval, duplicate validation, and access control")
     print("=" * 70)
     
     # Get backend URL from frontend .env file
@@ -3424,13 +3424,13 @@ def main():
     # Initialize tester with correct backend URL
     tester = UnicareEHRTester(backend_url)
     
-    # Run the specific verification test
+    # Run the department management tests
     tests = [
         # Basic connectivity
         tester.test_health_check,
         
-        # Main focus: Verify frontend doctor creation
-        tester.test_verify_frontend_doctor_creation,
+        # Main focus: Department Management APIs
+        tester.test_department_management_apis,
     ]
     
     for test in tests:
