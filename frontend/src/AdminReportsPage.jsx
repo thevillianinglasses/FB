@@ -361,12 +361,7 @@ function AdminReportsPage() {
                           <div className="text-center py-8 text-gray-500">
                             <p className="text-sm">No doctors in this department</p>
                             <button
-                              onClick={() => {
-                                const newDoctorName = prompt(`Add new doctor to ${department.department}:`);
-                                if (newDoctorName) {
-                                  console.log('Adding doctor to', department.department, newDoctorName);
-                                }
-                              }}
+                              onClick={() => addNewDoctorAdmin(null, department.department)}
                               className="mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
                             >
                               + Add Doctor
