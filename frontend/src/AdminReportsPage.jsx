@@ -432,20 +432,45 @@ function AdminReportsPage() {
         </div>
       </div>
 
-      {/* Doctor Profile Modal */}
+      {/* Enhanced Doctor Profile Modal */}
       {showDoctorProfile && selectedDoctor && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="bg-cornflower-blue text-white px-6 py-4 rounded-t-lg">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Dr. {selectedDoctor.name} - Detailed Profile</h2>
-                <button
-                  onClick={() => setShowDoctorProfile(false)}
-                  className="text-white hover:text-gray-300 text-2xl font-bold"
-                >
-                  ×
-                </button>
+                <h2 className="text-xl font-semibold">Dr. {selectedDoctor.name} - Complete Profile</h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      // Print functionality
+                      const printContent = `
+                        <h1>UNICARE POLYCLINIC - Doctor Profile</h1>
+                        <h2>Dr. ${selectedDoctor.name}</h2>
+                        <p><strong>Department:</strong> ${selectedDoctor.specialty}</p>
+                        <p><strong>Qualification:</strong> ${doctorProfile.degree}</p>
+                        <p><strong>Registration Number:</strong> ${doctorProfile.registration_number}</p>
+                        <p><strong>Address:</strong> ${doctorProfile.address}</p>
+                        <p><strong>Phone:</strong> ${doctorProfile.phone}</p>
+                        <p><strong>Email:</strong> ${doctorProfile.email}</p>
+                        <h3>Certificates:</h3>
+                        ${doctorProfile.certificates.map(cert => `<p>• ${cert.certificate_name}</p>`).join('')}
+                      `;
+                      const printWindow = window.open('', '_blank');
+                      printWindow.document.write(printContent);
+                      printWindow.print();
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                  >
+                    🖨️ Print PDF
+                  </button>
+                  <button
+                    onClick={() => setShowDoctorProfile(false)}
+                    className="text-white hover:text-gray-300 text-2xl font-bold"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -455,6 +480,24 @@ function AdminReportsPage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Basic Information</h3>
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Name</label>
+                    <input
+                      type="text"
+                      value={selectedDoctor.name}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                    <input
+                      type="text"
+                      value={selectedDoctor.specialty}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                      disabled
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Degree</label>
                     <input
@@ -508,46 +551,66 @@ function AdminReportsPage() {
                 </div>
               </div>
 
-              {/* Certificates Section */}
+              {/* Enhanced Upload Documents Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
-                  <h3 className="text-lg font-semibold text-gray-900">Certificates & Documents</h3>
-                  <button
-                    onClick={addCertificate}
-                    className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none"
-                  >
-                    + Add Certificate
-                  </button>
+                  <h3 className="text-lg font-semibold text-gray-900">Upload Documents</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => addCertificate('Aadhar Card')}
+                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                    >
+                      + Aadhar
+                    </button>
+                    <button
+                      onClick={() => addCertificate('TCMC Registration')}
+                      className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
+                    >
+                      + TCMC
+                    </button>
+                    <button
+                      onClick={() => addCertificate('Postgraduate Certificate')}
+                      className="px-3 py-1 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700"
+                    >
+                      + PG Cert
+                    </button>
+                    <button
+                      onClick={() => addCertificate()}
+                      className="px-3 py-1 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700"
+                    >
+                      + Other
+                    </button>
+                  </div>
                 </div>
 
                 {doctorProfile.certificates.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500">No certificates added yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Click "Add Certificate" to upload documents</p>
+                  <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <div className="text-4xl text-gray-400 mb-2">📄</div>
+                    <p className="text-gray-500">No certificates uploaded yet</p>
+                    <p className="text-sm text-gray-400 mt-1">Click the buttons above to add certificates</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {doctorProfile.certificates.map((cert) => (
-                      <div key={cert.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{cert.certificate_name}</p>
-                          <p className="text-sm text-gray-500">
-                            {cert.file_name || 'File not uploaded'} • Added: {new Date(cert.uploaded_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => alert('File upload functionality will be implemented next')}
-                            className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                          >
-                            Upload
-                          </button>
+                      <div key={cert.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900">{cert.certificate_name}</h4>
                           <button
                             onClick={() => removeCertificate(cert.id)}
-                            className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                            className="text-red-600 hover:text-red-800 text-sm"
                           >
-                            Remove
+                            ✕
                           </button>
+                        </div>
+                        <div className="space-y-2">
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cornflower-blue file:text-white hover:file:bg-blue-700"
+                          />
+                          <p className="text-xs text-gray-500">
+                            Supported: PDF, JPG, PNG • Added: {new Date(cert.uploaded_at).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                     ))}
