@@ -3191,7 +3191,7 @@ class UnicareEHRTester:
             return False
         
         # Test with different case variations to ensure case-insensitive duplicate detection
-        case_variations = ["cardiology", "Cardiology", "CARDIOLOGY", "CarDioLogy"]
+        case_variations = ["cardiology_test", "Cardiology_Test", "CARDIOLOGY_TEST", "CarDioLogy_Test"]
         
         for variation in case_variations:
             print(f"   🔍 Testing case variation: '{variation}'")
