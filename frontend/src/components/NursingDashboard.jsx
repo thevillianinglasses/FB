@@ -744,43 +744,66 @@ function NursingDashboard({ onLogout, userName }) {
         )}
       </main>
 
-      {/* Record Vitals Modal */}
+      {/* Enhanced Record Vitals Modal with OPD Integration */}
       {showRecordVitals && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
             <h3 className="text-lg font-semibold text-charcoal-grey mb-4">Record Vital Signs</h3>
-            <form onSubmit={handleRecordVitals} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
-                <select
-                  value={newVitals.patient_id}
-                  onChange={(e) => setNewVitals({...newVitals, patient_id: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                  required
-                >
-                  <option value="">Select Patient</option>
-                  {patients.map(patient => (
-                    <option key={patient.id} value={patient.id}>
-                      {patient.patient_name} - {patient.phone_number}
-                    </option>
-                  ))}
-                </select>
+            
+            {/* Patient Information Display */}
+            {selectedPatient && (
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900">Patient Information</h4>
+                <div className="text-sm text-blue-700 mt-1">
+                  <p><strong>Name:</strong> {selectedPatient.patient_name}</p>
+                  <p><strong>Age:</strong> {selectedPatient.age} years</p>
+                  <p><strong>Sex:</strong> {selectedPatient.sex}</p>
+                  <p><strong>OPD Number:</strong> {selectedPatient.opd_number}</p>
+                  <p><strong>Phone:</strong> {selectedPatient.phone_number}</p>
+                </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            )}
+            
+            <form onSubmit={(e) => { e.preventDefault(); recordVitalSigns(); }} className="space-y-4">
+              {/* Patient Selection (if not auto-selected) */}
+              {!selectedPatient && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Temperature (°F)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
+                  <select
+                    value={newVitals.patient_id}
+                    onChange={(e) => {
+                      const patient = patients.find(p => p.id === e.target.value);
+                      setNewVitals({...newVitals, patient_id: e.target.value});
+                      setSelectedPatient(patient);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
+                    required
+                  >
+                    <option value="">Select Patient</option>
+                    {patients.map((patient) => (
+                      <option key={patient.id} value={patient.id}>
+                        {patient.patient_name} - {patient.phone_number}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Vital Signs Input Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Temperature (°C)</label>
                   <input
                     type="number"
                     step="0.1"
                     value={newVitals.temperature}
                     onChange={(e) => setNewVitals({...newVitals, temperature: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                    placeholder="98.6"
+                    placeholder="36.5"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Blood Pressure</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Blood Pressure (systolic/diastolic)</label>
                   <input
                     type="text"
                     value={newVitals.blood_pressure}
@@ -790,7 +813,7 @@ function NursingDashboard({ onLogout, userName }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pulse Rate (bpm)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Heart Rate (BPM)</label>
                   <input
                     type="number"
                     value={newVitals.pulse_rate}
@@ -800,7 +823,7 @@ function NursingDashboard({ onLogout, userName }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Respiratory Rate</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Respiratory Rate (per min)</label>
                   <input
                     type="number"
                     value={newVitals.respiratory_rate}
@@ -827,7 +850,7 @@ function NursingDashboard({ onLogout, userName }) {
                     value={newVitals.weight}
                     onChange={(e) => setNewVitals({...newVitals, weight: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                    placeholder="70"
+                    placeholder="70.5"
                   />
                 </div>
                 <div>
@@ -841,17 +864,14 @@ function NursingDashboard({ onLogout, userName }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pain Scale (0-10)</label>
-                  <select
-                    value={newVitals.pain_scale}
-                    onChange={(e) => setNewVitals({...newVitals, pain_scale: e.target.value})}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Glucose Level (mg/dL)</label>
+                  <input
+                    type="number"
+                    value={newVitals.glucose_level || ''}
+                    onChange={(e) => setNewVitals({...newVitals, glucose_level: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
-                  >
-                    <option value="">Select Pain Level</option>
-                    {[0,1,2,3,4,5,6,7,8,9,10].map(level => (
-                      <option key={level} value={level}>{level} - {level === 0 ? 'No Pain' : level <= 3 ? 'Mild' : level <= 6 ? 'Moderate' : 'Severe'}</option>
-                    ))}
-                  </select>
+                    placeholder="90"
+                  />
                 </div>
               </div>
               
@@ -862,24 +882,27 @@ function NursingDashboard({ onLogout, userName }) {
                   onChange={(e) => setNewVitals({...newVitals, notes: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
                   rows="3"
-                  placeholder="Additional observations..."
+                  placeholder="Additional observations or notes..."
                 />
               </div>
-              
-              <div className="flex space-x-4 pt-4">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 bg-cornflower-blue hover:bg-opacity-90 text-white font-semibold py-2 px-4 rounded-md disabled:opacity-50"
-                >
-                  {isLoading ? 'Recording...' : 'Record Vitals'}
-                </button>
+
+              <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowRecordVitals(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-md"
+                  onClick={() => {
+                    setShowRecordVitals(false);
+                    setSelectedPatient(null);
+                    setPatientByOpd(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-cornflower-blue text-white rounded-md hover:bg-blue-700"
+                >
+                  Record Vitals
                 </button>
               </div>
             </form>
