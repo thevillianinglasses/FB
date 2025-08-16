@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from './AppContext';
 import DoctorEditor from './DoctorEditor';
+import DepartmentEditor from './DepartmentEditor';
 
 function DoctorsDirectory({ onBack }) {
   const { doctors, loadDoctors, deleteDoctor } = useAppContext();
