@@ -185,8 +185,7 @@ function AdminDashboardNew({ onLogout, userName }) {
         {/* Doctors Info - Full-width Blue Call-to-Action */}
         <div 
           className="relative bg-cornflower-blue hover:bg-blue-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 cursor-pointer group"
-          onClick={handleDoctorsInfoClick}
-          onDoubleClick={handleDoctorsInfoDoubleClick}
+          onClick={handleDoctorsInfoDoubleClick}
         >
           <div className="flex items-center justify-between">
             <div>
