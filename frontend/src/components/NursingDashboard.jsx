@@ -371,7 +371,184 @@ function NursingDashboard({ onLogout, userName }) {
 
       {/* Main Content */}
       <main className="px-6 py-6">
+        {/* Today's Patients Tab - 24-Hour Rolling Registration */}
+        {activeTab === 'today-patients' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-charcoal-grey">Today's Patients - 24 Hour Log</h2>
+              <div className="text-sm text-gray-600">
+                Total Patients: {todaysPatients.length} | Last Updated: {new Date().toLocaleTimeString()}
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="text-lg text-gray-600">Loading today's patients...</div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        OPD Number
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Patient Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Age/Sex
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Doctor
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Registration Time
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {todaysPatients.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                          <div className="text-lg mb-2">No patients registered today</div>
+                          <div className="text-sm">Patients will appear here as they register through Reception</div>
+                        </td>
+                      </tr>
+                    ) : (
+                      todaysPatients.map((patient) => (
+                        <tr key={patient.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-cornflower-blue">
+                              {patient.opd_number}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {patient.patient_name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {patient.phone_number}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {patient.age} years, {patient.sex}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {patient.assigned_doctor || 'Not assigned'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatDateTime(patient.created_at)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button
+                              onClick={() => {
+                                setSelectedPatient(patient);
+                                setNewVitals({
+                                  ...newVitals,
+                                  patient_id: patient.id,
+                                  patient_name: patient.patient_name,
+                                  age: patient.age,
+                                  opd_number: patient.opd_number
+                                });
+                                setShowRecordVitals(true);
+                              }}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+                            >
+                              Record Vitals
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedPatient(patient);
+                                setShowRecordProcedure(true);
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+                            >
+                              Procedure
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Enhanced Vital Signs Tab with OPD Integration */}
         {activeTab === 'vitals' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-charcoal-grey">Vital Signs & Procedures</h2>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowRecordVitals(true)}
+                  className="bg-cornflower-blue hover:bg-opacity-90 text-white font-semibold py-2 px-4 rounded-lg"
+                >
+                  + Record Vitals
+                </button>
+              </div>
+            </div>
+
+            {/* OPD Number Entry Section */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Access by OPD Number</h3>
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={opdNumber}
+                    onChange={(e) => setOpdNumber(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue"
+                    placeholder="Enter OPD number (e.g., 025/25)..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleOpdEntry();
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={handleOpdEntry}
+                  className="px-6 py-2 bg-cornflower-blue text-white rounded-md hover:bg-blue-700 focus:outline-none"
+                >
+                  Find Patient
+                </button>
+              </div>
+              
+              {patientByOpd && (
+                <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-green-900">Patient Found</h4>
+                      <p className="text-sm text-green-700">
+                        {patientByOpd.patient_name} • {patientByOpd.age} years, {patientByOpd.sex} • OPD: {patientByOpd.opd_number}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setNewVitals({
+                          ...newVitals,
+                          patient_id: patientByOpd.id,
+                          patient_name: patientByOpd.patient_name,
+                          age: patientByOpd.age,
+                          opd_number: patientByOpd.opd_number
+                        });
+                        setShowRecordVitals(true);
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                    >
+                      Record Vitals
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-charcoal-grey">Vital Signs</h2>
