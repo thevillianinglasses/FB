@@ -199,6 +199,44 @@ class AppointmentUpdate(BaseModel):
     type: Optional[str] = None
     status: Optional[AppointmentStatus] = None
     notes: Optional[str] = None
+    
+# Vital Signs Models for Nursing Integration
+class VitalSigns(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str  # Links to Patient.id or OPD number
+    patient_name: str
+    age: str
+    opd_number: str
+    temperature: str = ""  # Celsius
+    blood_pressure_systolic: str = ""
+    blood_pressure_diastolic: str = ""
+    heart_rate: str = ""  # BPM
+    respiratory_rate: str = ""  # Per minute
+    oxygen_saturation: str = ""  # Percentage
+    weight: str = ""  # Kg
+    height: str = ""  # cm
+    bmi: str = ""
+    glucose_level: str = ""  # mg/dL
+    notes: str = ""
+    recorded_by: str = ""  # Nurse/Staff name
+    recorded_at: datetime = Field(default_factory=datetime.utcnow)
+    
+class VitalSignsCreate(BaseModel):
+    patient_id: str
+    patient_name: str
+    age: str
+    opd_number: str
+    temperature: str = ""
+    blood_pressure_systolic: str = ""
+    blood_pressure_diastolic: str = ""
+    heart_rate: str = ""
+    respiratory_rate: str = ""
+    oxygen_saturation: str = ""
+    weight: str = ""
+    height: str = ""
+    glucose_level: str = ""
+    notes: str = ""
+    recorded_by: str = ""
 
 # Laboratory Models
 class LabTest(BaseModel):
