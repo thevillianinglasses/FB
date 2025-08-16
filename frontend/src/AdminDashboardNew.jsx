@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from './AppContext';
 import DoctorsDirectory from './DoctorsDirectory';
-import DoctorsDirectory from './DoctorsDirectory';
 
 function AdminDashboardNew({ onLogout, userName }) {
   const { doctors, patients, users, loadDoctors, loadPatients, loadUsers } = useAppContext();
