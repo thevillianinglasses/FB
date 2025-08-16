@@ -1047,3 +1047,254 @@ async def update_appointment_status(appointment_id: str, status: AppointmentStat
         return Appointment(**updated_appointment)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating appointment status: {str(e)}")
+
+# ===================
+# ADMIN REPORTS & DOCTOR MANAGEMENT APIS 
+# ===================
+
+@app.get("/api/admin/reports/departments")
+async def get_departments_with_doctors(current_user: dict = Depends(get_current_user)):
+    """Get all departments with their doctors for admin reports"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        doctors_cursor = database.doctors.find({})
+        departments = {}
+        
+        async for doctor in doctors_cursor:
+            specialty = doctor.get("specialty", "General")
+            if specialty not in departments:
+                departments[specialty] = []
+            departments[specialty].append(Doctor(**doctor))
+        
+        # Convert to list format for frontend
+        result = []
+        for dept_name, doctors_list in departments.items():
+            result.append({
+                "department": dept_name,
+                "doctors": doctors_list,
+                "total_doctors": len(doctors_list)
+            })
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching departments report: {str(e)}")
+
+@app.get("/api/admin/doctors/{doctor_id}/profile", response_model=DoctorProfile)
+async def get_doctor_profile(doctor_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed doctor profile with certificates"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Get doctor profile or create if not exists
+        profile = await database.doctor_profiles.find_one({"doctor_id": doctor_id})
+        
+        if not profile:
+            # Create empty profile for doctor
+            doctor = await database.doctors.find_one({"id": doctor_id})
+            if not doctor:
+                raise HTTPException(status_code=404, detail="Doctor not found")
+            
+            profile_data = {
+                "id": str(uuid.uuid4()),
+                "doctor_id": doctor_id,
+                "degree": doctor.get("qualification", ""),
+                "registration_number": doctor.get("registration_number", ""),
+                "address": doctor.get("address", ""),
+                "phone": doctor.get("phone", ""),
+                "email": doctor.get("email", ""),
+                "certificates": [],
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            
+            await database.doctor_profiles.insert_one(profile_data)
+            return DoctorProfile(**profile_data)
+        
+        return DoctorProfile(**profile)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching doctor profile: {str(e)}")
+
+@app.put("/api/admin/doctors/{doctor_id}/profile")
+async def update_doctor_profile(doctor_id: str, profile_update: DoctorProfile, current_user: dict = Depends(get_current_user)):
+    """Update doctor profile details"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        profile_dict = profile_update.dict()
+        profile_dict["updated_at"] = datetime.utcnow()
+        
+        # Update or create profile
+        result = await database.doctor_profiles.update_one(
+            {"doctor_id": doctor_id},
+            {"$set": profile_dict},
+            upsert=True
+        )
+        
+        # Also update basic doctor info
+        await database.doctors.update_one(
+            {"id": doctor_id},
+            {"$set": {
+                "qualification": profile_dict.get("degree", ""),
+                "registration_number": profile_dict.get("registration_number", ""),
+                "address": profile_dict.get("address", ""),
+                "phone": profile_dict.get("phone", ""),
+                "email": profile_dict.get("email", ""),
+                "has_profile": True,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        return {"message": "Doctor profile updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating doctor profile: {str(e)}")
+
+@app.delete("/api/admin/doctors/{doctor_id}")
+async def delete_doctor(doctor_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete doctor from admin panel"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Delete doctor and their profile
+        doctor_result = await database.doctors.delete_one({"id": doctor_id})
+        profile_result = await database.doctor_profiles.delete_one({"doctor_id": doctor_id})
+        
+        if doctor_result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+        
+        return {"message": "Doctor deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting doctor: {str(e)}")
+
+@app.put("/api/admin/doctors/{doctor_id}")
+async def update_doctor_admin(doctor_id: str, doctor_update: DoctorUpdate, current_user: dict = Depends(get_current_user)):
+    """Update doctor details from admin panel"""
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        update_dict = doctor_update.dict(exclude_unset=True)
+        if update_dict:
+            update_dict["updated_at"] = datetime.utcnow()
+            
+            result = await database.doctors.update_one(
+                {"id": doctor_id},
+                {"$set": update_dict}
+            )
+            
+            if result.matched_count == 0:
+                raise HTTPException(status_code=404, detail="Doctor not found")
+        
+        updated_doctor = await database.doctors.find_one({"id": doctor_id})
+        return Doctor(**updated_doctor)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating doctor: {str(e)}")
+
+# ===================
+# VITAL SIGNS & NURSING INTEGRATION APIS
+# ===================
+
+@app.get("/api/nursing/patients/today", response_model=List[Patient])
+async def get_todays_patients_for_nursing(current_user: dict = Depends(get_current_user)):
+    """Get today's registered patients for nursing vital signs"""
+    if not has_nursing_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        today = datetime.utcnow().date().isoformat()
+        
+        # Get patients registered today (24-hour rolling)
+        patients_cursor = database.patients.find({
+            "created_at": {
+                "$gte": datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0),
+                "$lt": datetime.utcnow().replace(hour=23, minute=59, second=59, microsecond=999999)
+            }
+        }).sort("created_at", -1)
+        
+        patients = []
+        async for patient in patients_cursor:
+            patients.append(Patient(**patient))
+        
+        return patients
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching today's patients: {str(e)}")
+
+@app.get("/api/nursing/patient/by-opd/{opd_number}")
+async def get_patient_by_opd(opd_number: str, current_user: dict = Depends(get_current_user)):
+    """Get patient details by OPD number for vital signs entry"""
+    if not has_nursing_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        patient = await database.patients.find_one({"opd_number": opd_number})
+        
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient with this OPD number not found")
+        
+        return Patient(**patient)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching patient by OPD: {str(e)}")
+
+@app.post("/api/nursing/vitals", response_model=VitalSigns)
+async def create_vital_signs(vitals: VitalSignsCreate, current_user: dict = Depends(get_current_user)):
+    """Record vital signs for a patient"""
+    if not has_nursing_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Calculate BMI if height and weight are provided
+        bmi = ""
+        if vitals.height and vitals.weight:
+            try:
+                height_m = float(vitals.height) / 100  # Convert cm to meters
+                weight_kg = float(vitals.weight)
+                if height_m > 0:
+                    bmi_value = weight_kg / (height_m ** 2)
+                    bmi = f"{bmi_value:.1f}"
+            except (ValueError, ZeroDivisionError):
+                bmi = ""
+        
+        vitals_dict = vitals.dict()
+        vitals_dict["id"] = str(uuid.uuid4())
+        vitals_dict["bmi"] = bmi
+        vitals_dict["recorded_by"] = current_user["username"]
+        vitals_dict["recorded_at"] = datetime.utcnow()
+        
+        result = await database.vital_signs.insert_one(vitals_dict)
+        return VitalSigns(**vitals_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recording vital signs: {str(e)}")
+
+@app.get("/api/doctor/patient/{patient_id}/vitals", response_model=List[VitalSigns])
+async def get_patient_vitals_for_doctor(patient_id: str, current_user: dict = Depends(get_current_user)):
+    """Get patient vital signs for doctor portal"""
+    if not has_doctor_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        vitals_cursor = database.vital_signs.find({"patient_id": patient_id}).sort("recorded_at", -1)
+        vitals = []
+        async for vital in vitals_cursor:
+            vitals.append(VitalSigns(**vital))
+        return vitals
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching patient vitals: {str(e)}")
+
+@app.get("/api/doctor/patient/opd/{opd_number}/vitals", response_model=List[VitalSigns])
+async def get_patient_vitals_by_opd_for_doctor(opd_number: str, current_user: dict = Depends(get_current_user)):
+    """Get patient vital signs by OPD number for doctor portal"""
+    if not has_doctor_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        vitals_cursor = database.vital_signs.find({"opd_number": opd_number}).sort("recorded_at", -1)
+        vitals = []
+        async for vital in vitals_cursor:
+            vitals.append(VitalSigns(**vital))
+        return vitals
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching patient vitals by OPD: {str(e)}")
