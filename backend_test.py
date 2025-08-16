@@ -3041,9 +3041,9 @@ class UnicareEHRTester:
             return False
 
 def main():
-    print("🏥 DOCTOR CREATION API TESTING")
-    print("🎯 Testing POST /api/doctors endpoint specifically")
-    print("🚨 Focus: Verify doctor creation with exact frontend data structure")
+    print("🏥 FRONTEND DOCTOR VERIFICATION TEST")
+    print("🎯 Verifying if 'Dr. John Test' was created during frontend testing")
+    print("🚨 Focus: Check if doctor exists with expected data from review request")
     print("=" * 70)
     
     # Get backend URL from frontend .env file
@@ -3052,16 +3052,13 @@ def main():
     # Initialize tester with correct backend URL
     tester = UnicareEHRTester(backend_url)
     
-    # Run doctor creation API tests as requested
+    # Run the specific verification test
     tests = [
         # Basic connectivity
         tester.test_health_check,
         
-        # Create test users if needed
-        tester.test_create_test_users,
-        
-        # Main focus: Doctor Creation API testing with exact test data
-        tester.test_doctor_creation_api,
+        # Main focus: Verify frontend doctor creation
+        tester.test_verify_frontend_doctor_creation,
     ]
     
     for test in tests:
