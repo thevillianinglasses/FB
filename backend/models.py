@@ -97,6 +97,26 @@ class Patient(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Enhanced Doctor Models for Admin Management
+class DoctorCertificate(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    certificate_name: str
+    file_path: str
+    file_name: str
+    uploaded_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DoctorProfile(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    doctor_id: str  # Links to Doctor.id
+    degree: str = ""
+    registration_number: str = ""
+    address: str = ""
+    phone: str = ""
+    email: str = ""
+    certificates: List[DoctorCertificate] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Doctor Models
 class Doctor(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -107,10 +127,36 @@ class Doctor(BaseModel):
     default_fee: str = "150"  # Default consultation fee
     phone: str = ""
     email: str = ""
+    address: str = ""
+    degree: str = ""
     schedule: str = ""
     room_number: str = ""
     status: str = "active"
+    has_profile: bool = False  # Indicates if detailed profile exists
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DoctorCreate(BaseModel):
+    name: str
+    specialty: str = ""
+    qualification: str = ""
+    default_fee: str = "500"
+    phone: str = ""
+    email: str = ""
+
+class DoctorUpdate(BaseModel):
+    name: Optional[str] = None
+    specialty: Optional[str] = None
+    qualification: Optional[str] = None
+    registration_number: Optional[str] = None
+    default_fee: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+    degree: Optional[str] = None
+    schedule: Optional[str] = None
+    room_number: Optional[str] = None
+    status: Optional[str] = None
 
 # Appointment Models
 class Appointment(BaseModel):
