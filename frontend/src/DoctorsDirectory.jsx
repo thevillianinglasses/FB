@@ -7,6 +7,7 @@ function DoctorsDirectory({ onBack }) {
   const { doctors, loadDoctors, deleteDoctor } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [showDoctorEditor, setShowDoctorEditor] = useState(false);
+  const [showDepartmentEditor, setShowDepartmentEditor] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
