@@ -3176,7 +3176,7 @@ class UnicareEHRTester:
         
         print(f"   🚫 Attempting to create duplicate department: CARDIOLOGY_TEST")
         success, duplicate_response = self.run_test(
-            "Create Duplicate Department - CARDIOLOGY",
+            "Create Duplicate Department - CARDIOLOGY_TEST",
             "POST",
             "api/admin/departments",
             400,  # Should return 400 Bad Request for duplicate
