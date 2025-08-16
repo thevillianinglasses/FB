@@ -2850,9 +2850,9 @@ class UnicareEHRTester:
         return True
 
 def main():
-    print("🏥 ADMIN DOCTOR MANAGEMENT APIs COMPREHENSIVE TESTING")
-    print("🎯 Testing newly implemented Admin Doctor Management APIs")
-    print("🚨 Focus: Verify all admin doctor management functionality is working")
+    print("🏥 DOCTOR CREATION API TESTING")
+    print("🎯 Testing POST /api/doctors endpoint specifically")
+    print("🚨 Focus: Verify doctor creation with exact frontend data structure")
     print("=" * 70)
     
     # Get backend URL from frontend .env file
@@ -2861,7 +2861,7 @@ def main():
     # Initialize tester with correct backend URL
     tester = UnicareEHRTester(backend_url)
     
-    # Run comprehensive admin doctor management API tests
+    # Run doctor creation API tests as requested
     tests = [
         # Basic connectivity
         tester.test_health_check,
@@ -2869,8 +2869,8 @@ def main():
         # Create test users if needed
         tester.test_create_test_users,
         
-        # Main focus: Admin Doctor Management API testing
-        tester.test_admin_doctor_management_apis,
+        # Main focus: Doctor Creation API testing with exact test data
+        tester.test_doctor_creation_api,
     ]
     
     for test in tests:
