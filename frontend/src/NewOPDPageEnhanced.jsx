@@ -787,140 +787,75 @@ function NewOPDPageEnhanced() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Department *
                 </label>
-                <input
-                  type="text"
-                  value={departmentSearchTerm}
-                  onChange={(e) => handleDepartmentSearch(e.target.value)}
-                  onFocus={() => setShowDepartmentDropdown(true)}
+                <select
+                  value={selectedDepartment}
+                  onChange={(e) => {
+                    if (e.target.value === 'ADD_NEW_DEPT') {
+                      const newDept = prompt('Enter new department name:');
+                      if (newDept && newDept.trim()) {
+                        setDepartmentsList(prev => [...prev, newDept.trim()]);
+                        setSelectedDepartment(newDept.trim());
+                        setDepartmentSearchTerm(newDept.trim());
+                      }
+                    } else {
+                      selectDepartment(e.target.value);
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
-                  placeholder="Search or select department..."
                   required
-                />
-                
-                {/* Department Floating Dropdown */}
-                {showDepartmentDropdown && (
-                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {/* Existing Departments */}
-                    {departmentsList
-                      .filter(dept => dept.toLowerCase().includes(departmentSearchTerm.toLowerCase()))
-                      .map(department => (
-                        <button
-                          key={department}
-                          type="button"
-                          onClick={() => selectDepartment(department)}
-                          className="w-full text-left p-3 hover:bg-blue-50 border-b last:border-b-0 focus:outline-none focus:bg-blue-50"
-                        >
-                          <div className="font-medium text-gray-900">{department}</div>
-                          <div className="text-sm text-gray-500">
-                            {doctors.filter(d => d.specialty === department).length} doctors available
-                          </div>
-                        </button>
-                      ))}
-                    
-                    {/* Add New Department Option */}
-                    {departmentSearchTerm && !departmentsList.some(dept => 
-                      dept.toLowerCase() === departmentSearchTerm.toLowerCase()
-                    ) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newDept = departmentSearchTerm.trim();
-                          setDepartmentsList(prev => [...prev, newDept]);
-                          selectDepartment(newDept);
-                        }}
-                        className="w-full text-left p-3 bg-green-50 hover:bg-green-100 border-b text-green-700 focus:outline-none"
-                      >
-                        <div className="font-medium">+ Add "{departmentSearchTerm}"</div>
-                        <div className="text-sm">Create new department</div>
-                      </button>
-                    )}
-                    
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowDepartmentDropdown(false);
-                        setDepartmentSearchTerm('');
-                      }}
-                      className="w-full text-left p-3 bg-gray-50 text-gray-600 hover:bg-gray-100 focus:outline-none"
-                    >
-                      Close
-                    </button>
-                  </div>
-                )}
+                >
+                  <option value="">Select Department</option>
+                  {departmentsList.map(department => (
+                    <option key={department} value={department}>
+                      {department} ({doctors.filter(d => d.specialty === department).length} doctors)
+                    </option>
+                  ))}
+                  <option value="ADD_NEW_DEPT" className="bg-green-50 text-green-700">
+                    + Add New Department
+                  </option>
+                </select>
               </div>
 
               <div className="relative dropdown-container">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Doctor *
                 </label>
-                <input
-                  type="text"
-                  value={doctorSearchTerm}
-                  onChange={(e) => handleDoctorSearch(e.target.value)}
-                  onFocus={() => setShowDoctorDropdown(true)}
+                <select
+                  value={selectedDoctor}
+                  onChange={(e) => {
+                    if (e.target.value === 'ADD_NEW_DOCTOR') {
+                      if (!selectedDepartment) {
+                        alert('Please select a department first');
+                        return;
+                      }
+                      const newDoctorName = prompt(`Enter new doctor name for ${selectedDepartment}:`);
+                      if (newDoctorName && newDoctorName.trim()) {
+                        handleCustomDoctorEntry(newDoctorName.trim(), selectedDepartment);
+                      }
+                    } else {
+                      const doctor = doctors.find(d => d.id === e.target.value);
+                      if (doctor) {
+                        selectDoctor(doctor);
+                      }
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
-                  placeholder="Search or select doctor..."
                   required
-                />
-                
-                {/* Doctor Floating Dropdown */}
-                {showDoctorDropdown && (
-                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {/* Existing Doctors */}
-                    {doctors
-                      .filter(doctor => 
-                        doctor.name.toLowerCase().includes(doctorSearchTerm.toLowerCase()) ||
-                        (selectedDepartment && doctor.specialty === selectedDepartment)
-                      )
-                      .map(doctor => (
-                        <button
-                          key={doctor.id}
-                          type="button"
-                          onClick={() => selectDoctor(doctor)}
-                          className="w-full text-left p-3 hover:bg-blue-50 border-b last:border-b-0 focus:outline-none focus:bg-blue-50"
-                        >
-                          <div className="font-medium text-gray-900">Dr. {doctor.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {doctor.specialty} • ₹{doctor.default_fee || 500}
-                          </div>
-                        </button>
-                      ))}
-                    
-                    {/* Add New Doctor Option */}
-                    {doctorSearchTerm && !doctors.some(doc => 
-                      doc.name.toLowerCase().includes(doctorSearchTerm.toLowerCase())
-                    ) && selectedDepartment && (
-                      <div className="border-t bg-green-50 p-3">
-                        <input
-                          type="text"
-                          value={customDoctorName}
-                          onChange={(e) => setCustomDoctorName(e.target.value)}
-                          placeholder="Enter new doctor name..."
-                          className="w-full px-3 py-2 mb-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleCustomDoctorEntry}
-                          className="w-full px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none"
-                        >
-                          + Add Dr. {customDoctorName || '[Name]'} to {selectedDepartment}
-                        </button>
-                      </div>
-                    )}
-                    
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowDoctorDropdown(false);
-                        setDoctorSearchTerm('');
-                        setCustomDoctorName('');
-                      }}
-                      className="w-full text-left p-3 bg-gray-50 text-gray-600 hover:bg-gray-100 focus:outline-none"
-                    >
-                      Close
-                    </button>
-                  </div>
-                )}
+                >
+                  <option value="">Select Doctor</option>
+                  {doctors
+                    .filter(doctor => !selectedDepartment || doctor.specialty === selectedDepartment)
+                    .map(doctor => (
+                      <option key={doctor.id} value={doctor.id}>
+                        Dr. {doctor.name} - {doctor.specialty} (₹{doctor.default_fee || 500})
+                      </option>
+                    ))}
+                  {selectedDepartment && (
+                    <option value="ADD_NEW_DOCTOR" className="bg-green-50 text-green-700">
+                      + Add New Doctor to {selectedDepartment}
+                    </option>
+                  )}
+                </select>
               </div>
 
               <div>
