@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usersAPI } from '../api';
+import AdminReportsPage from '../AdminReportsPage';
 
 function AdminDashboard({ onLogout, userName }) {
   const [activeTab, setActiveTab] = useState('users');
