@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from './AppContext';
 import DoctorsDirectory from './DoctorsDirectory';
 
-function AdminDashboardNew() {
+function AdminDashboardNew({ onLogout, userName }) {
   const { doctors, patients, users, loadDoctors, loadPatients, loadUsers } = useAppContext();
   const [currentScreen, setCurrentScreen] = useState('dashboard'); // 'dashboard' | 'doctors'
-  const [currentUser] = useState({ name: 'Admin', avatar: '👤' });
+  const [currentUser] = useState({ name: userName || 'Admin', avatar: '👤' });
 
   useEffect(() => {
     loadDoctors();
