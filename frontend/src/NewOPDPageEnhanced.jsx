@@ -783,7 +783,7 @@ function NewOPDPageEnhanced() {
                 Visit Information
               </h3>
 
-              <div className="relative">
+              <div className="relative dropdown-container">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Department *
                 </label>
@@ -849,7 +849,7 @@ function NewOPDPageEnhanced() {
                 )}
               </div>
 
-              <div className="relative">
+              <div className="relative dropdown-container">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Doctor *
                 </label>
