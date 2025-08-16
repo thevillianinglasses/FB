@@ -134,6 +134,15 @@ function DoctorsDirectory({ onBack }) {
     );
   }
 
+  if (showDepartmentEditor) {
+    return (
+      <DepartmentEditor
+        onClose={() => setShowDepartmentEditor(false)}
+        onSave={handleDepartmentSaved}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
