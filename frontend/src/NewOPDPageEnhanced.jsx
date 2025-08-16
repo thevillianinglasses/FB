@@ -827,10 +827,15 @@ function NewOPDPageEnhanced() {
                         alert('Please select a department first');
                         return;
                       }
-                      const newDoctorName = prompt(`Enter new doctor name for ${selectedDepartment}:`);
-                      if (newDoctorName && newDoctorName.trim()) {
-                        handleCustomDoctorEntry(newDoctorName.trim(), selectedDepartment);
-                      }
+                      setNewDoctorForm({
+                        name: '',
+                        specialty: selectedDepartment,
+                        qualification: '',
+                        default_fee: '500',
+                        phone: '',
+                        email: ''
+                      });
+                      setShowAddDoctorModal(true);
                     } else {
                       const doctor = doctors.find(d => d.id === e.target.value);
                       if (doctor) {
