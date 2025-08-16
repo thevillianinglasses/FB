@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional, List
 import os
@@ -8,6 +9,9 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import uuid
 import logging
+import aiofiles
+import shutil
+from pathlib import Path
 
 # Import our models and auth
 from models import *
