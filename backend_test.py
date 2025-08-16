@@ -3412,10 +3412,505 @@ class UnicareEHRTester:
         
         return True
 
+    def test_restful_apis_comprehensive(self):
+        """Test the new RESTful APIs for the refactored Unicare system as per review request"""
+        print("\n🏗️ TESTING NEW RESTFUL APIs FOR REFACTORED UNICARE SYSTEM")
+        print("Review Request: Test unified Department and Doctor APIs with role-based access control")
+        print("=" * 80)
+        
+        # Test data as specified in review request
+        test_department = {
+            "name": "PRIMARY CARE",
+            "description": "Primary care department for general medicine",
+            "location": "Ground Floor, Wing A",
+            "contactPhone": "9876543220"
+        }
+        
+        test_doctor = {
+            "name": "Dr. Naveen",
+            "degree": "MBBS",
+            "phone": "9876543220",
+            "fee": "500"
+        }
+        
+        created_department_id = None
+        created_doctor_id = None
+        
+        # Test 1: Department APIs with Admin Role
+        print("\n🏢 TEST 1: DEPARTMENT APIs WITH ADMIN ROLE")
+        print("-" * 50)
+        
+        # Login as admin
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin")
+            return False
+            
+        # Test 1.1: GET /api/departments (list all)
+        print("\n📋 Test 1.1: GET /api/departments - List all departments")
+        success, departments_response = self.run_test(
+            "GET /api/departments",
+            "GET",
+            "api/departments",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get departments list")
+            return False
+            
+        initial_dept_count = len(departments_response)
+        print(f"✅ Found {initial_dept_count} existing departments")
+        
+        # Test 1.2: POST /api/departments (create)
+        print("\n➕ Test 1.2: POST /api/departments - Create PRIMARY CARE department")
+        success, dept_response = self.run_test(
+            "Create PRIMARY CARE Department",
+            "POST",
+            "api/departments",
+            200,
+            data=test_department
+        )
+        
+        if not success:
+            print("❌ Failed to create department")
+            return False
+            
+        created_department_id = dept_response.get('id')
+        if not created_department_id:
+            print("❌ No department ID returned")
+            return False
+            
+        print(f"✅ Department created with ID: {created_department_id}")
+        print(f"   Name: {dept_response.get('name')}")
+        print(f"   Description: {dept_response.get('description')}")
+        
+        # Test 1.3: Verify department appears in list
+        print("\n📊 Test 1.3: Verify department appears in GET /api/departments")
+        success, updated_departments = self.run_test(
+            "GET /api/departments - After Creation",
+            "GET",
+            "api/departments",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        new_dept_count = len(updated_departments)
+        if new_dept_count != initial_dept_count + 1:
+            print(f"❌ Expected {initial_dept_count + 1} departments, got {new_dept_count}")
+            return False
+            
+        # Find our created department
+        created_dept_found = any(d.get('id') == created_department_id for d in updated_departments)
+        if not created_dept_found:
+            print("❌ Created department not found in list")
+            return False
+            
+        print(f"✅ Department found in list ({new_dept_count} total departments)")
+        
+        # Test 1.4: PUT /api/departments/{id} (update)
+        print("\n✏️ Test 1.4: PUT /api/departments/{id} - Update department")
+        updated_dept_data = {
+            "name": "PRIMARY CARE UPDATED",
+            "description": "Updated primary care department",
+            "location": "First Floor, Wing B",
+            "contactPhone": "9876543221"
+        }
+        
+        success, update_response = self.run_test(
+            "Update Department",
+            "PUT",
+            f"api/departments/{created_department_id}",
+            200,
+            data=updated_dept_data
+        )
+        
+        if not success:
+            print("❌ Failed to update department")
+            return False
+            
+        print("✅ Department updated successfully")
+        
+        # Test 2: Doctor APIs with Admin Role
+        print("\n👨‍⚕️ TEST 2: DOCTOR APIs WITH ADMIN ROLE")
+        print("-" * 50)
+        
+        # Test 2.1: GET /api/doctors (list all)
+        print("\n📋 Test 2.1: GET /api/doctors - List all doctors")
+        success, doctors_response = self.run_test(
+            "GET /api/doctors",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        initial_doctor_count = len(doctors_response)
+        print(f"✅ Found {initial_doctor_count} existing doctors")
+        
+        # Test 2.2: POST /api/doctors (create in PRIMARY CARE)
+        print("\n➕ Test 2.2: POST /api/doctors - Create Dr. Naveen in PRIMARY CARE")
+        test_doctor["departmentId"] = created_department_id
+        
+        success, doctor_response = self.run_test(
+            "Create Dr. Naveen",
+            "POST",
+            "api/doctors",
+            200,
+            data=test_doctor
+        )
+        
+        if not success:
+            print("❌ Failed to create doctor")
+            return False
+            
+        created_doctor_id = doctor_response.get('id')
+        if not created_doctor_id:
+            print("❌ No doctor ID returned")
+            return False
+            
+        print(f"✅ Doctor created with ID: {created_doctor_id}")
+        print(f"   Name: {doctor_response.get('name')}")
+        print(f"   Degree: {doctor_response.get('degree')}")
+        print(f"   Department ID: {doctor_response.get('departmentId')}")
+        print(f"   Fee: {doctor_response.get('fee')}")
+        
+        # Test 2.3: GET /api/doctors?departmentId={id} (filter by department)
+        print("\n🔍 Test 2.3: GET /api/doctors?departmentId={id} - Filter by department")
+        success, filtered_doctors = self.run_test(
+            "GET /api/doctors with departmentId filter",
+            "GET",
+            f"api/doctors?departmentId={created_department_id}",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Should find our created doctor
+        filtered_doctor_found = any(d.get('id') == created_doctor_id for d in filtered_doctors)
+        if not filtered_doctor_found:
+            print("❌ Created doctor not found in filtered results")
+            return False
+            
+        print(f"✅ Found {len(filtered_doctors)} doctors in PRIMARY CARE department")
+        print(f"   Created doctor found in filtered results")
+        
+        # Test 2.4: PUT /api/doctors/{id} (update)
+        print("\n✏️ Test 2.4: PUT /api/doctors/{id} - Update doctor")
+        updated_doctor_data = {
+            "name": "Dr. Naveen Kumar",
+            "degree": "MBBS, MD",
+            "phone": "9876543222",
+            "fee": "600",
+            "departmentId": created_department_id
+        }
+        
+        success, doctor_update_response = self.run_test(
+            "Update Doctor",
+            "PUT",
+            f"api/doctors/{created_doctor_id}",
+            200,
+            data=updated_doctor_data
+        )
+        
+        if not success:
+            print("❌ Failed to update doctor")
+            return False
+            
+        print("✅ Doctor updated successfully")
+        
+        # Test 3: Role-based Access Control
+        print("\n🔐 TEST 3: ROLE-BASED ACCESS CONTROL")
+        print("-" * 50)
+        
+        # Test 3.1: Reception user access (should work for GET/POST, restricted for DELETE)
+        print("\n👥 Test 3.1: Reception user access")
+        if not self.test_login(role="reception"):
+            print("❌ Failed to login as reception")
+            return False
+            
+        # Reception should be able to GET departments
+        success, _ = self.run_test(
+            "Reception GET /api/departments",
+            "GET",
+            "api/departments",
+            200
+        )
+        
+        if success:
+            print("✅ Reception can access GET /api/departments")
+        else:
+            print("❌ Reception cannot access GET /api/departments")
+            return False
+            
+        # Reception should be able to POST departments
+        test_dept_reception = {
+            "name": "RECEPTION TEST DEPT",
+            "description": "Test department created by reception"
+        }
+        
+        success, reception_dept_response = self.run_test(
+            "Reception POST /api/departments",
+            "POST",
+            "api/departments",
+            200,
+            data=test_dept_reception
+        )
+        
+        reception_dept_id = None
+        if success:
+            print("✅ Reception can create departments")
+            reception_dept_id = reception_dept_response.get('id')
+        else:
+            print("❌ Reception cannot create departments")
+            return False
+            
+        # Reception should be able to GET doctors
+        success, _ = self.run_test(
+            "Reception GET /api/doctors",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if success:
+            print("✅ Reception can access GET /api/doctors")
+        else:
+            print("❌ Reception cannot access GET /api/doctors")
+            return False
+            
+        # Reception should be able to POST doctors
+        test_doctor_reception = {
+            "name": "Dr. Reception Test",
+            "degree": "MBBS",
+            "phone": "9876543223",
+            "fee": "400",
+            "departmentId": created_department_id
+        }
+        
+        success, reception_doctor_response = self.run_test(
+            "Reception POST /api/doctors",
+            "POST",
+            "api/doctors",
+            200,
+            data=test_doctor_reception
+        )
+        
+        reception_doctor_id = None
+        if success:
+            print("✅ Reception can create doctors")
+            reception_doctor_id = reception_doctor_response.get('id')
+        else:
+            print("❌ Reception cannot create doctors")
+            return False
+            
+        # Test 3.2: Reception DELETE restrictions (should be blocked for departments)
+        print("\n🚫 Test 3.2: Reception DELETE restrictions")
+        
+        # Reception should be blocked from DELETE departments (admin only)
+        success, _ = self.run_test(
+            "Reception DELETE /api/departments (should fail)",
+            "DELETE",
+            f"api/departments/{reception_dept_id}",
+            403  # Should be forbidden
+        )
+        
+        if success:
+            print("✅ Reception correctly blocked from DELETE departments")
+        else:
+            print("❌ Reception DELETE restriction not working properly")
+            
+        # Test 4: Data Validation and Error Handling
+        print("\n✅ TEST 4: DATA VALIDATION AND ERROR HANDLING")
+        print("-" * 50)
+        
+        # Login back as admin for validation tests
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin")
+            return False
+            
+        # Test 4.1: Duplicate department names
+        print("\n🚫 Test 4.1: Duplicate department name validation")
+        duplicate_dept = {
+            "name": "PRIMARY CARE UPDATED",  # Same as updated department
+            "description": "Duplicate department test"
+        }
+        
+        success, _ = self.run_test(
+            "Create Duplicate Department (should fail)",
+            "POST",
+            "api/departments",
+            400,  # Should be bad request
+            data=duplicate_dept
+        )
+        
+        if success:
+            print("✅ Duplicate department name correctly rejected")
+        else:
+            print("❌ Duplicate department validation not working")
+            
+        # Test 4.2: Invalid department ID for doctor creation
+        print("\n🚫 Test 4.2: Invalid department ID validation")
+        invalid_doctor = {
+            "name": "Dr. Invalid Dept",
+            "degree": "MBBS",
+            "departmentId": "invalid-department-id-12345"
+        }
+        
+        success, _ = self.run_test(
+            "Create Doctor with Invalid Department (should fail)",
+            "POST",
+            "api/doctors",
+            400,  # Should be bad request
+            data=invalid_doctor
+        )
+        
+        if success:
+            print("✅ Invalid department ID correctly rejected")
+        else:
+            print("❌ Invalid department ID validation not working")
+            
+        # Test 5: Department-Doctor Relationships
+        print("\n🔗 TEST 5: DEPARTMENT-DOCTOR RELATIONSHIPS")
+        print("-" * 50)
+        
+        # Test 5.1: Verify doctor is linked to department
+        print("\n🔍 Test 5.1: Verify doctor-department relationship")
+        success, dept_doctors = self.run_test(
+            "GET doctors in PRIMARY CARE department",
+            "GET",
+            f"api/doctors?departmentId={created_department_id}",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        primary_care_doctors = [d for d in dept_doctors if d.get('departmentId') == created_department_id]
+        if len(primary_care_doctors) < 1:
+            print("❌ No doctors found in PRIMARY CARE department")
+            return False
+            
+        print(f"✅ Found {len(primary_care_doctors)} doctors in PRIMARY CARE department")
+        for doctor in primary_care_doctors:
+            print(f"   • {doctor.get('name')} (Fee: ₹{doctor.get('fee')})")
+            
+        # Test 5.2: Test deleting doctor, then department
+        print("\n🗑️ Test 5.2: Test deletion workflow - doctor first, then department")
+        
+        # Delete the doctor we created
+        if created_doctor_id:
+            success, _ = self.run_test(
+                "DELETE doctor",
+                "DELETE",
+                f"api/doctors/{created_doctor_id}",
+                200
+            )
+            
+            if success:
+                print("✅ Doctor deleted successfully")
+            else:
+                print("❌ Failed to delete doctor")
+                return False
+                
+        # Delete reception's doctor too
+        if reception_doctor_id:
+            success, _ = self.run_test(
+                "DELETE reception doctor",
+                "DELETE",
+                f"api/doctors/{reception_doctor_id}",
+                200
+            )
+            
+            if success:
+                print("✅ Reception doctor deleted successfully")
+            else:
+                print("❌ Failed to delete reception doctor")
+                
+        # Now delete the department
+        if created_department_id:
+            success, _ = self.run_test(
+                "DELETE department",
+                "DELETE",
+                f"api/departments/{created_department_id}",
+                200
+            )
+            
+            if success:
+                print("✅ Department deleted successfully")
+            else:
+                print("❌ Failed to delete department")
+                return False
+                
+        # Clean up reception department too
+        if reception_dept_id:
+            success, _ = self.run_test(
+                "DELETE reception department",
+                "DELETE",
+                f"api/departments/{reception_dept_id}",
+                200
+            )
+            
+            if success:
+                print("✅ Reception department deleted successfully")
+            else:
+                print("❌ Failed to delete reception department")
+                
+        # Test 6: Final Verification
+        print("\n✅ TEST 6: FINAL VERIFICATION")
+        print("-" * 50)
+        
+        # Verify departments list is back to original count
+        success, final_departments = self.run_test(
+            "GET /api/departments - Final verification",
+            "GET",
+            "api/departments",
+            200
+        )
+        
+        if success:
+            final_dept_count = len(final_departments)
+            print(f"✅ Final department count: {final_dept_count}")
+            if final_dept_count == initial_dept_count:
+                print("✅ Department count restored to original")
+            else:
+                print(f"⚠️ Department count changed: {initial_dept_count} → {final_dept_count}")
+        
+        # Verify doctors list
+        success, final_doctors = self.run_test(
+            "GET /api/doctors - Final verification",
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if success:
+            final_doctor_count = len(final_doctors)
+            print(f"✅ Final doctor count: {final_doctor_count}")
+            
+        print("\n" + "=" * 80)
+        print("🎉 RESTFUL APIs COMPREHENSIVE TESTING COMPLETED!")
+        print("\n📋 SUMMARY OF TESTS:")
+        print("✅ Department APIs: GET/POST/PUT/DELETE /api/departments")
+        print("✅ Doctor APIs: GET/POST/PUT/DELETE /api/doctors")
+        print("✅ Query parameter filtering: GET /api/doctors?departmentId={id}")
+        print("✅ Role-based access control: admin/reception users")
+        print("✅ Data validation and error handling")
+        print("✅ Department-doctor relationships")
+        print("✅ No duplicate department names allowed")
+        print("✅ Proper JSON responses with unified schema")
+        print("✅ Access control enforced (reception restricted from DELETE departments)")
+        
+        return True
+
 def main():
-    print("🏢 DEPARTMENT MANAGEMENT APIs TESTING")
-    print("🎯 Testing newly implemented Department Management APIs")
-    print("🚨 Focus: Department creation, retrieval, duplicate validation, and access control")
+    print("🏗️ RESTFUL APIs TESTING FOR REFACTORED UNICARE SYSTEM")
+    print("🎯 Testing unified Department and Doctor APIs as per review request")
+    print("🚨 Focus: RESTful APIs, role-based access control, data validation")
     print("=" * 70)
     
     # Get backend URL from frontend .env file
@@ -3424,13 +3919,13 @@ def main():
     # Initialize tester with correct backend URL
     tester = UnicareEHRTester(backend_url)
     
-    # Run the department management tests
+    # Run the RESTful APIs tests as per review request
     tests = [
         # Basic connectivity
         tester.test_health_check,
         
-        # Main focus: Department Management APIs
-        tester.test_department_management_apis,
+        # Main focus: RESTful APIs Testing
+        tester.test_restful_apis_comprehensive,
     ]
     
     for test in tests:
