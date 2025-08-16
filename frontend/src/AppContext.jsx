@@ -114,6 +114,39 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Function to update a doctor
+  const updateDoctor = async (doctorId, doctorData) => {
+    try {
+      setIsLoading(true);
+      const updatedDoctor = await doctorsAPI.update(doctorId, doctorData);
+      setDoctors(prevDoctors => 
+        prevDoctors.map(d => d.id === doctorId ? updatedDoctor : d)
+      );
+      return updatedDoctor;
+    } catch (error) {
+      console.error('Error updating doctor:', error);
+      setError('Failed to update doctor');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to delete a doctor
+  const deleteDoctor = async (doctorId) => {
+    try {
+      setIsLoading(true);
+      await doctorsAPI.delete(doctorId);
+      setDoctors(prevDoctors => prevDoctors.filter(d => d.id !== doctorId));
+    } catch (error) {
+      console.error('Error deleting doctor:', error);
+      setError('Failed to delete doctor');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Function to add a new user (admin only)
   const addUser = async (userData) => {
     try {
