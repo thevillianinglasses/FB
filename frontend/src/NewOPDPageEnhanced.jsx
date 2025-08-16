@@ -134,52 +134,28 @@ function NewOPDPageEnhanced() {
   const selectDepartment = (department) => {
     setSelectedDepartment(department);
     setDepartmentSearchTerm(department);
-    setShowDepartmentDropdown(false);
-    
-    // Filter doctors by department
-    const departmentDoctors = doctors.filter(d => d.specialty === department);
-    if (departmentDoctors.length > 0) {
-      // Auto-select first doctor in department if available
-      selectDoctor(departmentDoctors[0]);
-    }
+    // Clear doctor selection when department changes
+    setSelectedDoctor('');
+    setDoctorSearchTerm('');
   };
 
-  // Save new doctor to department (auto-save functionality)
-  const saveNewDoctorToDatabase = async (doctorName, department) => {
-    try {
-      const { addDoctor } = useAppContext();
-      const newDoctorData = {
-        name: doctorName.replace('Dr. ', ''), // Remove Dr. prefix
-        specialty: department,
-        default_fee: 500, // Default consultation fee
-        phone: '',
-        email: ''
-      };
-      
-      const savedDoctor = await addDoctor(newDoctorData);
-      console.log('✅ New doctor saved to database:', savedDoctor);
-      
-      // Reload doctors to get updated list
-      await loadDoctors();
-      
-      return savedDoctor;
-    } catch (error) {
-      console.error('❌ Error saving new doctor:', error);
-      throw error;
-    }
-  };
-
-  // Handle custom doctor entry - simplified version
+  // Handle custom doctor entry - fixed version
   const handleCustomDoctorEntry = async (doctorName, department) => {
     try {
+      console.log('🔄 Adding new doctor:', doctorName, 'to department:', department);
+      
+      // Use AppContext function properly
       const { addDoctor } = useAppContext();
       const newDoctorData = {
-        name: doctorName.replace('Dr. ', ''), // Remove Dr. prefix if present
+        name: doctorName.replace(/^Dr\.?\s*/i, ''), // Remove Dr. prefix if present
         specialty: department,
-        default_fee: 500, // Default consultation fee
+        qualification: '', // Empty by default
+        default_fee: '500', // Default consultation fee as string
         phone: '',
         email: ''
       };
+      
+      console.log('🔄 Sending doctor data to backend:', newDoctorData);
       
       const savedDoctor = await addDoctor(newDoctorData);
       console.log('✅ New doctor saved to database:', savedDoctor);
@@ -189,14 +165,15 @@ function NewOPDPageEnhanced() {
       
       // Auto-select the new doctor
       setSelectedDoctor(savedDoctor.id);
-      setConsultationFee(savedDoctor.default_fee.toString());
+      setDoctorSearchTerm(`Dr. ${savedDoctor.name}`);
+      setConsultationFee(savedDoctor.default_fee);
       
-      alert(`✅ New doctor added successfully!\n\nDoctor: Dr. ${savedDoctor.name}\nDepartment: ${department}\n\nThe doctor has been saved to the system and can be managed from Admin portal.`);
+      alert(`✅ New doctor added successfully!\n\nDoctor: Dr. ${savedDoctor.name}\nDepartment: ${department}\nConsultation Fee: ₹${savedDoctor.default_fee}\n\nThe doctor has been saved to the system and is now available for selection.`);
       
       return savedDoctor;
     } catch (error) {
       console.error('❌ Error saving new doctor:', error);
-      alert(`❌ Error adding doctor: ${error.message}`);
+      alert(`❌ Error adding doctor: ${error.message || 'Please try again.'}`);
       throw error;
     }
   };
