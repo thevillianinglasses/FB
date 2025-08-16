@@ -329,14 +329,7 @@ function AdminReportsPage() {
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-charcoal-grey">Department-wise Doctor Management</h2>
                 <button
-                  onClick={() => {
-                    const newDoctorName = prompt('Enter new doctor name:');
-                    const department = prompt('Enter department:');
-                    if (newDoctorName && department) {
-                      // Add new doctor logic here
-                      console.log('Adding new doctor:', newDoctorName, department);
-                    }
-                  }}
+                  onClick={() => addNewDoctorAdmin()}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm"
                 >
                   + Add New Doctor
