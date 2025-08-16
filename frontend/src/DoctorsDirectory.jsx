@@ -95,6 +95,17 @@ function DoctorsDirectory({ onBack }) {
     loadDoctorsData(); // Reload data
   };
 
+  const handleDepartmentSaved = (departmentData) => {
+    setShowDepartmentEditor(false);
+    // Add the new department to the list
+    const newDept = {
+      name: departmentData.name,
+      doctors: []
+    };
+    setDepartments(prev => [...prev, newDept]);
+    alert(`✅ Department "${departmentData.name}" created successfully!`);
+  };
+
   // Loading skeletons
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
