@@ -94,6 +94,85 @@ function NewOPDPageEnhanced() {
     return todayDoctorPatients.length + 1;
   };
 
+  // Enhanced doctor selection functions
+  const handleDoctorSearch = (searchTerm) => {
+    setDoctorSearchTerm(searchTerm);
+    setShowDoctorDropdown(true);
+  };
+
+  const selectDoctor = (doctor) => {
+    setSelectedDoctor(doctor.id);
+    setDoctorSearchTerm(`Dr. ${doctor.name}`);
+    setSelectedDepartment(doctor.specialty || '');
+    setDepartmentSearchTerm(doctor.specialty || '');
+    setShowDoctorDropdown(false);
+    
+    // Set consultation fee based on doctor's default fee
+    if (doctor.default_fee) {
+      setConsultationFee(doctor.default_fee.toString());
+    }
+  };
+
+  const handleDepartmentSearch = (searchTerm) => {
+    setDepartmentSearchTerm(searchTerm);
+    setShowDepartmentDropdown(true);
+  };
+
+  const selectDepartment = (department) => {
+    setSelectedDepartment(department);
+    setDepartmentSearchTerm(department);
+    setShowDepartmentDropdown(false);
+    
+    // Filter doctors by department
+    const departmentDoctors = doctors.filter(d => d.specialty === department);
+    if (departmentDoctors.length > 0) {
+      // Auto-select first doctor in department if available
+      selectDoctor(departmentDoctors[0]);
+    }
+  };
+
+  // Save new doctor to department (auto-save functionality)
+  const saveNewDoctorToDatabase = async (doctorName, department) => {
+    try {
+      const { addDoctor } = useAppContext();
+      const newDoctorData = {
+        name: doctorName.replace('Dr. ', ''), // Remove Dr. prefix
+        specialty: department,
+        default_fee: 500, // Default consultation fee
+        phone: '',
+        email: ''
+      };
+      
+      const savedDoctor = await addDoctor(newDoctorData);
+      console.log('✅ New doctor saved to database:', savedDoctor);
+      
+      // Reload doctors to get updated list
+      await loadDoctors();
+      
+      return savedDoctor;
+    } catch (error) {
+      console.error('❌ Error saving new doctor:', error);
+      throw error;
+    }
+  };
+
+  // Handle custom doctor entry
+  const handleCustomDoctorEntry = async () => {
+    if (customDoctorName && selectedDepartment) {
+      try {
+        const savedDoctor = await saveNewDoctorToDatabase(customDoctorName, selectedDepartment);
+        setSelectedDoctor(savedDoctor.id);
+        setDoctorSearchTerm(`Dr. ${savedDoctor.name}`);
+        setCustomDoctorName('');
+        setShowDoctorDropdown(false);
+        
+        alert(`✅ New doctor added successfully!\n\nDoctor: Dr. ${savedDoctor.name}\nDepartment: ${selectedDepartment}\n\nThe doctor has been saved to the system and can be managed from Admin portal.`);
+      } catch (error) {
+        alert(`❌ Error adding doctor: ${error.message}`);
+      }
+    }
+  };
+
   // Handle phone number change with auto-fill logic - FIXED
   const handlePhoneChange = (e) => {
     const phone = e.target.value.replace(/\D/g, '').slice(0, 10);
