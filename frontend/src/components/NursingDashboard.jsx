@@ -31,11 +31,17 @@ function NursingDashboard({ onLogout, userName }) {
   });
 
   const tabs = [
-    { id: 'vitals', name: 'Vital Signs', icon: '💓' },
-    { id: 'procedures', name: 'Procedures', icon: '🏥' },
-    { id: 'triage', name: 'Triage', icon: '🚨' },
+    { id: 'today-patients', name: 'Today\'s Patients', icon: '👥' },
+    { id: 'vitals', name: 'Vital Signs & Procedure', icon: '💓' },
+    { id: 'procedures', name: 'Nursing Procedures', icon: '🏥' },
     { id: 'reports', name: 'Reports', icon: '📊' }
   ];
+
+  // Enhanced state for 24-hour patient integration
+  const [todaysPatients, setTodaysPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [opdNumber, setOpdNumber] = useState('');
+  const [patientByOpd, setPatientByOpd] = useState(null);
 
   useEffect(() => {
     loadInitialData();
