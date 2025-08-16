@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { departmentsAPI } from './api';
 
 function DepartmentEditor({ onClose, onSave }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
