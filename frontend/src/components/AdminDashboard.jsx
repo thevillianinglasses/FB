@@ -248,23 +248,7 @@ function AdminDashboard({ onLogout, userName }) {
         )}
 
         {activeTab === 'reports' && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold text-charcoal-grey mb-4">System Reports</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-900">Daily Summary</h3>
-                <p className="text-blue-700 text-sm">Patient registrations, consultations, revenue</p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-green-900">Monthly Analytics</h3>
-                <p className="text-green-700 text-sm">Department performance, trends</p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-purple-900">User Activity</h3>
-                <p className="text-purple-700 text-sm">Login times, module usage</p>
-              </div>
-            </div>
-          </div>
+          <AdminReportsPage />
         )}
 
         {activeTab === 'settings' && (
