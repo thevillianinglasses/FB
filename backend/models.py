@@ -370,6 +370,12 @@ class PurchaseItem(BaseModel):
     hsn: str
     rack_id: Optional[str] = None
     schedule_symbol: ScheduleSymbol = "NONE"
+    # Computed fields added during processing
+    taxable: Optional[float] = None
+    cgst: Optional[float] = None
+    sgst: Optional[float] = None
+    igst: Optional[float] = None
+    row_net: Optional[float] = None
 
 class PurchaseTotals(BaseModel):
     taxable: float = 0.0
