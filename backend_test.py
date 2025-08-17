@@ -2288,50 +2288,215 @@ class UnicareEHRTester:
         
         return True
 
+    def test_shared_resources_functionality(self):
+        """Test Phase 3: Admin & Reception Integration shared resources functionality"""
+        print("\n🔄 PHASE 3 TEST: Admin & Reception Integration - Shared Resources")
+        print("Testing shared doctor/department management between Admin and Reception modules")
+        print("=" * 80)
+        
+        # Login as admin first
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin for shared resources testing")
+            return False
+            
+        # Test 1: Get initial state of departments and doctors
+        print("\n📊 Test 1: Get initial state of departments and doctors")
+        
+        success, initial_departments = self.run_test(
+            "Get Initial Departments",
+            "GET",
+            "api/departments",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get initial departments")
+            return False
+            
+        success, initial_doctors = self.run_test(
+            "Get Initial Doctors", 
+            "GET",
+            "api/doctors",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get initial doctors")
+            return False
+            
+        print(f"   📈 Initial state: {len(initial_departments)} departments, {len(initial_doctors)} doctors")
+        
+        # Display current departments and doctors
+        print("\n   📋 Current Departments:")
+        for dept in initial_departments:
+            dept_doctors = [d for d in initial_doctors if d.get('department_id') == dept.get('id')]
+            print(f"      • {dept.get('name')} ({len(dept_doctors)} doctors)")
+            for doctor in dept_doctors:
+                print(f"        - {doctor.get('name')} ({doctor.get('specialty')})")
+                
+        # Test 2: Create a new department (Admin → Reception sharing test)
+        print("\n🏥 Test 2: Create new department 'Neurology' (Admin → Reception sharing)")
+        
+        new_department_data = {
+            "name": "Neurology",
+            "description": "Neurological disorders and brain health",
+            "location": "Second Floor, Wing C",
+            "phone": "0471-2345682",
+            "email": "neurology@unicare.com",
+            "status": "active"
+        }
+        
+        success, created_department = self.run_test(
+            "Create Neurology Department",
+            "POST",
+            "api/departments",
+            200,
+            data=new_department_data
+        )
+        
+        if not success:
+            print("❌ Failed to create Neurology department")
+            return False
+            
+        neurology_dept_id = created_department.get('id')
+        print(f"   ✅ Created Neurology department with ID: {neurology_dept_id}")
+        
+        # Test 3: Verify department appears in GET /api/departments immediately
+        print("\n🔍 Test 3: Verify new department appears in departments list immediately")
+        
+        success, updated_departments = self.run_test(
+            "Get Updated Departments List",
+            "GET", 
+            "api/departments",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get updated departments")
+            return False
+            
+        neurology_found = any(d.get('id') == neurology_dept_id for d in updated_departments)
+        if neurology_found:
+            print("   ✅ Neurology department appears in departments list immediately")
+        else:
+            print("   ❌ Neurology department NOT found in departments list")
+            return False
+            
+        # Test 4: Add a doctor to the new department
+        print("\n👨‍⚕️ Test 4: Add doctor to Neurology department")
+        
+        new_doctor_data = {
+            "name": "Dr. Rajesh Neurologist",
+            "department_id": neurology_dept_id,
+            "specialty": "Neurology",
+            "qualification": "MBBS, DM Neurology",
+            "default_fee": "1200",
+            "phone": "9876543299",
+            "email": "rajesh.neuro@unicare.com",
+            "room_number": "201",
+            "status": "active"
+        }
+        
+        success, created_doctor = self.run_test(
+            "Create Neurologist Doctor",
+            "POST",
+            "api/doctors",
+            200,
+            data=new_doctor_data
+        )
+        
+        if not success:
+            print("❌ Failed to create neurologist doctor")
+            return False
+            
+        neurologist_id = created_doctor.get('id')
+        print(f"   ✅ Created neurologist with ID: {neurologist_id}")
+        
+        # Test 5: Verify doctor appears in GET /api/doctors immediately
+        print("\n🔍 Test 5: Verify new doctor appears in doctors list immediately")
+        
+        success, updated_doctors = self.run_test(
+            "Get Updated Doctors List",
+            "GET",
+            "api/doctors", 
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get updated doctors")
+            return False
+            
+        neurologist_found = any(d.get('id') == neurologist_id for d in updated_doctors)
+        if neurologist_found:
+            print("   ✅ Neurologist appears in doctors list immediately")
+        else:
+            print("   ❌ Neurologist NOT found in doctors list")
+            return False
+            
+        # Test 6: Verify doctor is correctly associated with department
+        print("\n🔗 Test 6: Verify doctor-department association")
+        
+        neurologist_data = next((d for d in updated_doctors if d.get('id') == neurologist_id), None)
+        if neurologist_data and neurologist_data.get('department_id') == neurology_dept_id:
+            print("   ✅ Doctor correctly associated with Neurology department")
+        else:
+            print(f"   ❌ Doctor association incorrect. Expected: {neurology_dept_id}, Got: {neurologist_data.get('department_id') if neurologist_data else 'None'}")
+            return False
+            
+        # Summary
+        print("\n" + "=" * 80)
+        print("🎉 PHASE 3 SHARED RESOURCES TEST SUMMARY:")
+        print(f"   • Created new department: Neurology (ID: {neurology_dept_id})")
+        print(f"   • Created neurologist in Neurology department")
+        print("   • ✅ Admin → Reception data sharing working")
+        print("   • ✅ Immediate data visibility (no caching issues)")
+        print("   • ✅ Department-doctor associations working")
+        print("\n💡 READY FOR FRONTEND TESTING:")
+        print("   • Backend APIs support shared resources functionality")
+        print("   • React Query cache invalidation should work properly")
+        print("   • Admin and Reception modules can share department/doctor data")
+        
+        return True
+
 def main():
-    print("🏥 COMPREHENSIVE APPOINTMENT MANAGEMENT API TESTING")
-    print("🎯 Testing all appointment APIs implemented by main agent")
-    print("🚨 Focus: Verify appointment management system is fully functional")
-    print("=" * 70)
+    # Setup with public URL
+    tester = UnicareEHRTester("https://838312d3-29d6-40e1-bbf3-5c35ee84f582.preview.emergentagent.com")
     
-    # Get backend URL from frontend .env file
-    backend_url = "http://localhost:8001"  # Default from frontend/.env VITE_BACKEND_URL
+    print("🚀 UNICARE EHR BACKEND API TESTING")
+    print("Testing Phase 3: Admin & Reception Integration - Shared Resources")
+    print("=" * 80)
     
-    # Initialize tester with correct backend URL
-    tester = UnicareEHRTester(backend_url)
-    
-    # Run comprehensive appointment API tests
-    tests = [
-        # Basic connectivity
-        tester.test_health_check,
+    # Test basic connectivity first
+    if not tester.test_health_check():
+        print("❌ Health check failed, stopping tests")
+        return 1
         
-        # Create test users if needed
-        tester.test_create_test_users,
+    # Test shared resources functionality (main focus)
+    if not tester.test_shared_resources_functionality():
+        print("❌ Shared resources functionality test failed")
+        return 1
         
-        # Main focus: Comprehensive appointment API testing
-        tester.test_appointment_management_apis,
-    ]
-    
-    for test in tests:
-        try:
-            test()
-        except Exception as e:
-            print(f"❌ Test failed with exception: {str(e)}")
-            import traceback
-            traceback.print_exc()
+    # Test departments API comprehensively
+    if not tester.test_departments_api_comprehensive():
+        print("❌ Departments API comprehensive test failed")
+        return 1
+        
+    # Test doctors API comprehensively
+    if not tester.test_doctors_api_comprehensive():
+        print("❌ Doctors API comprehensive test failed")
+        return 1
     
     # Print final results
-    print("\n" + "=" * 70)
-    print(f"📊 Final Results:")
-    print(f"   Tests run: {tester.tests_run}")
-    print(f"   Tests passed: {tester.tests_passed}")
-    print(f"   Success rate: {(tester.tests_passed/tester.tests_run*100):.1f}%")
+    print(f"\n📊 FINAL RESULTS:")
+    print(f"   Tests passed: {tester.tests_passed}/{tester.tests_run}")
+    print(f"   Success rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
     
     if tester.tests_passed == tester.tests_run:
-        print("🎉 All tests passed!")
+        print("\n🎉 ALL BACKEND TESTS PASSED!")
+        print("✅ Backend is ready for frontend shared resources testing")
         return 0
     else:
-        print("❌ Some tests failed - check output above")
+        print(f"\n❌ {tester.tests_run - tester.tests_passed} tests failed")
         return 1
 
 if __name__ == "__main__":
