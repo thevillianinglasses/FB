@@ -122,8 +122,56 @@ export const doctorsAPI = {
     return response.data;
   },
   
+  getById: async (id) => {
+    const response = await api.get(`/api/doctors/${id}`);
+    return response.data;
+  },
+  
   create: async (doctorData) => {
     const response = await api.post('/api/doctors', doctorData);
+    return response.data;
+  },
+  
+  update: async (id, doctorData) => {
+    const response = await api.put(`/api/doctors/${id}`, doctorData);
+    return response.data;
+  },
+  
+  delete: async (id) => {
+    const response = await api.delete(`/api/doctors/${id}`);
+    return response.data;
+  }
+};
+
+// Departments API
+export const departmentsAPI = {
+  getAll: async () => {
+    const response = await api.get('/api/departments');
+    return response.data;
+  },
+  
+  getById: async (id) => {
+    const response = await api.get(`/api/departments/${id}`);
+    return response.data;
+  },
+  
+  create: async (departmentData) => {
+    const response = await api.post('/api/departments', departmentData);
+    return response.data;
+  },
+  
+  update: async (id, departmentData) => {
+    const response = await api.put(`/api/departments/${id}`, departmentData);
+    return response.data;
+  },
+  
+  delete: async (id) => {
+    const response = await api.delete(`/api/departments/${id}`);
+    return response.data;
+  },
+  
+  getDoctors: async (departmentId) => {
+    const response = await api.get(`/api/departments/${departmentId}/doctors`);
     return response.data;
   }
 };
