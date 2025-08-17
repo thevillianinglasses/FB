@@ -13,7 +13,7 @@ import AppLayout from './components/AppLayout';
 import AdminDashboard from './components/AdminDashboard';
 import ReceptionDashboard from './components/ReceptionDashboard';
 import LaboratoryDashboard from './components/LaboratoryDashboard';
-import PharmacyDashboard from './components/PharmacyDashboard';
+import PharmacyDashboard from './components/pharmacy/PharmacyDashboard';
 import NursingDashboard from './components/NursingDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
 
