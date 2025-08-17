@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Unicare EHR Routing Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .test-link { display: inline-block; margin: 10px; padding: 10px 15px; background: #3B82F6; color: white; text-decoration: none; border-radius: 5px; }
+        .test-link:hover { background: #2563EB; }
+        .status { padding: 5px 10px; border-radius: 3px; font-size: 12px; }
+        .success { background: #10B981; color: white; }
+        .pending { background: #F59E0B; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🏥 Unicare EHR - Phase 2 Testing</h1>
+    
+    <div class="test-section">
+        <h2>Phase 2: Frontend Infrastructure - Testing Routes</h2>
+        <p><span class="status success">✅ COMPLETED</span> React Router + React Query Setup</p>
+        <p><span class="status success">✅ COMPLETED</span> AppLayout with Breadcrumbs</p>
+        <p><span class="status success">✅ COMPLETED</span> Toast Notifications</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Test the New Routing System</h2>
+        <p>Click these links to test the new URL-based routing:</p>
+        
+        <h3>Authentication Routes:</h3>
+        <a href="http://localhost:3000/login" class="test-link" target="_blank">Login Page</a>
+        <a href="http://localhost:3000/" class="test-link" target="_blank">Root Redirect</a>
+        
+        <h3>Admin Routes (Requires Admin Login):</h3>
+        <a href="http://localhost:3000/admin" class="test-link" target="_blank">Admin Dashboard</a>
+        <a href="http://localhost:3000/admin/users" class="test-link" target="_blank">User Management</a>
+        <a href="http://localhost:3000/admin/doctors" class="test-link" target="_blank">Doctor Management</a>
+        
+        <h3>Reception Route (Requires Reception/Admin Login):</h3>
+        <a href="http://localhost:3000/reception" class="test-link" target="_blank">Reception Dashboard</a>
+        
+        <h3>Other Role Routes:</h3>
+        <a href="http://localhost:3000/laboratory" class="test-link" target="_blank">Laboratory</a>
+        <a href="http://localhost:3000/pharmacy" class="test-link" target="_blank">Pharmacy</a>
+        <a href="http://localhost:3000/nursing" class="test-link" target="_blank">Nursing</a>
+        <a href="http://localhost:3000/doctor" class="test-link" target="_blank">Doctor</a>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Expected Behavior:</h2>
+        <ul>
+            <li><strong>Unauthenticated users:</strong> Should redirect to /login</li>
+            <li><strong>Admin users:</strong> Can access all /admin/* routes</li>
+            <li><strong>Reception users:</strong> Can access /reception route</li>
+            <li><strong>Breadcrumbs:</strong> Should show navigation path</li>
+            <li><strong>"← Back to Admin":</strong> Should appear on admin sub-pages</li>
+            <li><strong>Toast notifications:</strong> Should show success/error messages</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 API Testing:</h2>
+        <p>Test the new backend APIs:</p>
+        <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# Login as admin
+curl -X POST http://localhost:8001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin_007"}'
+
+# Get departments
+curl -X GET http://localhost:8001/api/departments \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Get doctors
+curl -X GET http://localhost:8001/api/doctors \
+  -H "Authorization: Bearer YOUR_TOKEN"
+        </pre>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ Phase 2 Achievements:</h2>
+        <ul>
+            <li>✅ <strong>React Router:</strong> Proper URL routing (/admin, /admin/doctors, /admin/users, /reception)</li>
+            <li>✅ <strong>AppLayout:</strong> Persistent header with breadcrumbs and "← Back to Admin"</li>
+            <li>✅ <strong>React Query:</strong> Caching with ['departments'] and ['doctors'] queries</li>
+            <li>✅ <strong>Toast Notifications:</strong> Replaced alerts with react-hot-toast</li>
+            <li>✅ <strong>Protected Routes:</strong> Role-based access control</li>
+            <li>✅ <strong>Department Integration:</strong> Inline doctor creation with department linking</li>
+            <li>✅ <strong>Optimistic UI:</strong> Immediate updates with rollback on failure</li>
+        </ul>
+    </div>
+
+    <script>
+        console.log('🏥 Unicare EHR - Phase 2 Testing Ready!');
+        console.log('Backend API: http://localhost:8001');
+        console.log('Frontend App: http://localhost:3000');
+    </script>
+</body>
+</html>
