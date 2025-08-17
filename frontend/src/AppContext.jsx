@@ -19,7 +19,7 @@ export const AppProvider = ({ children }) => {
   // Simple loading functions
   const loadDoctors = async () => {
     try {
-      const doctorsData = await doctorsAPI.getAll();
+      const doctorsData = await doctorsAPI.getDoctors();
       setDoctors(doctorsData);
       return doctorsData;
     } catch (error) {
@@ -30,7 +30,7 @@ export const AppProvider = ({ children }) => {
 
   const loadDepartments = async () => {
     try {
-      const departmentsData = await departmentsAPI.getAll();
+      const departmentsData = await departmentsAPI.getDepartments();
       setDepartments(departmentsData);
       return departmentsData;
     } catch (error) {
@@ -41,7 +41,7 @@ export const AppProvider = ({ children }) => {
 
   const loadPatients = async () => {
     try {
-      const patientsData = await patientsAPI.getAll();
+      const patientsData = await patientsAPI.getPatients();
       setPatients(patientsData);
       return patientsData;
     } catch (error) {
@@ -52,7 +52,7 @@ export const AppProvider = ({ children }) => {
 
   const loadUsers = async () => {
     try {
-      const usersData = await usersAPI.getAll();
+      const usersData = await usersAPI.getUsers();
       setUsers(usersData);
       return usersData;
     } catch (error) {
