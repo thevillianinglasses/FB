@@ -120,86 +120,62 @@ function AuthWrapper() {
           } 
         />
         
-        {/* Admin Routes */}
+        {/* Admin Route */}
         <Route 
           path="/admin" 
           element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <AppLayout userName={userName} userRole={userRole} />
+              <AdminDashboard onLogout={handleLogout} userName={userName} />
             </ProtectedRoute>
           } 
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="doctors" element={<DoctorManagement />} />
-          <Route path="*" element={<Navigate to="/admin" replace />} />
-        </Route>
+        />
         
         {/* Reception Route */}
         <Route 
           path="/reception" 
           element={
             <ProtectedRoute allowedRoles={['admin', 'reception']}>
-              <AppLayout userName={userName} userRole={userRole}>
-                <ReceptionDashboard />
-              </AppLayout>
+              <ReceptionDashboard onLogout={handleLogout} userName={userName} />
             </ProtectedRoute>
           } 
         />
         
-        {/* Other role routes */}
+        {/* Laboratory Route */}
         <Route 
           path="/laboratory" 
           element={
             <ProtectedRoute allowedRoles={['admin', 'laboratory']}>
-              <AppLayout userName={userName} userRole={userRole}>
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold text-charcoal-grey">Laboratory Dashboard</h2>
-                  <p className="text-gray-600 mt-2">Laboratory management system coming soon...</p>
-                </div>
-              </AppLayout>
+              <LaboratoryDashboard onLogout={handleLogout} userName={userName} />
             </ProtectedRoute>
           } 
         />
         
+        {/* Pharmacy Route */}
         <Route 
           path="/pharmacy" 
           element={
             <ProtectedRoute allowedRoles={['admin', 'pharmacy']}>
-              <AppLayout userName={userName} userRole={userRole}>
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold text-charcoal-grey">Pharmacy Dashboard</h2>
-                  <p className="text-gray-600 mt-2">Pharmacy management system coming soon...</p>
-                </div>
-              </AppLayout>
+              <PharmacyDashboard onLogout={handleLogout} userName={userName} />
             </ProtectedRoute>
           } 
         />
         
+        {/* Nursing Route */}
         <Route 
           path="/nursing" 
           element={
             <ProtectedRoute allowedRoles={['admin', 'nursing']}>
-              <AppLayout userName={userName} userRole={userRole}>
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold text-charcoal-grey">Nursing Dashboard</h2>
-                  <p className="text-gray-600 mt-2">Nursing management system coming soon...</p>
-                </div>
-              </AppLayout>
+              <NursingDashboard onLogout={handleLogout} userName={userName} />
             </ProtectedRoute>
           } 
         />
         
+        {/* Doctor Route */}
         <Route 
           path="/doctor" 
           element={
             <ProtectedRoute allowedRoles={['admin', 'doctor']}>
-              <AppLayout userName={userName} userRole={userRole}>
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold text-charcoal-grey">Doctor Dashboard</h2>
-                  <p className="text-gray-600 mt-2">Doctor portal coming soon...</p>
-                </div>
-              </AppLayout>
+              <DoctorDashboard onLogout={handleLogout} userName={userName} />
             </ProtectedRoute>
           } 
         />
