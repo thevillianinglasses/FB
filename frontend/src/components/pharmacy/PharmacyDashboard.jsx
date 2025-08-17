@@ -3,8 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { pharmacyAPI } from '../../api';
 import { formatCurrency } from '../../utils/gst';
+import PurchaseManagement from './PurchaseManagement';
+import SalesBilling from './SalesBilling';
+import ProductsInventory from './ProductsInventory';
+import ReturnsRefunds from './ReturnsRefunds';
+import NearExpiryManagement from './NearExpiryManagement';
+import DisposalManagement from './DisposalManagement';
+import AnalyticsReports from './AnalyticsReports';
 
-export default function PharmacyDashboard() {
+export default function PharmacyDashboard({ onLogout, userName }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   
   // Fetch dashboard data
@@ -37,7 +44,49 @@ export default function PharmacyDashboard() {
 
   const renderDashboard = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Pharmacy Dashboard</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">Pharmacy Dashboard</h2>
+        
+        {/* Navigation Links */}
+        <div className="flex items-center space-x-4">
+          <a 
+            href="/admin" 
+            className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+          >
+            👨‍💼 Admin
+          </a>
+          <a 
+            href="/reception" 
+            className="px-3 py-2 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+          >
+            🏥 Reception
+          </a>
+          <a 
+            href="/laboratory" 
+            className="px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
+          >
+            🔬 Laboratory
+          </a>
+          <a 
+            href="/nursing" 
+            className="px-3 py-2 text-sm bg-pink-100 text-pink-700 rounded-md hover:bg-pink-200 transition-colors"
+          >
+            👩‍⚕️ Nursing
+          </a>
+          <a 
+            href="/doctor" 
+            className="px-3 py-2 text-sm bg-teal-100 text-teal-700 rounded-md hover:bg-teal-200 transition-colors"
+          >
+            👨‍⚕️ Doctor
+          </a>
+          <button
+            onClick={onLogout}
+            className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+          >
+            🚪 Logout
+          </button>
+        </div>
+      </div>
       
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -147,7 +196,15 @@ export default function PharmacyDashboard() {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Sales</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Today's Sales</h3>
+            <button 
+              onClick={() => setActiveTab('sales')}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              View All →
+            </button>
+          </div>
           {recentSales && recentSales.length > 0 ? (
             <div className="space-y-3">
               {recentSales.slice(0, 5).map((sale, index) => (
@@ -159,6 +216,7 @@ export default function PharmacyDashboard() {
                   <div className="text-right">
                     <p className="font-medium text-gray-900">{formatCurrency(sale.totals.net)}</p>
                     <p className="text-sm text-gray-500">{new Date(sale.date_time).toLocaleDateString()}</p>
+                    <button className="text-xs text-blue-600 hover:text-blue-800">Edit</button>
                   </div>
                 </div>
               ))}
@@ -195,12 +253,36 @@ export default function PharmacyDashboard() {
     </div>
   );
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return renderDashboard();
+      case 'products':
+        return <ProductsInventory />;
+      case 'purchases':
+        return <PurchaseManagement />;
+      case 'sales':
+        return <SalesBilling />;
+      case 'returns':
+        return <ReturnsRefunds />;
+      case 'near-expiry':
+        return <NearExpiryManagement />;
+      case 'disposals':
+        return <DisposalManagement />;
+      case 'analytics':
+        return <AnalyticsReports />;
+      default:
+        return renderDashboard();
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-sm border-r">
         <div className="p-6">
           <h1 className="text-xl font-bold text-gray-800">Pharmacy Management</h1>
+          <p className="text-sm text-gray-600 mt-1">Welcome, {userName}</p>
         </div>
         
         <nav className="mt-6">
@@ -219,19 +301,22 @@ export default function PharmacyDashboard() {
             </button>
           ))}
         </nav>
+        
+        <div className="absolute bottom-4 left-4 right-4">
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center px-4 py-2 text-left text-red-600 hover:bg-red-50 rounded-md transition-colors"
+          >
+            <span className="mr-3">🚪</span>
+            Logout
+          </button>
+        </div>
       </div>
       
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'products' && <div>Products & Inventory Management - Coming Soon</div>}
-          {activeTab === 'purchases' && <div>Purchase Management - Coming Soon</div>}
-          {activeTab === 'sales' && <div>Sales & Billing - Coming Soon</div>}
-          {activeTab === 'returns' && <div>Returns & Refunds - Coming Soon</div>}
-          {activeTab === 'near-expiry' && <div>Near Expiry Management - Coming Soon</div>}
-          {activeTab === 'disposals' && <div>Disposal Management - Coming Soon</div>}
-          {activeTab === 'analytics' && <div>Analytics & Reports - Coming Soon</div>}
+          {renderContent()}
         </div>
       </div>
     </div>
