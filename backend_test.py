@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class UnicareEHRTester:
-    def __init__(self, base_url="https://medshare-hub.preview.emergentagent.com"):
+    def __init__(self, base_url="https://unicare-login-fix.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -2527,7 +2527,7 @@ class UnicareEHRTester:
 
 def main():
     # Setup with public URL
-    tester = UnicareEHRTester("https://medshare-hub.preview.emergentagent.com")
+    tester = UnicareEHRTester("https://unicare-login-fix.preview.emergentagent.com")
     
     print("🚀 UNICARE EHR BACKEND API TESTING")
     print("Testing Phase 3: Admin & Reception Integration - Shared Resources")
