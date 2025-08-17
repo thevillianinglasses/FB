@@ -75,8 +75,8 @@ function AuthWrapper() {
 
   const handleLogout = () => {
     authAPI.logout();
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_name');
     setIsLoggedIn(false);
     setUserRole('');
     setUserName('');
