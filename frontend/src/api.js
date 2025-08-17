@@ -200,6 +200,22 @@ export const billingAPI = {
   },
 };
 
+// EMR API
+export const emrAPI = {
+  getConsultations: async () => {
+    const response = await api.get('/api/emr/consultations');
+    return response.data;
+  },
+  createConsultation: async (consultationData) => {
+    const response = await api.post('/api/emr/consultations', consultationData);
+    return response.data;
+  },
+  getPatientHistory: async (patientId) => {
+    const response = await api.get(`/api/emr/patients/${patientId}/history`);
+    return response.data;
+  },
+};
+
 // Pharmacy API
 export const pharmacyAPI = {
   // Suppliers
