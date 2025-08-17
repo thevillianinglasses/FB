@@ -2458,6 +2458,73 @@ class UnicareEHRTester:
         
         return True
 
+    def test_departments_api_comprehensive(self):
+        """Test departments API comprehensively for shared resources"""
+        print("\n🏥 COMPREHENSIVE DEPARTMENTS API TESTING")
+        print("Testing departments API for shared resources functionality")
+        print("=" * 70)
+        
+        # Login as admin
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin for departments API testing")
+            return False
+            
+        # Test 1: GET /api/departments - Basic functionality
+        print("\n📋 Test 1: GET /api/departments - Basic functionality")
+        success, departments_response = self.run_test(
+            "GET /api/departments",
+            "GET",
+            "api/departments",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get departments list")
+            return False
+            
+        if not isinstance(departments_response, list):
+            print(f"❌ Expected list response, got {type(departments_response)}")
+            return False
+            
+        print(f"✅ Successfully retrieved {len(departments_response)} departments")
+        
+        # Test 2: Verify department data structure
+        print("\n🔍 Test 2: Verify department data structure")
+        
+        required_fields = ['id', 'name', 'description', 'status']
+        all_departments_valid = True
+        
+        for i, department in enumerate(departments_response):
+            print(f"\n   Department {i+1}: {department.get('name', 'Unknown')}")
+            
+            # Check required fields
+            missing_fields = [field for field in required_fields if field not in department]
+            if missing_fields:
+                print(f"   ❌ Missing required fields: {missing_fields}")
+                all_departments_valid = False
+            else:
+                print(f"   ✅ All required fields present")
+                
+            # Check specific fields
+            name = department.get('name', '')
+            description = department.get('description', '')
+            status = department.get('status', '')
+            
+            print(f"   📝 Name: '{name}'")
+            print(f"   📄 Description: '{description}'")
+            print(f"   🔄 Status: '{status}'")
+            
+            if not name.strip():
+                print(f"   ❌ Department name is empty")
+                all_departments_valid = False
+                
+        if not all_departments_valid:
+            print("\n❌ Department data structure validation failed")
+            return False
+            
+        print("\n✅ All departments have valid data structure")
+        return all_departments_valid
+
 def main():
     # Setup with public URL
     tester = UnicareEHRTester("https://838312d3-29d6-40e1-bbf3-5c35ee84f582.preview.emergentagent.com")
