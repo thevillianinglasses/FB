@@ -66,6 +66,13 @@ async def get_suppliers(current_user: dict = Depends(get_current_user)):
     check_pharmacy_access(current_user["role"])
     
     try:
+        # Check if database is connected
+        if not db.is_connected():
+            raise HTTPException(status_code=500, detail="Database not connected")
+        
+        if db.suppliers is None:
+            raise HTTPException(status_code=500, detail="Suppliers collection not available")
+            
         suppliers_cursor = db.suppliers.find({})
         suppliers = []
         async for supplier in suppliers_cursor:
