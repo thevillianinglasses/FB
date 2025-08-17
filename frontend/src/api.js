@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://838312d3-29d6-40e1-bbf3-5c35ee84f582.preview.emergentagent.com';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
 
 // Create axios instance
 const api = axios.create({
