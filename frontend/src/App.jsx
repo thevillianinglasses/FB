@@ -100,23 +100,23 @@ function AuthWrapper() {
   return (
     <Router>
       <Routes>
+        {/* Default redirect */}
+        <Route 
+          path="/" 
+          element={
+            <Navigate to={isLoggedIn ? getRoleBasedRoute(userRole) : '/login'} replace />
+          } 
+        />
+        
         {/* Login Route */}
         <Route 
           path="/login" 
           element={
             isLoggedIn ? (
-              <Navigate to={userRole === 'admin' ? '/admin' : '/reception'} replace />
+              <Navigate to={getRoleBasedRoute(userRole)} replace />
             ) : (
               <LoginPage onLoginSuccess={handleLoginSuccess} />
             )
-          } 
-        />
-        
-        {/* Default redirect */}
-        <Route 
-          path="/" 
-          element={
-            <Navigate to={isLoggedIn ? (userRole === 'admin' ? '/admin' : '/reception') : '/login'} replace />
           } 
         />
         
