@@ -67,6 +67,62 @@ async def create_db_client():
             await database.users.insert_one(admin_user)
             logging.info("Default admin user created")
         
+        # Initialize default departments if not exist
+        existing_departments = await database.departments.count_documents({})
+        if existing_departments == 0:
+            default_departments = [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "General Medicine",
+                    "description": "Primary healthcare and general medical consultations",
+                    "location": "Ground Floor, Wing A",
+                    "phone": "0471-2345678",
+                    "email": "general@unicare.com",
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Cardiology",
+                    "description": "Heart and cardiovascular system care",
+                    "location": "First Floor, Wing B",
+                    "phone": "0471-2345679",
+                    "email": "cardiology@unicare.com",
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Pediatrics",
+                    "description": "Medical care for infants, children, and adolescents",
+                    "location": "Ground Floor, Wing B",
+                    "phone": "0471-2345680",
+                    "email": "pediatrics@unicare.com",
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Orthopedics",
+                    "description": "Bone, joint, and musculoskeletal system care",
+                    "location": "First Floor, Wing A",
+                    "phone": "0471-2345681",
+                    "email": "orthopedics@unicare.com",
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            ]
+            await database.departments.insert_many(default_departments)
+            logging.info("Default departments created")
+            
+        # Get departments for doctor assignment
+        general_medicine_dept = await database.departments.find_one({"name": "General Medicine"})
+        cardiology_dept = await database.departments.find_one({"name": "Cardiology"})
+        
         # Initialize default doctors if not exist
         existing_doctors = await database.doctors.count_documents({})
         if existing_doctors == 0:
@@ -74,22 +130,28 @@ async def create_db_client():
                 {
                     "id": str(uuid.uuid4()),
                     "name": "Dr. Emily Carter",
+                    "department_id": general_medicine_dept["id"] if general_medicine_dept else "",
                     "specialty": "General Medicine",
                     "qualification": "MBBS, MD",
-                    "default_fee": "500",  # Changed to string to match model
+                    "default_fee": "500",
                     "phone": "9876543210",
                     "room_number": "101",
-                    "created_at": datetime.utcnow()
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
                 },
                 {
                     "id": str(uuid.uuid4()),
                     "name": "Dr. John Adebayo",
+                    "department_id": cardiology_dept["id"] if cardiology_dept else "",
                     "specialty": "Cardiology",
                     "qualification": "MBBS, DM Cardiology",
-                    "default_fee": "800",  # Changed to string to match model
+                    "default_fee": "800",
                     "phone": "9876543211",
                     "room_number": "102",
-                    "created_at": datetime.utcnow()
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
                 }
             ]
             await database.doctors.insert_many(default_doctors)
