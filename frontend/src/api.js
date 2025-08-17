@@ -40,6 +40,12 @@ api.interceptors.response.use(
 export const authAPI = {
   login: async (username, password) => {
     const response = await api.post('/api/auth/login', { username, password });
+    
+    // Store the JWT token in localStorage
+    if (response.data.access_token) {
+      localStorage.setItem('access_token', response.data.access_token);
+    }
+    
     return response.data;
   },
   logout: () => {
