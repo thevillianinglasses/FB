@@ -1,26 +1,60 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppProvider, useAppContext } from './AppContext';
 import { authAPI } from './api';
+import toast from 'react-hot-toast';
+
+// Components
 import LoginPage from './LoginPage';
+import AppLayout from './components/AppLayout';
 
-// Import all module components
-import ReceptionDashboard from './components/ReceptionDashboard';
-import LaboratoryDashboard from './components/LaboratoryDashboard';
-import PharmacyDashboard from './components/PharmacyDashboard';
-import NursingDashboard from './components/NursingDashboard';
-import DoctorDashboard from './components/DoctorDashboard';
-import AdminDashboard from './components/AdminDashboard';
+// Pages
+import AdminDashboard from './pages/AdminDashboard';
+import UserManagement from './pages/UserManagement';
+import DoctorManagement from './pages/DoctorManagement';
+import ReceptionDashboard from './pages/ReceptionDashboard';
 
-function AppContent() {
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
+// Protected Route Component
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const userRole = localStorage.getItem('userRole');
+  const isAuthenticated = authAPI.isAuthenticated();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
+    toast.error('Access denied. Insufficient permissions.');
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
+
+// Auth wrapper to handle authentication state
+function AuthWrapper() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [userName, setUserName] = useState('');
-  const { error, clearError, loadInitialData } = useAppContext();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Check if user is already authenticated on app load
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = () => {
       const isAuthenticated = authAPI.isAuthenticated();
       const storedRole = localStorage.getItem('userRole');
       const storedName = localStorage.getItem('userName');
@@ -28,34 +62,18 @@ function AppContent() {
       setIsLoggedIn(isAuthenticated);
       setUserRole(storedRole || '');
       setUserName(storedName || '');
-      
-      // Don't auto-load data here to prevent infinite loops
-      // Let individual components load their own data as needed
-      
       setIsCheckingAuth(false);
     };
     
     checkAuth();
-  }, []); // Remove loadInitialData from dependencies
+  }, []);
 
-  const handleLoginSuccess = async (role, name) => {
+  const handleLoginSuccess = (role, name) => {
     setIsLoggedIn(true);
     setUserRole(role);
     setUserName(name);
     localStorage.setItem('userRole', role);
     localStorage.setItem('userName', name);
-    
-    // Don't auto-load data here to prevent infinite loops
-    // Let individual dashboard components load their own data as needed
-  };
-
-  const handleLogout = () => {
-    authAPI.logout();
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    setIsLoggedIn(false);
-    setUserRole('');
-    setUserName('');
   };
 
   // Show loading while checking authentication
@@ -70,72 +88,130 @@ function AppContent() {
     );
   }
 
-  if (!isLoggedIn) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  // Role-based dashboard rendering
-  const renderDashboard = () => {
-    switch (userRole) {
-      case 'admin':
-        return <AdminDashboard onLogout={handleLogout} userName={userName} />;
-      case 'reception':
-        return <ReceptionDashboard onLogout={handleLogout} userName={userName} />;
-      case 'laboratory':
-        return <LaboratoryDashboard onLogout={handleLogout} userName={userName} />;
-      case 'pharmacy':
-        return <PharmacyDashboard onLogout={handleLogout} userName={userName} />;
-      case 'nursing':
-        return <NursingDashboard onLogout={handleLogout} userName={userName} />;
-      case 'doctor':
-        return <DoctorDashboard onLogout={handleLogout} userName={userName} />;
-      default:
-        return (
-          <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-charcoal-grey mb-4">Access Denied</h2>
-              <p className="text-gray-600 mb-4">Invalid user role: {userRole}</p>
-              <button
-                onClick={handleLogout}
-                className="bg-coral-red hover:bg-opacity-80 text-white font-semibold py-2 px-4 rounded"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        );
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Global Error Display */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 relative" role="alert">
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
-          <button
-            onClick={clearError}
-            className="absolute top-0 bottom-0 right-0 px-4 py-3"
-          >
-            <span className="sr-only">Close</span>
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
-
-      {renderDashboard()}
-    </div>
+    <Router>
+      <Routes>
+        {/* Login Route */}
+        <Route 
+          path="/login" 
+          element={
+            isLoggedIn ? (
+              <Navigate to={userRole === 'admin' ? '/admin' : '/reception'} replace />
+            ) : (
+              <LoginPage onLoginSuccess={handleLoginSuccess} />
+            )
+          } 
+        />
+        
+        {/* Default redirect */}
+        <Route 
+          path="/" 
+          element={
+            <Navigate to={isLoggedIn ? (userRole === 'admin' ? '/admin' : '/reception') : '/login'} replace />
+          } 
+        />
+        
+        {/* Admin Routes */}
+        <Route 
+          path="/admin/*" 
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AppLayout userName={userName} userRole={userRole}>
+                <Routes>
+                  <Route path="/" element={<AdminDashboard />} />
+                  <Route path="/users" element={<UserManagement />} />
+                  <Route path="/doctors" element={<DoctorManagement />} />
+                  {/* Add more admin routes as needed */}
+                  <Route path="*" element={<Navigate to="/admin" replace />} />
+                </Routes>
+              </AppLayout>
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Reception Route */}
+        <Route 
+          path="/reception" 
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'reception']}>
+              <AppLayout userName={userName} userRole={userRole}>
+                <ReceptionDashboard />
+              </AppLayout>
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Other role routes can be added here */}
+        <Route 
+          path="/laboratory" 
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'laboratory']}>
+              <AppLayout userName={userName} userRole={userRole}>
+                <div className="text-center py-12">
+                  <h2 className="text-2xl font-bold text-charcoal-grey">Laboratory Dashboard</h2>
+                  <p className="text-gray-600 mt-2">Coming Soon...</p>
+                </div>
+              </AppLayout>
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/pharmacy" 
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'pharmacy']}>
+              <AppLayout userName={userName} userRole={userRole}>
+                <div className="text-center py-12">
+                  <h2 className="text-2xl font-bold text-charcoal-grey">Pharmacy Dashboard</h2>
+                  <p className="text-gray-600 mt-2">Coming Soon...</p>
+                </div>
+              </AppLayout>
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/nursing" 
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'nursing']}>
+              <AppLayout userName={userName} userRole={userRole}>
+                <div className="text-center py-12">
+                  <h2 className="text-2xl font-bold text-charcoal-grey">Nursing Dashboard</h2>
+                  <p className="text-gray-600 mt-2">Coming Soon...</p>
+                </div>
+              </AppLayout>
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/doctor" 
+          element={
+            <ProtectedRoute allowedRoles={['admin', 'doctor']}>
+              <AppLayout userName={userName} userRole={userRole}>
+                <div className="text-center py-12">
+                  <h2 className="text-2xl font-bold text-charcoal-grey">Doctor Dashboard</h2>
+                  <p className="text-gray-600 mt-2">Coming Soon...</p>
+                </div>
+              </AppLayout>
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Catch all - redirect to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
 function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <QueryClientProvider client={queryClient}>
+      <AppProvider>
+        <AuthWrapper />
+      </AppProvider>
+    </QueryClientProvider>
   );
 }
 
