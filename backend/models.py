@@ -5,7 +5,11 @@ from enum import Enum
 
 # Enums and Types
 ScheduleSymbol = Literal["NONE", "H", "H1", "X", "G", "K", "N"]
-UserRole = Literal["admin", "pharmacist", "assistant", "doctor", "nurse"]
+UserRole = Literal["admin", "reception", "laboratory", "pharmacy", "nursing", "doctor", "pharmacist", "assistant"]
+UserStatus = Literal["active", "inactive", "suspended"]
+AppointmentStatus = Literal["scheduled", "confirmed", "checked_in", "completed", "cancelled", "no_show"]
+TestStatus = Literal["ordered", "collected", "in_progress", "reported", "verified"]
+PrescriptionStatus = Literal["pending", "dispensed", "cancelled"]
 PurchaseType = Literal["CASH", "CREDIT"]
 SaleMode = Literal["OPD", "OP", "IP"]
 TxnType = Literal["PURCHASE", "SALE", "RETURN_IN", "RETURN_OUT", "DISPOSAL", "ISSUE_INTERNAL"]
