@@ -683,6 +683,8 @@ async def delete_department(department_id: str, current_user: dict = Depends(get
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Department not found")
         return {"message": "Department deleted successfully"}
+    except HTTPException:
+        raise  # Re-raise HTTPException as is
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting department: {str(e)}")
 
