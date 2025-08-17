@@ -2335,19 +2335,19 @@ class UnicareEHRTester:
                 print(f"        - {doctor.get('name')} ({doctor.get('specialty')})")
                 
         # Test 2: Create a new department (Admin → Reception sharing test)
-        print("\n🏥 Test 2: Create new department 'Neurology' (Admin → Reception sharing)")
+        print("\n🏥 Test 2: Create new department 'Dermatology' (Admin → Reception sharing)")
         
         new_department_data = {
-            "name": "Neurology",
-            "description": "Neurological disorders and brain health",
-            "location": "Second Floor, Wing C",
-            "phone": "0471-2345682",
-            "email": "neurology@unicare.com",
+            "name": "Dermatology",
+            "description": "Skin and dermatological conditions",
+            "location": "Third Floor, Wing A",
+            "phone": "0471-2345683",
+            "email": "dermatology@unicare.com",
             "status": "active"
         }
         
         success, created_department = self.run_test(
-            "Create Neurology Department",
+            "Create Dermatology Department",
             "POST",
             "api/departments",
             200,
@@ -2355,11 +2355,11 @@ class UnicareEHRTester:
         )
         
         if not success:
-            print("❌ Failed to create Neurology department")
+            print("❌ Failed to create Dermatology department")
             return False
             
-        neurology_dept_id = created_department.get('id')
-        print(f"   ✅ Created Neurology department with ID: {neurology_dept_id}")
+        dermatology_dept_id = created_department.get('id')
+        print(f"   ✅ Created Dermatology department with ID: {dermatology_dept_id}")
         
         # Test 3: Verify department appears in GET /api/departments immediately
         print("\n🔍 Test 3: Verify new department appears in departments list immediately")
@@ -2375,30 +2375,30 @@ class UnicareEHRTester:
             print("❌ Failed to get updated departments")
             return False
             
-        neurology_found = any(d.get('id') == neurology_dept_id for d in updated_departments)
-        if neurology_found:
-            print("   ✅ Neurology department appears in departments list immediately")
+        dermatology_found = any(d.get('id') == dermatology_dept_id for d in updated_departments)
+        if dermatology_found:
+            print("   ✅ Dermatology department appears in departments list immediately")
         else:
-            print("   ❌ Neurology department NOT found in departments list")
+            print("   ❌ Dermatology department NOT found in departments list")
             return False
             
         # Test 4: Add a doctor to the new department
-        print("\n👨‍⚕️ Test 4: Add doctor to Neurology department")
+        print("\n👨‍⚕️ Test 4: Add doctor to Dermatology department")
         
         new_doctor_data = {
-            "name": "Dr. Rajesh Neurologist",
-            "department_id": neurology_dept_id,
-            "specialty": "Neurology",
-            "qualification": "MBBS, DM Neurology",
-            "default_fee": "1200",
-            "phone": "9876543299",
-            "email": "rajesh.neuro@unicare.com",
-            "room_number": "201",
+            "name": "Dr. Priya Dermatologist",
+            "department_id": dermatology_dept_id,
+            "specialty": "Dermatology",
+            "qualification": "MBBS, MD Dermatology",
+            "default_fee": "800",
+            "phone": "9876543298",
+            "email": "priya.derma@unicare.com",
+            "room_number": "301",
             "status": "active"
         }
         
         success, created_doctor = self.run_test(
-            "Create Neurologist Doctor",
+            "Create Dermatologist Doctor",
             "POST",
             "api/doctors",
             200,
@@ -2406,11 +2406,11 @@ class UnicareEHRTester:
         )
         
         if not success:
-            print("❌ Failed to create neurologist doctor")
+            print("❌ Failed to create dermatologist doctor")
             return False
             
-        neurologist_id = created_doctor.get('id')
-        print(f"   ✅ Created neurologist with ID: {neurologist_id}")
+        dermatologist_id = created_doctor.get('id')
+        print(f"   ✅ Created dermatologist with ID: {dermatologist_id}")
         
         # Test 5: Verify doctor appears in GET /api/doctors immediately
         print("\n🔍 Test 5: Verify new doctor appears in doctors list immediately")
@@ -2426,28 +2426,28 @@ class UnicareEHRTester:
             print("❌ Failed to get updated doctors")
             return False
             
-        neurologist_found = any(d.get('id') == neurologist_id for d in updated_doctors)
-        if neurologist_found:
-            print("   ✅ Neurologist appears in doctors list immediately")
+        dermatologist_found = any(d.get('id') == dermatologist_id for d in updated_doctors)
+        if dermatologist_found:
+            print("   ✅ Dermatologist appears in doctors list immediately")
         else:
-            print("   ❌ Neurologist NOT found in doctors list")
+            print("   ❌ Dermatologist NOT found in doctors list")
             return False
             
         # Test 6: Verify doctor is correctly associated with department
         print("\n🔗 Test 6: Verify doctor-department association")
         
-        neurologist_data = next((d for d in updated_doctors if d.get('id') == neurologist_id), None)
-        if neurologist_data and neurologist_data.get('department_id') == neurology_dept_id:
-            print("   ✅ Doctor correctly associated with Neurology department")
+        dermatologist_data = next((d for d in updated_doctors if d.get('id') == dermatologist_id), None)
+        if dermatologist_data and dermatologist_data.get('department_id') == dermatology_dept_id:
+            print("   ✅ Doctor correctly associated with Dermatology department")
         else:
-            print(f"   ❌ Doctor association incorrect. Expected: {neurology_dept_id}, Got: {neurologist_data.get('department_id') if neurologist_data else 'None'}")
+            print(f"   ❌ Doctor association incorrect. Expected: {dermatology_dept_id}, Got: {dermatologist_data.get('department_id') if dermatologist_data else 'None'}")
             return False
             
         # Summary
         print("\n" + "=" * 80)
         print("🎉 PHASE 3 SHARED RESOURCES TEST SUMMARY:")
-        print(f"   • Created new department: Neurology (ID: {neurology_dept_id})")
-        print(f"   • Created neurologist in Neurology department")
+        print(f"   • Created new department: Dermatology (ID: {dermatology_dept_id})")
+        print(f"   • Created dermatologist in Dermatology department")
         print("   • ✅ Admin → Reception data sharing working")
         print("   • ✅ Immediate data visibility (no caching issues)")
         print("   • ✅ Department-doctor associations working")
