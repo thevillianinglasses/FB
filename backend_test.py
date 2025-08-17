@@ -2527,7 +2527,7 @@ class UnicareEHRTester:
 
 def main():
     # Setup with public URL
-    tester = UnicareEHRTester("http://localhost:8001")
+    tester = UnicareEHRTester("https://838312d3-29d6-40e1-bbf3-5c35ee84f582.preview.emergentagent.com")
     
     print("🚀 UNICARE EHR BACKEND API TESTING")
     print("Testing Phase 3: Admin & Reception Integration - Shared Resources")
