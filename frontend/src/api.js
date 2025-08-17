@@ -216,6 +216,26 @@ export const emrAPI = {
   },
 };
 
+// Nursing API
+export const nursingAPI = {
+  getVitals: async () => {
+    const response = await api.get('/api/nursing/vitals');
+    return response.data;
+  },
+  recordVitals: async (vitalsData) => {
+    const response = await api.post('/api/nursing/vitals', vitalsData);
+    return response.data;
+  },
+  getProcedures: async () => {
+    const response = await api.get('/api/nursing/procedures');
+    return response.data;
+  },
+  recordProcedure: async (procedureData) => {
+    const response = await api.post('/api/nursing/procedures', procedureData);
+    return response.data;
+  },
+};
+
 // Pharmacy API
 export const pharmacyAPI = {
   // Suppliers
