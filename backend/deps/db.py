@@ -40,71 +40,75 @@ class DatabaseManager:
     def database(self):
         return get_database()
     
+    def is_connected(self):
+        """Check if database is connected"""
+        return get_database() is not None
+    
     # Collection shortcuts for pharmacy operations
     @property
     def suppliers(self):
         db = get_database()
-        return db.suppliers if db else None
+        return db.suppliers if db is not None else None
     
     @property
     def products(self):
         db = get_database()
-        return db.products if db else None
+        return db.products if db is not None else None
     
     @property
     def racks(self):
         db = get_database()
-        return db.racks if db else None
+        return db.racks if db is not None else None
     
     @property
     def chemical_schedules(self):
         db = get_database()
-        return db.chemical_schedules if db else None
+        return db.chemical_schedules if db is not None else None
     
     @property
     def batches(self):
         db = get_database()
-        return db.batches if db else None
+        return db.batches if db is not None else None
     
     @property
     def purchases(self):
         db = get_database()
-        return db.purchases if db else None
+        return db.purchases if db is not None else None
     
     @property
     def sales(self):
         db = get_database()
-        return db.sales if db else None
+        return db.sales if db is not None else None
     
     @property
     def sale_items(self):
         db = get_database()
-        return db.sale_items if db else None
+        return db.sale_items if db is not None else None
     
     @property
     def payments(self):
         db = get_database()
-        return db.payments if db else None
+        return db.payments if db is not None else None
     
     @property
     def stock_ledger(self):
         db = get_database()
-        return db.stock_ledger if db else None
+        return db.stock_ledger if db is not None else None
     
     @property
     def returns(self):
         db = get_database()
-        return db.returns if db else None
+        return db.returns if db is not None else None
     
     @property
     def disposals(self):
         db = get_database()
-        return db.disposals if db else None
+        return db.disposals if db is not None else None
     
     @property
     def audits(self):
         db = get_database()
-        return db.audits if db else None
+        return db.audits if db is not None else None
 
 # Create a global instance
 db_manager = DatabaseManager()
