@@ -57,8 +57,8 @@ function AuthWrapper() {
     setIsLoggedIn(true);
     setUserRole(role);
     setUserName(name);
-    localStorage.setItem('userRole', role);
-    localStorage.setItem('userName', name);
+    localStorage.setItem('user_role', role);
+    localStorage.setItem('user_name', name);
   };
 
   const getRoleBasedRoute = (role) => {
