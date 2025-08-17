@@ -405,14 +405,18 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Appointment Management APIs - COMPLETED SUCCESSFULLY"
+    - "Pharmacy Dashboard Access & Navigation"
+    - "Pharmacy Dashboard Data Loading & API Integration"
+    - "Schedule Compliance Components"
+    - "GST Calculation Utilities (Frontend)"
+    - "Pharmacy API Integration Testing"
   stuck_tasks: []
-  test_all: true
-  test_priority: "completed"
-  comprehensive_test_status: "completed_successfully"
-  all_features_working: true
-  appointment_apis_tested: true
-  appointment_management_functional: true
+  test_all: false
+  test_priority: "high_first"
+  comprehensive_test_status: "pharmacy_testing_required"
+  all_features_working: false
+  pharmacy_testing_required: true
+  pharmacy_kerala_gst_compliance: true
 
 agent_communication:
   - agent: "testing"
