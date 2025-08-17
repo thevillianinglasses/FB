@@ -150,10 +150,26 @@ async def create_purchase(purchase: PurchaseCreate, current_user: dict = Depends
             purchase_totals["post_tax_discount"] += line_calc["post_tax_discount"]
             purchase_totals["net_payable"] += line_calc["row_net"]
             
-            # Store processed item
-            processed_item = item.dict()
-            processed_item["batch_id"] = str(result.inserted_id)
-            processed_item.update(line_calc)
+            # Store processed item (create PurchaseItem structure)
+            processed_item = {
+                "product_id": item.product_id,
+                "batch_id": str(result.inserted_id),
+                "billed_qty": item.billed_qty,
+                "free_qty": item.free_qty,
+                "gst_rate": item.gst_rate,
+                "scheme_pct": item.scheme_pct,
+                "cash_pct": item.cash_pct,
+                "mrp": item.mrp,
+                "trade_price_ex_tax": item.trade_price_ex_tax,
+                "hsn": item.hsn,
+                "rack_id": item.rack_id,
+                "schedule_symbol": item.schedule_symbol,
+                "taxable": line_calc["taxable"],
+                "cgst": line_calc["cgst"],
+                "sgst": line_calc["sgst"], 
+                "igst": line_calc["igst"],
+                "row_net": line_calc["row_net"]
+            }
             processed_items.append(processed_item)
         
         # Round totals
