@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { useAppContext } from './AppContext';
+import { patientsAPI, doctorsAPI, departmentsAPI } from './api';
+import DepartmentDoctorSelector from './components/shared/DepartmentDoctorSelector';
 
 function NewOPDPageEnhanced() {
-  const { addPatient, updatePatient, doctors, loadDoctors, patients, loadPatients, patientForEditing, setPatientForEditing, isLoading } = useAppContext();
+  const { patientForEditing, setPatientForEditing } = useAppContext();
+  const queryClient = useQueryClient();
 
   // Form states
   const [patientName, setPatientName] = useState('');
@@ -20,8 +25,6 @@ function NewOPDPageEnhanced() {
   
   // UI states
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
   const [lastRegisteredPatient, setLastRegisteredPatient] = useState(null);
   
   // Auto-fill states
@@ -29,25 +32,114 @@ function NewOPDPageEnhanced() {
   const [matchingPatients, setMatchingPatients] = useState([]);
   const [selectedPatientForAutofill, setSelectedPatientForAutofill] = useState(null);
 
-  // Departments list
-  const departments = [
-    'General Medicine',
-    'Cardiology', 
-    'Dermatology',
-    'Orthopedics',
-    'Pediatrics',
-    'Gynecology',
-    'ENT',
-    'Ophthalmology',
-    'Psychiatry',
-    'Emergency'
-  ];
+  // Fetch patients using React Query
+  const { 
+    data: patients = [], 
+    isLoading: patientsLoading 
+  } = useQuery({
+    queryKey: ['patients'],
+    queryFn: patientsAPI.getAll,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  // Load doctors and patients on component mount
+  // Fetch doctors using React Query
+  const { 
+    data: doctors = [] 
+  } = useQuery({
+    queryKey: ['doctors'],
+    queryFn: doctorsAPI.getAll,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Create patient mutation with optimistic updates
+  const createPatientMutation = useMutation({
+    mutationFn: patientsAPI.create,
+    onMutate: async (newPatientData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries(['patients']);
+      
+      // Snapshot the previous value
+      const previousPatients = queryClient.getQueryData(['patients']);
+      
+      // Optimistically update
+      const tempPatient = {
+        ...newPatientData,
+        id: `temp-${Date.now()}`,
+        opd_number: generateOPDNumber(),
+        token_number: generateTokenNumber(newPatientData.assigned_doctor),
+        created_at: new Date().toISOString()
+      };
+      
+      queryClient.setQueryData(['patients'], (old) => [tempPatient, ...(old || [])]);
+      
+      return { previousPatients, tempPatient };
+    },
+    onSuccess: (createdPatient, variables, context) => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries(['patients']);
+      
+      const enhancedResult = {
+        ...createdPatient,
+        opd_number: context.tempPatient.opd_number,
+        token_number: context.tempPatient.token_number,
+        assigned_doctor: variables.assigned_doctor,
+        department: selectedDepartment,
+        consultation_fee: consultationFee,
+        visit_type: visitType,
+        patient_rating: patientRating,
+        total_visits: totalVisits
+      };
+      
+      setLastRegisteredPatient(enhancedResult);
+      toast.success(`Patient registered successfully! OPD: ${enhancedResult.opd_number}, Token: ${enhancedResult.token_number}`);
+    },
+    onError: (error, variables, context) => {
+      // Rollback optimistic update
+      if (context?.previousPatients) {
+        queryClient.setQueryData(['patients'], context.previousPatients);
+      }
+      
+      const errorMessage = error.response?.data?.detail || error.message || 'Registration failed';
+      toast.error(`Error: ${errorMessage}`);
+    }
+  });
+
+  // Update patient mutation
+  const updatePatientMutation = useMutation({
+    mutationFn: ({ id, data }) => patientsAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['patients']);
+      toast.success('Patient updated successfully!');
+    },
+    onError: (error) => {
+      const errorMessage = error.response?.data?.detail || error.message || 'Update failed';
+      toast.error(`Error: ${errorMessage}`);
+    }
+  });
+
+  // Load patient for editing when patientForEditing changes
   useEffect(() => {
-    loadDoctors();
-    loadPatients();
-  }, []);
+    if (patientForEditing) {
+      setPatientName(patientForEditing.patient_name || '');
+      setAge(patientForEditing.age || '');
+      setDob(patientForEditing.dob || '');
+      setSex(patientForEditing.sex || '');
+      setAddress(patientForEditing.address || '');
+      setPhoneNumber(patientForEditing.phone_number || '');
+      setSelectedDoctor(patientForEditing.assigned_doctor || '');
+      setConsultationFee(patientForEditing.consultation_fee || '');
+      setVisitType(patientForEditing.visit_type || 'New');
+      setPatientRating(patientForEditing.patient_rating || 0);
+      
+      // Find department for selected doctor
+      if (patientForEditing.assigned_doctor) {
+        const doctor = doctors.find(d => d.id === patientForEditing.assigned_doctor);
+        if (doctor) {
+          setSelectedDepartment(doctor.department_id || '');
+        }
+      }
+    }
+  }, [patientForEditing, doctors]);
 
   // Generate next OPD number in 001/25 format (daily)
   const generateOPDNumber = () => {
@@ -86,7 +178,7 @@ function NewOPDPageEnhanced() {
     return todayDoctorPatients.length + 1;
   };
 
-  // Handle phone number change with auto-fill logic - FIXED
+  // Handle phone number change with auto-fill logic
   const handlePhoneChange = (e) => {
     const phone = e.target.value.replace(/\D/g, '').slice(0, 10);
     setPhoneNumber(phone);
@@ -161,19 +253,18 @@ function NewOPDPageEnhanced() {
   };
 
   // Handle doctor selection and update consultation fee
-  const handleDoctorChange = (e) => {
-    const doctorId = e.target.value;
-    setSelectedDoctor(doctorId);
-    
-    if (doctorId) {
-      const doctor = doctors.find(d => d.id === doctorId);
-      if (doctor) {
-        setConsultationFee(doctor.default_fee || '150');
-        setSelectedDepartment(doctor.specialty || '');
+  const handleDoctorChange = (doctor) => {
+    if (doctor) {
+      setConsultationFee(doctor.default_fee || '150');
+      
+      // Find department name from departments
+      const departments = queryClient.getQueryData(['departments']) || [];
+      const department = departments.find(d => d.id === doctor.department_id);
+      if (department) {
+        // This is handled by the DepartmentDoctorSelector component
       }
     } else {
       setConsultationFee('');
-      setSelectedDepartment('');
     }
   };
 
@@ -240,7 +331,8 @@ function NewOPDPageEnhanced() {
     });
 
     const doctorName = doctors.find(d => d.id === selectedDoctor)?.name || 'Not Assigned';
-    const department = selectedDepartment || 'General';
+    const departments = queryClient.getQueryData(['departments']) || [];
+    const department = departments.find(d => d.id === selectedDepartment)?.name || 'General';
 
     const printContent = `
       <!DOCTYPE html>
@@ -346,45 +438,39 @@ function NewOPDPageEnhanced() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setSuccessMessage('');
-    setErrorMessage('');
 
     // Validation
     if (!patientName.trim()) {
-      setErrorMessage('Patient name is required');
+      toast.error('Patient name is required');
       setIsSubmitting(false);
       return;
     }
 
     if (!phoneNumber.trim() || phoneNumber.length !== 10) {
-      setErrorMessage('Valid 10-digit phone number is required');
+      toast.error('Valid 10-digit phone number is required');
       setIsSubmitting(false);
       return;
     }
 
     if (!sex) {
-      setErrorMessage('Please select gender');
+      toast.error('Please select gender');
       setIsSubmitting(false);
       return;
     }
 
     if (!age && !dob) {
-      setErrorMessage('Please provide either age or date of birth');
+      toast.error('Please provide either age or date of birth');
       setIsSubmitting(false);
       return;
     }
 
     if (!selectedDoctor) {
-      setErrorMessage('Please select a doctor');
+      toast.error('Please select a doctor');
       setIsSubmitting(false);
       return;
     }
 
     try {
-      // Generate OPD and Token numbers
-      const opdNumber = generateOPDNumber();
-      const tokenNumber = generateTokenNumber(selectedDoctor);
-
       const patientData = {
         patient_name: patientName.trim(),
         age: age || "",
@@ -405,45 +491,21 @@ function NewOPDPageEnhanced() {
         total_visits: totalVisits
       };
 
-      console.log('📤 Sending patient data:', patientData);
-
-      let result;
       if (patientForEditing) {
-        result = await updatePatient(patientForEditing.id, patientData);
-        setSuccessMessage('Patient updated successfully!');
+        updatePatientMutation.mutate({ id: patientForEditing.id, data: patientData });
       } else {
-        result = await addPatient(patientData);
-        
-        // Add additional data that's not in the core patient model
-        const enhancedResult = {
-          ...result,
-          opd_number: opdNumber,
-          token_number: tokenNumber,
-          assigned_doctor: selectedDoctor,
-          department: selectedDepartment,
-          consultation_fee: consultationFee,
-          visit_type: visitType,
-          patient_rating: patientRating,
-          total_visits: totalVisits
-        };
-        
-        setLastRegisteredPatient(enhancedResult);
-        setSuccessMessage(`Patient registered successfully! OPD: ${opdNumber}, Token: ${tokenNumber}`);
+        createPatientMutation.mutate(patientData);
       }
-
-      // Reload patients to update lists
-      await loadPatients();
-      
-      // Don't reset form immediately, keep for potential print
-      // resetForm();
 
     } catch (error) {
       console.error('❌ Registration error:', error);
-      setErrorMessage(`Registration failed: ${error.message || 'Please try again.'}`);
+      toast.error(`Registration failed: ${error.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isLoading = patientsLoading || createPatientMutation.isLoading || updatePatientMutation.isLoading;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -467,36 +529,6 @@ function NewOPDPageEnhanced() {
             </button>
           )}
         </div>
-
-        {successMessage && (
-          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-            <div className="flex justify-between items-center">
-              <span>{successMessage}</span>
-              {lastRegisteredPatient && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => printOPD(lastRegisteredPatient)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
-                  >
-                    Print OPD
-                  </button>
-                  <button
-                    onClick={resetForm}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                  >
-                    New Patient
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {errorMessage && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {errorMessage}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* OPD and Token Numbers Display */}
@@ -683,42 +715,15 @@ function NewOPDPageEnhanced() {
                 Visit Information
               </h3>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Department
-                </label>
-                <select
-                  value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
-                >
-                  <option value="">Select Department</option>
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Doctor *
-                </label>
-                <select
-                  value={selectedDoctor}
-                  onChange={handleDoctorChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
-                  required
-                >
-                  <option value="">Select Doctor</option>
-                    {doctors && doctors.map((doctor) => (
-                      <option key={doctor.id} value={doctor.id}>
-                        {doctor.name} - {doctor.specialty}
-                      </option>
-                    ))}
-                </select>
-              </div>
+              {/* Shared Department/Doctor Selector */}
+              <DepartmentDoctorSelector
+                selectedDepartment={selectedDepartment}
+                setSelectedDepartment={setSelectedDepartment}
+                selectedDoctor={selectedDoctor}
+                setSelectedDoctor={setSelectedDoctor}
+                onDoctorChange={handleDoctorChange}
+                required={true}
+              />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -759,19 +764,6 @@ function NewOPDPageEnhanced() {
                       +1
                     </button>
                   </div>
-                  
-                  {patientRating !== 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Reason for Rating Adjustment (Optional)
-                      </label>
-                      <textarea
-                        rows="2"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cornflower-blue focus:border-cornflower-blue"
-                        placeholder="Enter reason for rating adjustment..."
-                      />
-                    </div>
-                  )}
 
                   <div className={`text-center text-sm font-medium ${
                     patientRating >= 5 ? 'text-green-600' : 
@@ -814,6 +806,15 @@ function NewOPDPageEnhanced() {
                 patientForEditing ? 'Update Patient' : 'Register Patient'
               )}
             </button>
+            {lastRegisteredPatient && (
+              <button
+                type="button"
+                onClick={() => printOPD(lastRegisteredPatient)}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                Print OPD
+              </button>
+            )}
           </div>
         </form>
       </div>
