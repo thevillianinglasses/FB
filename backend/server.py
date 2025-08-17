@@ -12,6 +12,8 @@ import logging
 # Import our models and auth
 from models import *
 from auth import *
+# Import pharmacy routers
+from routers import pharmacy, purchases, sales, inventory, returns, disposals
 
 # Load environment variables
 load_dotenv()
