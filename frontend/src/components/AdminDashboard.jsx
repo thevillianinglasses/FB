@@ -38,7 +38,7 @@ function AdminDashboard({ onLogout, userName }) {
     try {
       setIsLoading(true);
       console.log('🔄 Loading users for admin dashboard...');
-      const usersData = await usersAPI.getAll();
+      const usersData = await usersAPI.getUsers();
       setUsers(usersData);
       console.log('✅ Users loaded successfully:', usersData.length);
     } catch (error) {
