@@ -41,9 +41,11 @@ export const authAPI = {
   login: async (username, password) => {
     const response = await api.post('/api/auth/login', { username, password });
     
-    // Store the JWT token in localStorage
+    // Store the JWT token and user info in localStorage
     if (response.data.access_token) {
       localStorage.setItem('access_token', response.data.access_token);
+      localStorage.setItem('user_role', response.data.user_role);
+      localStorage.setItem('user_name', response.data.user_name);
     }
     
     return response.data;
