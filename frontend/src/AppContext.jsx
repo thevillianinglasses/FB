@@ -166,7 +166,7 @@ export const AppProvider = ({ children }) => {
   // Appointment management functions
   const loadAppointments = async (filters = {}) => {
     try {
-      const appointmentsData = await appointmentsAPI.getAll(filters);
+      const appointmentsData = await appointmentsAPI.getAppointments(filters);
       setAppointments(appointmentsData);
       return appointmentsData;
     } catch (error) {
@@ -178,7 +178,7 @@ export const AppProvider = ({ children }) => {
   const addAppointment = async (appointmentData) => {
     try {
       setIsLoading(true);
-      const newAppointment = await appointmentsAPI.create(appointmentData);
+      const newAppointment = await appointmentsAPI.createAppointment(appointmentData);
       setAppointments(prevAppointments => [newAppointment, ...prevAppointments]);
       return newAppointment;
     } catch (error) {
@@ -193,7 +193,7 @@ export const AppProvider = ({ children }) => {
   const updateAppointment = async (appointmentId, appointmentData) => {
     try {
       setIsLoading(true);
-      const updatedAppointment = await appointmentsAPI.update(appointmentId, appointmentData);
+      const updatedAppointment = await appointmentsAPI.updateAppointment(appointmentId, appointmentData);
       setAppointments(prevAppointments => 
         prevAppointments.map(a => a.id === appointmentId ? updatedAppointment : a)
       );
@@ -210,7 +210,8 @@ export const AppProvider = ({ children }) => {
   const updateAppointmentStatus = async (appointmentId, status) => {
     try {
       setIsLoading(true);
-      const updatedAppointment = await appointmentsAPI.updateStatus(appointmentId, status);
+      // Use the checkInAppointment method if available
+      const updatedAppointment = await appointmentsAPI.checkInAppointment(appointmentId);
       setAppointments(prevAppointments => 
         prevAppointments.map(a => a.id === appointmentId ? updatedAppointment : a)
       );
@@ -227,7 +228,7 @@ export const AppProvider = ({ children }) => {
   const deleteAppointment = async (appointmentId) => {
     try {
       setIsLoading(true);
-      await appointmentsAPI.delete(appointmentId);
+      await appointmentsAPI.deleteAppointment(appointmentId);
       setAppointments(prevAppointments => prevAppointments.filter(a => a.id !== appointmentId));
     } catch (error) {
       console.error('Error deleting appointment:', error);
