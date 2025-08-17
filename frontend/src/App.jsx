@@ -110,21 +110,18 @@ function AuthWrapper() {
         
         {/* Admin Routes */}
         <Route 
-          path="/admin/*" 
+          path="/admin" 
           element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <AppLayout userName={userName} userRole={userRole}>
-                <Routes>
-                  <Route path="/" element={<AdminDashboard />} />
-                  <Route path="/users" element={<UserManagement />} />
-                  <Route path="/doctors" element={<DoctorManagement />} />
-                  {/* Add more admin routes as needed */}
-                  <Route path="*" element={<Navigate to="/admin" replace />} />
-                </Routes>
-              </AppLayout>
+              <AppLayout userName={userName} userRole={userRole} />
             </ProtectedRoute>
           } 
-        />
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="doctors" element={<DoctorManagement />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Route>
         
         {/* Reception Route */}
         <Route 
