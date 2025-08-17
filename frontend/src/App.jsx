@@ -61,6 +61,18 @@ function AuthWrapper() {
     localStorage.setItem('userName', name);
   };
 
+  const getRoleBasedRoute = (role) => {
+    const roleRoutes = {
+      admin: '/admin',
+      reception: '/reception', 
+      pharmacy: '/pharmacy',
+      laboratory: '/laboratory',
+      nursing: '/nursing',
+      doctor: '/doctor'
+    };
+    return roleRoutes[role] || '/admin';
+  };
+
   const handleLogout = () => {
     authAPI.logout();
     localStorage.removeItem('userRole');
