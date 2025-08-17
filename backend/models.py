@@ -1,347 +1,358 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel, Field, validator
+from typing import Optional, List, Literal, Dict, Any
 from datetime import datetime
-import uuid
 from enum import Enum
 
-class UserRole(str, Enum):
-    ADMIN = "admin"
-    RECEPTION = "reception"
-    LABORATORY = "laboratory"
-    PHARMACY = "pharmacy"
-    NURSING = "nursing"
-    DOCTOR = "doctor"
+# Enums and Types
+ScheduleSymbol = Literal["NONE", "H", "H1", "X", "G", "K", "N"]
+UserRole = Literal["admin", "pharmacist", "assistant", "doctor", "nurse"]
+PurchaseType = Literal["CASH", "CREDIT"]
+SaleMode = Literal["OPD", "OP", "IP"]
+TxnType = Literal["PURCHASE", "SALE", "RETURN_IN", "RETURN_OUT", "DISPOSAL", "ISSUE_INTERNAL"]
+PackType = Literal["TAB", "ML", "GM", "UNIT"]
+PricingMode = Literal["MRP_INC", "RATE_EX"]
 
-class UserStatus(str, Enum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-
-class TestStatus(str, Enum):
-    PENDING = "pending"
-    COLLECTED = "collected"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    REPORTED = "reported"
-
-class PrescriptionStatus(str, Enum):
-    PENDING = "pending"
-    DISPENSED = "dispensed"
-    PARTIAL = "partial"
-    CANCELLED = "cancelled"
-
-class AppointmentStatus(str, Enum):
-    SCHEDULED = "Scheduled"
-    CONFIRMED = "Confirmed" 
-    CHECKED_IN = "Checked In"
-    IN_PROGRESS = "In Progress"
-    COMPLETED = "Completed"
-    CANCELLED = "Cancelled"
-    NO_SHOW = "No Show"
-
-# User Management Models
-class User(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    username: str
-    password_hash: str = ""
-    full_name: str
-    role: UserRole
-    department: str = ""
-    email: str = ""
-    phone: str = ""
-    status: UserStatus = UserStatus.ACTIVE
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-    last_login: Optional[datetime] = None
-
-class UserCreate(BaseModel):
-    username: str
-    password: str
-    full_name: str
-    role: UserRole
-    department: str = ""
-    email: str = ""
-    phone: str = ""
-
-class UserLogin(BaseModel):
-    username: str
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    user_role: str
-    user_name: str
-
-# Patient Models (Enhanced)
-class Patient(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_name: str
-    age: str
-    dob: str = ""
-    sex: str
-    address: str = ""
-    phone_number: str
-    email: str = ""
-    emergency_contact_name: str = ""
-    emergency_contact_phone: str = ""
-    allergies: str = ""
-    medical_history: str = ""
-    assigned_doctor: str = ""  # Doctor ID
-    visit_type: str = "New"
-    patient_rating: int = 0
-    department: str = ""
-    consultation_fee: str = ""
-    total_visits: int = 1
-    opd_number: str = ""
-    token_number: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-# Department Models
-class Department(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+# Base Models
+class Supplier(BaseModel):
+    id: Optional[str] = None
     name: str
-    description: str = ""
-    head_of_department: str = ""  # Doctor ID
-    location: str = ""
-    phone: str = ""
-    email: str = ""
-    status: str = "active"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-class DepartmentCreate(BaseModel):
-    name: str
-    description: str = ""
-    head_of_department: str = ""
-    location: str = ""
-    phone: str = ""
-    email: str = ""
-
-class DepartmentUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    head_of_department: Optional[str] = None
-    location: Optional[str] = None
-    phone: Optional[str] = None
+    gstin: Optional[str] = None
+    state: str = "Kerala"
+    address: Optional[str] = None
+    phones: List[str] = []
     email: Optional[str] = None
-    status: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-# Doctor Models
-class Doctor(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    name: str
-    department_id: str = ""  # Link to department
-    specialty: str = ""
-    qualification: str = ""
-    registration_number: str = ""
-    default_fee: str = "150"  # Default consultation fee
-    phone: str = ""
-    email: str = ""
-    schedule: str = ""
-    room_number: str = ""
-    status: str = "active"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+class Product(BaseModel):
+    id: Optional[str] = None
+    brand_name: str
+    chemical_name: str
+    strength: str
+    form: str  # "Tablet", "Syrup", "Capsule", etc.
+    hsn: str
+    pack_type: PackType
+    pack_size: int
+    company_name: Optional[str] = None
+    rack_id: Optional[str] = None
+    min_level: Optional[int] = None
+    max_level: Optional[int] = None
+    schedule_symbol: ScheduleSymbol = "NONE"
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-class DoctorCreate(BaseModel):
-    name: str
-    department_id: str = ""
-    specialty: str = ""
-    qualification: str = ""
-    registration_number: str = ""
-    default_fee: str = "150"
-    phone: str = ""
-    email: str = ""
-    schedule: str = ""
-    room_number: str = ""
+class ProductCreate(BaseModel):
+    brand_name: str
+    chemical_name: str
+    strength: str
+    form: str
+    hsn: str
+    pack_type: PackType
+    pack_size: int
+    company_name: Optional[str] = None
+    rack_id: Optional[str] = None
+    min_level: Optional[int] = None
+    max_level: Optional[int] = None
+    schedule_symbol: ScheduleSymbol = "NONE"
 
-class DoctorUpdate(BaseModel):
-    name: Optional[str] = None
-    department_id: Optional[str] = None
-    specialty: Optional[str] = None
-    qualification: Optional[str] = None
-    registration_number: Optional[str] = None
-    default_fee: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    schedule: Optional[str] = None
-    room_number: Optional[str] = None
-    status: Optional[str] = None
+class ChemicalSchedule(BaseModel):
+    id: Optional[str] = None
+    chemical_name_norm: str
+    schedule_symbol: ScheduleSymbol
+    source: Literal["ADMIN", "DERIVED"] = "DERIVED"
+    updated_at: Optional[datetime] = None
 
-# Appointment Models
-class Appointment(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_name: str
-    phone_number: str
-    patient_details: Optional[dict] = {"age": "", "sex": "", "address": ""}
-    doctor_id: str
-    appointment_date: str  # YYYY-MM-DD format
-    appointment_time: str  # HH:MM format
-    duration: str = "30"  # minutes
-    reason: str = ""
-    type: str = "Consultation"  # Consultation, Follow-up, Procedure
-    status: AppointmentStatus = AppointmentStatus.SCHEDULED
-    notes: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-    
-class AppointmentCreate(BaseModel):
-    patient_name: str
-    phone_number: str
-    patient_details: Optional[dict] = {"age": "", "sex": "", "address": ""}
-    doctor_id: str
-    appointment_date: str
-    appointment_time: str
-    duration: str = "30"
-    reason: str = ""
-    type: str = "Consultation"
-    notes: str = ""
-    
-class AppointmentUpdate(BaseModel):
-    patient_name: Optional[str] = None
-    phone_number: Optional[str] = None
-    patient_details: Optional[dict] = None
-    doctor_id: Optional[str] = None
-    appointment_date: Optional[str] = None
-    appointment_time: Optional[str] = None
-    duration: Optional[str] = None
-    reason: Optional[str] = None
-    type: Optional[str] = None
-    status: Optional[AppointmentStatus] = None
+class Batch(BaseModel):
+    id: Optional[str] = None
+    product_id: str
+    batch_no: str
+    expiry: str  # "YYYY-MM" format
+    gst_rate: int
+    mrp: float
+    trade_price_ex_tax: float
+    scheme_pct: float = 0.0
+    cash_pct: float = 0.0
+    received_qty: int
+    free_qty: int = 0
+    effective_cost_per_unit: float = 0.0
+    supplier_id: str
+    received_at: Optional[datetime] = None
+    rack_id: Optional[str] = None
+    status: Literal["PENDING", "APPROVED"] = "PENDING"
+
+class BatchCreate(BaseModel):
+    product_id: str
+    batch_no: str
+    expiry: str  # "YYYY-MM"
+    gst_rate: int
+    mrp: float
+    trade_price_ex_tax: float
+    scheme_pct: float = 0.0
+    cash_pct: float = 0.0
+    billed_qty: int
+    free_qty: int = 0
+    supplier_id: str
+    rack_id: Optional[str] = None
+
+class PurchaseItem(BaseModel):
+    product_id: str
+    batch_id: Optional[str] = None
+    billed_qty: int
+    free_qty: int = 0
+    gst_rate: int
+    scheme_pct: float = 0.0
+    cash_pct: float = 0.0
+    mrp: float
+    trade_price_ex_tax: float
+    hsn: str
+    rack_id: Optional[str] = None
+    schedule_symbol: ScheduleSymbol = "NONE"
+
+class PurchaseTotals(BaseModel):
+    taxable: float = 0.0
+    cgst: float = 0.0
+    sgst: float = 0.0
+    igst: float = 0.0
+    cess: float = 0.0
+    post_tax_discount: float = 0.0
+    net_payable: float = 0.0
+
+class Purchase(BaseModel):
+    id: Optional[str] = None
+    invoice_no: str
+    invoice_date: str  # "YYYY-MM-DD"
+    supplier_id: str
+    type: PurchaseType
+    items: List[PurchaseItem]
+    totals: PurchaseTotals
+    created_by: str
+    approved_by: Optional[str] = None
+    status: Literal["PENDING", "APPROVED", "REJECTED"] = "PENDING"
     notes: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-# Laboratory Models
-class LabTest(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    test_name: str
-    test_code: str
-    category: str = ""
-    sample_type: str = ""
-    normal_range: str = ""
-    unit: str = ""
-    price: float = 0.0
-    tat_hours: int = 24  # Turnaround time in hours
-    preparation_notes: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+class PurchaseCreate(BaseModel):
+    invoice_no: str
+    invoice_date: str
+    supplier_id: str
+    type: PurchaseType
+    items: List[BatchCreate]
 
-class LabOrder(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
-    doctor_id: str = ""
-    tests: List[str] = []  # List of test IDs
-    priority: str = "routine"  # routine, urgent, stat
-    clinical_notes: str = ""
-    sample_collected_at: Optional[datetime] = None
-    reported_at: Optional[datetime] = None
-    status: TestStatus = TestStatus.PENDING
-    total_amount: float = 0.0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+class StockLedger(BaseModel):
+    id: Optional[str] = None
+    product_id: str
+    batch_id: str
+    txn_type: TxnType
+    qty_in: int = 0
+    qty_out: int = 0
+    cost_per_unit: Optional[float] = None
+    mrp: Optional[float] = None
+    ref_type: str
+    ref_id: str
+    created_at: Optional[datetime] = None
 
-class LabResult(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    order_id: str
-    test_id: str
-    patient_id: str
-    result_value: str = ""
-    result_unit: str = ""
-    reference_range: str = ""
-    flag: str = ""  # normal, high, low, critical
-    comments: str = ""
-    validated_by: str = ""
-    validated_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-# Pharmacy Models
-class Medication(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+class Patient(BaseModel):
     name: str
-    generic_name: str = ""
-    strength: str = ""
-    form: str = ""  # tablet, syrup, injection, etc.
-    manufacturer: str = ""
-    batch_number: str = ""
-    expiry_date: str = ""
-    mrp: float = 0.0
-    selling_price: float = 0.0
-    stock_quantity: int = 0
-    min_stock_level: int = 10
-    category: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    age: int
+    sex: Literal["Male", "Female", "Other"]
+    phone: Optional[str] = None
 
-class Prescription(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
-    doctor_id: str
-    medications: List[dict] = []  # List of {medication_id, dosage, frequency, duration, instructions}
-    diagnosis: str = ""
-    notes: str = ""
-    status: PrescriptionStatus = PrescriptionStatus.PENDING
-    prescribed_date: datetime = Field(default_factory=datetime.utcnow)
-    dispensed_date: Optional[datetime] = None
-    total_amount: float = 0.0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+class SaleCompliance(BaseModel):
+    required: bool = False
+    schedule_symbol: Optional[ScheduleSymbol] = None
+    rx_docs: List[str] = []  # file IDs or URLs
+    rx_number: Optional[str] = None
+    prescriber_reg_no: Optional[str] = None
+    patient_id_proof: Optional[str] = None
+    override_by: Optional[str] = None
+    override_reason: Optional[str] = None
 
-# Nursing Models
-class VitalSigns(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
-    recorded_by: str  # nurse user ID
-    temperature: str = ""
-    blood_pressure: str = ""
-    pulse_rate: str = ""
-    respiratory_rate: str = ""
-    oxygen_saturation: str = ""
-    weight: str = ""
-    height: str = ""
-    bmi: str = ""
-    pain_scale: str = ""
-    notes: str = ""
-    recorded_at: datetime = Field(default_factory=datetime.utcnow)
+class SaleItem(BaseModel):
+    id: Optional[str] = None
+    sale_id: Optional[str] = None
+    product_id: str
+    batch_id: str
+    nos: int
+    pricing_mode: PricingMode = "MRP_INC"
+    rate_ex_tax: Optional[float] = None
+    mrp: float
+    mrp_discount_pct: float = 0.0
+    gst_rate: int
+    schedule_symbol: ScheduleSymbol = "NONE"
+    base_ex_tax: float = 0.0
+    cgst: float = 0.0
+    sgst: float = 0.0
+    igst: float = 0.0
+    net: float = 0.0
+    prescribed_by: Optional[str] = None
 
-class NursingProcedure(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
-    performed_by: str  # nurse user ID
-    procedure_name: str
-    procedure_notes: str = ""
-    materials_used: str = ""
-    charges: float = 0.0
-    performed_at: datetime = Field(default_factory=datetime.utcnow)
+class SaleItemCreate(BaseModel):
+    product_id: str
+    batch_id: str
+    nos: int
+    pricing_mode: PricingMode = "MRP_INC"
+    rate_ex_tax: Optional[float] = None
+    mrp: float
+    mrp_discount_pct: float = 0.0
+    gst_rate: int
+    schedule_symbol: ScheduleSymbol = "NONE"
 
-# EMR Models
-class Consultation(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
-    doctor_id: str
-    chief_complaint: str = ""
-    history_present_illness: str = ""
-    physical_examination: str = ""
-    diagnosis: str = ""
-    treatment_plan: str = ""
-    follow_up_instructions: str = ""
-    next_visit_date: Optional[str] = None
-    consultation_fee: float = 0.0
-    consultation_date: datetime = Field(default_factory=datetime.utcnow)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+class Payment(BaseModel):
+    id: Optional[str] = None
+    sale_id: str
+    split: Dict[str, float]  # {"cash": 100, "upi": 200}
+    amount: float
+    received_at: Optional[datetime] = None
 
-# Billing Models
-class Bill(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    patient_id: str
-    bill_number: str = ""
-    items: List[dict] = []  # List of {item_name, quantity, rate, amount}
-    subtotal: float = 0.0
-    discount: float = 0.0
-    tax: float = 0.0
-    total_amount: float = 0.0
-    paid_amount: float = 0.0
-    balance_amount: float = 0.0
-    payment_method: str = ""
-    payment_date: Optional[datetime] = None
-    status: str = "pending"  # pending, paid, partial
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+class SaleTotals(BaseModel):
+    mrp_total: float = 0.0
+    discount_on_mrp: float = 0.0
+    taxable: float = 0.0
+    cgst: float = 0.0
+    sgst: float = 0.0
+    igst: float = 0.0
+    net: float = 0.0
+
+class Sale(BaseModel):
+    id: Optional[str] = None
+    bill_no: str
+    date_time: datetime
+    mode: SaleMode
+    doctor_name: Optional[str] = None
+    opd_no: Optional[str] = None
+    patient: Patient
+    items: List[str] = []  # sale_item_ids
+    payments: List[str] = []  # payment_ids
+    schedule_compliance: Optional[SaleCompliance] = None
+    totals: SaleTotals
+    time_to_serve_seconds: Optional[int] = None
+    created_by: str
+    edited_by: Optional[str] = None
+    edited_at: Optional[datetime] = None
+    edit_notes: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+class SaleCreate(BaseModel):
+    bill_no: str
+    date_time: str  # ISO string
+    mode: SaleMode
+    doctor_name: Optional[str] = None
+    opd_no: Optional[str] = None
+    patient: Patient
+    items: List[SaleItemCreate]
+    payments: Dict[str, float]  # {"cash": 100, "upi": 200}
+    time_to_serve_seconds: Optional[int] = None
+    compliance: Optional[SaleCompliance] = None
+
+class ReturnItem(BaseModel):
+    sale_item_id: str
+    batch_id: str
+    qty_returned: int
+    base_reversed: float = 0.0
+    cgst_rev: float = 0.0
+    sgst_rev: float = 0.0
+    igst_rev: float = 0.0
+    net_refund: float = 0.0
+
+class ReturnTotals(BaseModel):
+    base_reversed: float = 0.0
+    cgst_rev: float = 0.0
+    sgst_rev: float = 0.0
+    igst_rev: float = 0.0
+    net_refund: float = 0.0
+
+class Return(BaseModel):
+    id: Optional[str] = None
+    sale_id: str
+    bill_no: str
+    date_time: datetime
+    items: List[ReturnItem]
+    totals: ReturnTotals
+    schedule_link: Optional[Dict[str, Any]] = None
+    created_by: str
+    approved_by: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+class ReturnCreate(BaseModel):
+    sale_id: str
+    bill_no: str
+    items: List[Dict[str, Any]]  # {sale_item_id, batch_id, qty_returned}
+    reason: Optional[str] = None
+
+class Rack(BaseModel):
+    id: Optional[str] = None
+    name: str
+    location_note: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+class RackCreate(BaseModel):
+    name: str
+    location_note: Optional[str] = None
+
+class Disposal(BaseModel):
+    id: Optional[str] = None
+    batch_id: str
+    qty: int
+    reason: Literal["expiry", "damage", "recall"]
+    remark: str
+    itc_reversal_tax: float = 0.0
+    approved_by: str
+    created_at: Optional[datetime] = None
+
+class DisposalCreate(BaseModel):
+    batch_id: str
+    qty: int
+    reason: Literal["expiry", "damage", "recall"]
+    remark: str
+    itc_reversal_tax: float = 0.0
+
+class Audit(BaseModel):
+    id: Optional[str] = None
+    actor_id: str
+    role: str
+    action: str
+    entity: str
+    entity_id: str
+    before: Optional[Dict[str, Any]] = None
+    after: Optional[Dict[str, Any]] = None
+    created_at: Optional[datetime] = None
+
+# Settings Models
+class SchedulePolicy(BaseModel):
+    requires_rx: bool
+    retention_days: int
+    extra_fields: List[str] = []
+
+class SchedulePolicies(BaseModel):
+    H: SchedulePolicy = SchedulePolicy(requires_rx=True, retention_days=1825, extra_fields=["rx_number", "prescriber_reg_no"])
+    H1: SchedulePolicy = SchedulePolicy(requires_rx=True, retention_days=1825, extra_fields=["rx_number", "prescriber_reg_no"])
+    X: SchedulePolicy = SchedulePolicy(requires_rx=True, retention_days=1825, extra_fields=["rx_number", "prescriber_reg_no", "patient_id_proof"])
+    G: SchedulePolicy = SchedulePolicy(requires_rx=False, retention_days=0, extra_fields=[])
+    K: SchedulePolicy = SchedulePolicy(requires_rx=False, retention_days=0, extra_fields=[])
+    N: SchedulePolicy = SchedulePolicy(requires_rx=True, retention_days=1825, extra_fields=["rx_number", "prescriber_reg_no"])
+    NONE: SchedulePolicy = SchedulePolicy(requires_rx=False, retention_days=0, extra_fields=[])
+
+class PharmacySettings(BaseModel):
+    schedule_policies: SchedulePolicies = SchedulePolicies()
+    kerala_gst_enabled: bool = True
+    financial_year_start_month: int = 4  # April
+    bill_number_format: str = "NNNN/FY{start_year}-{end_year}"
+
+# Response Models
+class ProductResponse(Product):
+    current_stock: int = 0
+    near_expiry_batches: int = 0
+
+class BatchResponse(Batch):
+    product_name: str = ""
+    expiry_color: Literal["red", "orange", "yellow", "ok"] = "ok"
+    current_stock: int = 0
+
+class PurchaseResponse(Purchase):
+    supplier_name: str = ""
+    total_items: int = 0
+
+class SaleResponse(Sale):
+    total_items: int = 0
+    payment_mode: str = ""
