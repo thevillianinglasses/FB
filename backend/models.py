@@ -16,7 +16,266 @@ TxnType = Literal["PURCHASE", "SALE", "RETURN_IN", "RETURN_OUT", "DISPOSAL", "IS
 PackType = Literal["TAB", "ML", "GM", "UNIT"]
 PricingMode = Literal["MRP_INC", "RATE_EX"]
 
-# Base Models
+# Core EHR Models (required by existing server.py)
+class User(BaseModel):
+    id: Optional[str] = None
+    username: str
+    password_hash: str = ""
+    full_name: str
+    role: UserRole
+    department: str
+    email: Optional[str] = None
+    status: UserStatus = "active"
+    last_login: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    full_name: str
+    role: UserRole
+    department: str
+    email: Optional[str] = None
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user_role: str
+    user_name: str
+
+class Patient(BaseModel):
+    id: Optional[str] = None
+    patient_name: str
+    age: str
+    dob: Optional[str] = None
+    sex: str
+    address: Optional[str] = None
+    phone_number: str
+    email: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    allergies: Optional[str] = None
+    medical_history: Optional[str] = None
+    assigned_doctor: Optional[str] = None
+    visit_type: Optional[str] = None
+    patient_rating: Optional[int] = None
+    opd_number: Optional[str] = None
+    token_number: Optional[str] = None
+    status: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class Doctor(BaseModel):
+    id: Optional[str] = None
+    name: str
+    department_id: Optional[str] = None
+    specialty: str
+    qualification: Optional[str] = None
+    default_fee: str
+    phone: Optional[str] = None
+    room_number: Optional[str] = None
+    status: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class DoctorCreate(BaseModel):
+    name: str
+    department_id: Optional[str] = None
+    specialty: str
+    qualification: Optional[str] = None
+    default_fee: str
+    phone: Optional[str] = None
+    room_number: Optional[str] = None
+
+class DoctorUpdate(BaseModel):
+    name: Optional[str] = None
+    department_id: Optional[str] = None
+    specialty: Optional[str] = None
+    qualification: Optional[str] = None
+    default_fee: Optional[str] = None
+    phone: Optional[str] = None
+    room_number: Optional[str] = None
+
+class Department(BaseModel):
+    id: Optional[str] = None
+    name: str
+    description: Optional[str] = None
+    location: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    status: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class DepartmentCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    location: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+
+class Appointment(BaseModel):
+    id: Optional[str] = None
+    patient_name: str
+    phone_number: str
+    age: int
+    sex: str
+    address: Optional[str] = None
+    doctor_id: str
+    appointment_date: str
+    appointment_time: str
+    appointment_type: str
+    notes: Optional[str] = None
+    status: AppointmentStatus = "scheduled"
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class AppointmentCreate(BaseModel):
+    patient_name: str
+    phone_number: str
+    age: int
+    sex: str
+    address: Optional[str] = None
+    doctor_id: str
+    appointment_date: str
+    appointment_time: str
+    appointment_type: str
+    notes: Optional[str] = None
+
+class AppointmentUpdate(BaseModel):
+    patient_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    age: Optional[int] = None
+    sex: Optional[str] = None
+    address: Optional[str] = None
+    doctor_id: Optional[str] = None
+    appointment_date: Optional[str] = None
+    appointment_time: Optional[str] = None
+    appointment_type: Optional[str] = None
+    notes: Optional[str] = None
+    status: Optional[AppointmentStatus] = None
+
+class LabTest(BaseModel):
+    id: Optional[str] = None
+    test_name: str
+    test_code: str
+    category: str
+    sample_type: str
+    price: float
+    tat_hours: int
+    preparation_notes: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+class LabOrder(BaseModel):
+    id: Optional[str] = None
+    patient_id: str
+    doctor_id: str
+    tests: List[str]
+    status: TestStatus = "ordered"
+    total_amount: Optional[float] = None
+    sample_collected_at: Optional[datetime] = None
+    reported_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class LabResult(BaseModel):
+    id: Optional[str] = None
+    order_id: str
+    test_id: str
+    result_value: str
+    reference_range: Optional[str] = None
+    unit: Optional[str] = None
+    status: str = "normal"
+    validated_by: Optional[str] = None
+    validated_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+class Medication(BaseModel):
+    id: Optional[str] = None
+    name: str
+    generic_name: str
+    strength: str
+    form: str
+    mrp: float
+    selling_price: float
+    stock_quantity: int
+    category: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class Prescription(BaseModel):
+    id: Optional[str] = None
+    patient_id: str
+    doctor_id: str
+    medications: List[Dict[str, Any]]
+    status: PrescriptionStatus = "pending"
+    total_amount: Optional[float] = None
+    prescribed_date: Optional[datetime] = None
+    dispensed_date: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class VitalSigns(BaseModel):
+    id: Optional[str] = None
+    patient_id: str
+    temperature: Optional[float] = None
+    blood_pressure_systolic: Optional[int] = None
+    blood_pressure_diastolic: Optional[int] = None
+    heart_rate: Optional[int] = None
+    respiratory_rate: Optional[int] = None
+    oxygen_saturation: Optional[float] = None
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    recorded_by: Optional[str] = None
+    recorded_at: Optional[datetime] = None
+
+class NursingProcedure(BaseModel):
+    id: Optional[str] = None
+    patient_id: str
+    procedure_name: str
+    description: Optional[str] = None
+    performed_by: Optional[str] = None
+    performed_at: Optional[datetime] = None
+
+class Consultation(BaseModel):
+    id: Optional[str] = None
+    patient_id: str
+    doctor_id: str
+    chief_complaint: str
+    history: Optional[str] = None
+    examination: Optional[str] = None
+    diagnosis: Optional[str] = None
+    treatment_plan: Optional[str] = None
+    consultation_date: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+class Bill(BaseModel):
+    id: Optional[str] = None
+    bill_number: str
+    patient_id: str
+    items: List[Dict[str, Any]]
+    subtotal: float
+    tax_amount: float
+    discount_amount: float = 0.0
+    total_amount: float
+    payment_status: str = "pending"
+    payment_method: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+# Pharmacy Models
 class Supplier(BaseModel):
     id: Optional[str] = None
     name: str
