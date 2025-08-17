@@ -30,6 +30,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include pharmacy routers
+app.include_router(pharmacy.router)
+app.include_router(purchases.router) 
+app.include_router(sales.router)
+app.include_router(inventory.router)
+app.include_router(returns.router)
+app.include_router(disposals.router)
+
 # Database configuration
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/unicare_ehr")
 
