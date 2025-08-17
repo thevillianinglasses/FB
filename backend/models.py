@@ -97,10 +97,41 @@ class Patient(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Department Models
+class Department(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str = ""
+    head_of_department: str = ""  # Doctor ID
+    location: str = ""
+    phone: str = ""
+    email: str = ""
+    status: str = "active"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DepartmentCreate(BaseModel):
+    name: str
+    description: str = ""
+    head_of_department: str = ""
+    location: str = ""
+    phone: str = ""
+    email: str = ""
+
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    head_of_department: Optional[str] = None
+    location: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    status: Optional[str] = None
+
 # Doctor Models
 class Doctor(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
+    department_id: str = ""  # Link to department
     specialty: str = ""
     qualification: str = ""
     registration_number: str = ""
@@ -111,6 +142,32 @@ class Doctor(BaseModel):
     room_number: str = ""
     status: str = "active"
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DoctorCreate(BaseModel):
+    name: str
+    department_id: str = ""
+    specialty: str = ""
+    qualification: str = ""
+    registration_number: str = ""
+    default_fee: str = "150"
+    phone: str = ""
+    email: str = ""
+    schedule: str = ""
+    room_number: str = ""
+
+class DoctorUpdate(BaseModel):
+    name: Optional[str] = None
+    department_id: Optional[str] = None
+    specialty: Optional[str] = None
+    qualification: Optional[str] = None
+    registration_number: Optional[str] = None
+    default_fee: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    schedule: Optional[str] = None
+    room_number: Optional[str] = None
+    status: Optional[str] = None
 
 # Appointment Models
 class Appointment(BaseModel):
