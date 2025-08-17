@@ -6,7 +6,7 @@ from datetime import datetime
 
 class QuickBackendTester:
     def __init__(self):
-        self.base_url = "https://838312d3-29d6-40e1-bbf3-5c35ee84f582.preview.emergentagent.com"
+        self.base_url = "https://medshare-hub.preview.emergentagent.com"
         self.token = None
         self.tests_run = 0
         self.tests_passed = 0
