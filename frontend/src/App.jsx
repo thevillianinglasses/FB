@@ -9,11 +9,13 @@ import toast from 'react-hot-toast';
 import LoginPage from './LoginPage';
 import AppLayout from './components/AppLayout';
 
-// Pages
-import AdminDashboard from './pages/AdminDashboard';
-import UserManagement from './pages/UserManagement';
-import DoctorManagement from './pages/DoctorManagement';
-import ReceptionDashboard from './pages/ReceptionDashboard';
+// Import original dashboard components instead of pages
+import AdminDashboard from './components/AdminDashboard';
+import ReceptionDashboard from './components/ReceptionDashboard';
+import LaboratoryDashboard from './components/LaboratoryDashboard';
+import PharmacyDashboard from './components/PharmacyDashboard';
+import NursingDashboard from './components/NursingDashboard';
+import DoctorDashboard from './components/DoctorDashboard';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
