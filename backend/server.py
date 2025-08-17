@@ -478,17 +478,163 @@ async def get_doctors(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Error fetching doctors: {str(e)}")
 
 @app.post("/api/doctors", response_model=Doctor)
-async def add_doctor(doctor: Doctor, current_user: dict = Depends(get_current_user)):
+async def add_doctor(doctor: DoctorCreate, current_user: dict = Depends(get_current_user)):
     if not has_admin_access(current_user["role"]):
         raise HTTPException(status_code=403, detail="Access denied")
     
     try:
         doctor_dict = doctor.dict()
+        doctor_dict["id"] = str(uuid.uuid4())
         doctor_dict["created_at"] = datetime.utcnow()
+        doctor_dict["updated_at"] = datetime.utcnow()
         result = await database.doctors.insert_one(doctor_dict)
         return Doctor(**doctor_dict)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding doctor: {str(e)}")
+
+@app.put("/api/doctors/{doctor_id}", response_model=Doctor)
+async def update_doctor(doctor_id: str, doctor: DoctorUpdate, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        update_dict = doctor.dict(exclude_unset=True)
+        if update_dict:
+            update_dict["updated_at"] = datetime.utcnow()
+            
+            result = await database.doctors.update_one(
+                {"id": doctor_id},
+                {"$set": update_dict}
+            )
+            
+            if result.matched_count == 0:
+                raise HTTPException(status_code=404, detail="Doctor not found")
+        
+        updated_doctor = await database.doctors.find_one({"id": doctor_id})
+        return Doctor(**updated_doctor)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating doctor: {str(e)}")
+
+@app.delete("/api/doctors/{doctor_id}")
+async def delete_doctor(doctor_id: str, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        result = await database.doctors.delete_one({"id": doctor_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+        return {"message": "Doctor deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting doctor: {str(e)}")
+
+@app.get("/api/doctors/{doctor_id}", response_model=Doctor)
+async def get_doctor(doctor_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        doctor = await database.doctors.find_one({"id": doctor_id})
+        if not doctor:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+        return Doctor(**doctor)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching doctor: {str(e)}")
+
+# ===================
+# DEPARTMENT MANAGEMENT APIS
+# ===================
+
+@app.get("/api/departments", response_model=List[Department])
+async def get_departments(current_user: dict = Depends(get_current_user)):
+    try:
+        departments_cursor = database.departments.find({})
+        departments = []
+        async for department in departments_cursor:
+            departments.append(Department(**department))
+        return departments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching departments: {str(e)}")
+
+@app.get("/api/departments/{department_id}", response_model=Department)
+async def get_department(department_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        department = await database.departments.find_one({"id": department_id})
+        if not department:
+            raise HTTPException(status_code=404, detail="Department not found")
+        return Department(**department)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching department: {str(e)}")
+
+@app.post("/api/departments", response_model=Department)
+async def add_department(department: DepartmentCreate, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Check if department with same name already exists
+        existing_dept = await database.departments.find_one({"name": department.name})
+        if existing_dept:
+            raise HTTPException(status_code=400, detail="Department with this name already exists")
+        
+        department_dict = department.dict()
+        department_dict["id"] = str(uuid.uuid4())
+        department_dict["created_at"] = datetime.utcnow()
+        department_dict["updated_at"] = datetime.utcnow()
+        result = await database.departments.insert_one(department_dict)
+        return Department(**department_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding department: {str(e)}")
+
+@app.put("/api/departments/{department_id}", response_model=Department)
+async def update_department(department_id: str, department: DepartmentUpdate, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        update_dict = department.dict(exclude_unset=True)
+        if update_dict:
+            update_dict["updated_at"] = datetime.utcnow()
+            
+            result = await database.departments.update_one(
+                {"id": department_id},
+                {"$set": update_dict}
+            )
+            
+            if result.matched_count == 0:
+                raise HTTPException(status_code=404, detail="Department not found")
+        
+        updated_department = await database.departments.find_one({"id": department_id})
+        return Department(**updated_department)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating department: {str(e)}")
+
+@app.delete("/api/departments/{department_id}")
+async def delete_department(department_id: str, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Check if any doctors are assigned to this department
+        doctors_in_dept = await database.doctors.count_documents({"department_id": department_id})
+        if doctors_in_dept > 0:
+            raise HTTPException(status_code=400, detail=f"Cannot delete department. {doctors_in_dept} doctors are assigned to this department.")
+        
+        result = await database.departments.delete_one({"id": department_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Department not found")
+        return {"message": "Department deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting department: {str(e)}")
+
+@app.get("/api/departments/{department_id}/doctors", response_model=List[Doctor])
+async def get_department_doctors(department_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all doctors in a specific department"""
+    try:
+        doctors_cursor = database.doctors.find({"department_id": department_id})
+        doctors = []
+        async for doctor in doctors_cursor:
+            doctors.append(Doctor(**doctor))
+        return doctors
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching department doctors: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
