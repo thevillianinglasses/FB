@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
-import { patientsAPI, doctorsAPI, authAPI, usersAPI, appointmentsAPI } from './api';
+import { patientsAPI, doctorsAPI, departmentsAPI, authAPI, usersAPI, appointmentsAPI } from './api';
 
 const AppContext = createContext();
 
@@ -8,6 +8,7 @@ export const useAppContext = () => useContext(AppContext);
 export const AppProvider = ({ children }) => {
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [patientForEditing, setPatientForEditing] = useState(null);
@@ -15,7 +16,7 @@ export const AppProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // Simple loading functions without infinite loops
+  // Simple loading functions
   const loadDoctors = async () => {
     try {
       const doctorsData = await doctorsAPI.getAll();
@@ -23,6 +24,17 @@ export const AppProvider = ({ children }) => {
       return doctorsData;
     } catch (error) {
       console.error('Error loading doctors:', error);
+      throw error;
+    }
+  };
+
+  const loadDepartments = async () => {
+    try {
+      const departmentsData = await departmentsAPI.getAll();
+      setDepartments(departmentsData);
+      return departmentsData;
+    } catch (error) {
+      console.error('Error loading departments:', error);
       throw error;
     }
   };
@@ -108,6 +120,22 @@ export const AppProvider = ({ children }) => {
     } catch (error) {
       console.error('Error adding doctor:', error);
       setError('Failed to add doctor');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to add a new department
+  const addDepartment = async (departmentData) => {
+    try {
+      setIsLoading(true);
+      const newDepartment = await departmentsAPI.create(departmentData);
+      setDepartments(prevDepartments => [...prevDepartments, newDepartment]);
+      return newDepartment;
+    } catch (error) {
+      console.error('Error adding department:', error);
+      setError('Failed to add department');
       throw error;
     } finally {
       setIsLoading(false);
@@ -233,6 +261,7 @@ export const AppProvider = ({ children }) => {
   const contextValue = {
     patients,
     doctors,
+    departments,
     users,
     appointments,
     patientForEditing,
@@ -244,9 +273,11 @@ export const AppProvider = ({ children }) => {
     updatePatient,
     deletePatient,
     addDoctor,
+    addDepartment,
     addUser,
     loadPatients,
     loadDoctors,
+    loadDepartments,
     loadUsers,
     loadAppointments,
     addAppointment,
