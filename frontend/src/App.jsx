@@ -61,6 +61,16 @@ function AuthWrapper() {
     localStorage.setItem('userName', name);
   };
 
+  const handleLogout = () => {
+    authAPI.logout();
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    setIsLoggedIn(false);
+    setUserRole('');
+    setUserName('');
+    toast.success('Logged out successfully');
+  };
+
   // Protected Route Component - moved inside AuthWrapper to access state
   const ProtectedRoute = ({ children, allowedRoles }) => {
     if (!isLoggedIn) {
