@@ -54,6 +54,10 @@ export const authAPI = {
       name: localStorage.getItem('user_name'),
     };
   },
+  isAuthenticated: () => {
+    const token = localStorage.getItem('access_token');
+    return !!token;
+  },
 };
 
 // User Management API
