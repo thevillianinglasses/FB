@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { labAPI, patientsAPI, doctorsAPI } from '../api';
+import { labTestsAPI as labAPI, patientsAPI, doctorsAPI } from '../api';
 
 function LaboratoryDashboard({ onLogout, userName }) {
   const [activeTab, setActiveTab] = useState('orders');
