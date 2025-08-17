@@ -135,7 +135,7 @@ function AuthWrapper() {
           } 
         />
         
-        {/* Other role routes can be added here */}
+        {/* Other role routes */}
         <Route 
           path="/laboratory" 
           element={
@@ -143,7 +143,7 @@ function AuthWrapper() {
               <AppLayout userName={userName} userRole={userRole}>
                 <div className="text-center py-12">
                   <h2 className="text-2xl font-bold text-charcoal-grey">Laboratory Dashboard</h2>
-                  <p className="text-gray-600 mt-2">Coming Soon...</p>
+                  <p className="text-gray-600 mt-2">Laboratory management system coming soon...</p>
                 </div>
               </AppLayout>
             </ProtectedRoute>
@@ -157,7 +157,7 @@ function AuthWrapper() {
               <AppLayout userName={userName} userRole={userRole}>
                 <div className="text-center py-12">
                   <h2 className="text-2xl font-bold text-charcoal-grey">Pharmacy Dashboard</h2>
-                  <p className="text-gray-600 mt-2">Coming Soon...</p>
+                  <p className="text-gray-600 mt-2">Pharmacy management system coming soon...</p>
                 </div>
               </AppLayout>
             </ProtectedRoute>
@@ -171,7 +171,7 @@ function AuthWrapper() {
               <AppLayout userName={userName} userRole={userRole}>
                 <div className="text-center py-12">
                   <h2 className="text-2xl font-bold text-charcoal-grey">Nursing Dashboard</h2>
-                  <p className="text-gray-600 mt-2">Coming Soon...</p>
+                  <p className="text-gray-600 mt-2">Nursing management system coming soon...</p>
                 </div>
               </AppLayout>
             </ProtectedRoute>
@@ -185,7 +185,7 @@ function AuthWrapper() {
               <AppLayout userName={userName} userRole={userRole}>
                 <div className="text-center py-12">
                   <h2 className="text-2xl font-bold text-charcoal-grey">Doctor Dashboard</h2>
-                  <p className="text-gray-600 mt-2">Coming Soon...</p>
+                  <p className="text-gray-600 mt-2">Doctor portal coming soon...</p>
                 </div>
               </AppLayout>
             </ProtectedRoute>
