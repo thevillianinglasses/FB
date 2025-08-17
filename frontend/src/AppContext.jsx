@@ -65,7 +65,7 @@ export const AppProvider = ({ children }) => {
   const addPatient = async (patientData) => {
     try {
       setIsLoading(true);
-      const newPatient = await patientsAPI.create(patientData);
+      const newPatient = await patientsAPI.createPatient(patientData);
       setPatients(prevPatients => [newPatient, ...prevPatients]);
       return newPatient;
     } catch (error) {
@@ -81,7 +81,7 @@ export const AppProvider = ({ children }) => {
   const updatePatient = async (patientId, patientData) => {
     try {
       setIsLoading(true);
-      const updatedPatient = await patientsAPI.update(patientId, patientData);
+      const updatedPatient = await patientsAPI.updatePatient(patientId, patientData);
       setPatients(prevPatients => 
         prevPatients.map(p => p.id === patientId ? updatedPatient : p)
       );
@@ -99,7 +99,7 @@ export const AppProvider = ({ children }) => {
   const deletePatient = async (patientId) => {
     try {
       setIsLoading(true);
-      await patientsAPI.delete(patientId);
+      await patientsAPI.deletePatient(patientId);
       setPatients(prevPatients => prevPatients.filter(p => p.id !== patientId));
     } catch (error) {
       console.error('Error deleting patient:', error);
@@ -114,7 +114,7 @@ export const AppProvider = ({ children }) => {
   const addDoctor = async (doctorData) => {
     try {
       setIsLoading(true);
-      const newDoctor = await doctorsAPI.create(doctorData);
+      const newDoctor = await doctorsAPI.createDoctor(doctorData);
       setDoctors(prevDoctors => [...prevDoctors, newDoctor]);
       return newDoctor;
     } catch (error) {
@@ -130,7 +130,7 @@ export const AppProvider = ({ children }) => {
   const addDepartment = async (departmentData) => {
     try {
       setIsLoading(true);
-      const newDepartment = await departmentsAPI.create(departmentData);
+      const newDepartment = await departmentsAPI.createDepartment(departmentData);
       setDepartments(prevDepartments => [...prevDepartments, newDepartment]);
       return newDepartment;
     } catch (error) {
@@ -146,7 +146,7 @@ export const AppProvider = ({ children }) => {
   const addUser = async (userData) => {
     try {
       setIsLoading(true);
-      const newUser = await usersAPI.create(userData);
+      const newUser = await usersAPI.createUser(userData);
       setUsers(prevUsers => [...prevUsers, newUser]);
       return newUser;
     } catch (error) {
