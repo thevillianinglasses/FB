@@ -29,23 +29,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Protected Route Component
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const userRole = localStorage.getItem('userRole');
-  const isAuthenticated = authAPI.isAuthenticated();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    toast.error('Access denied. Insufficient permissions.');
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
-};
-
 // Auth wrapper to handle authentication state
 function AuthWrapper() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -74,6 +57,20 @@ function AuthWrapper() {
     setUserName(name);
     localStorage.setItem('userRole', role);
     localStorage.setItem('userName', name);
+  };
+
+  // Protected Route Component - moved inside AuthWrapper to access state
+  const ProtectedRoute = ({ children, allowedRoles }) => {
+    if (!isLoggedIn) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    if (allowedRoles && !allowedRoles.includes(userRole)) {
+      toast.error('Access denied. Insufficient permissions.');
+      return <Navigate to="/login" replace />;
+    }
+    
+    return children;
   };
 
   // Show loading while checking authentication
