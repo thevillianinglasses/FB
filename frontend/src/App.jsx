@@ -41,8 +41,8 @@ function AuthWrapper() {
   useEffect(() => {
     const checkAuth = () => {
       const isAuthenticated = authAPI.isAuthenticated();
-      const storedRole = localStorage.getItem('userRole');
-      const storedName = localStorage.getItem('userName');
+      const storedRole = localStorage.getItem('user_role');
+      const storedName = localStorage.getItem('user_name');
       
       setIsLoggedIn(isAuthenticated);
       setUserRole(storedRole || '');
