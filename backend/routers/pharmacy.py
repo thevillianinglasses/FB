@@ -214,10 +214,11 @@ async def set_chemical_schedule(
     current_user: dict = Depends(get_current_user)
 ):
     """Set schedule for chemical and propagate to all products"""
-    if current_user["role"] != "admin":
+    # Allow both admin and pharmacist roles to set chemical schedules
+    if current_user["role"] not in ["admin", "pharmacist"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only Admin can set chemical schedules"
+            detail="Only Admin or Pharmacist-Incharge can set chemical schedules"
         )
     
     try:
