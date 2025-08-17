@@ -60,6 +60,14 @@ async def create_db_client():
         await database.command('ping')
         logging.info("Connected to MongoDB successfully")
         
+        # Set database instance for pharmacy routers
+        try:
+            from deps.db import set_database
+            set_database(database)
+            logging.info("Database instance set for pharmacy routers")
+        except Exception as e:
+            logging.warning(f"Could not set database for pharmacy routers: {e}")
+        
         # Initialize default admin user
         existing_admin = await database.users.find_one({"username": "admin"})
         if not existing_admin:
