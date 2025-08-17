@@ -107,8 +107,23 @@ class DatabaseManager:
     def audits(self):
         return self._db.audits if self._db else None
 
-# Create a global instance
+# Create a global instance and connect
 db_manager = DatabaseManager()
+
+# Initialize connection on import
+import asyncio
+try:
+    # Try to connect if we're in an async context
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        # We're already in an async context, schedule the connection
+        asyncio.create_task(db_manager.connect())
+    else:
+        # We're not in an async context, run the connection
+        asyncio.run(db_manager.connect())
+except:
+    # If we can't connect immediately, that's okay - the routers will handle it
+    pass
 
 # For backward compatibility with existing routers
 db = db_manager
