@@ -40,9 +40,9 @@ app.include_router(inventory.router)
 app.include_router(returns.router)
 app.include_router(disposals.router)
 
-# Include new comprehensive system routers
-app.include_router(departments_new.router)
-app.include_router(users_new.router)
+# Include new comprehensive system routers - temporarily disabled due to import issues
+# app.include_router(departments_new.router)
+# app.include_router(users_new.router)
 
 # Database configuration
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/unicare_ehr")
