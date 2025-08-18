@@ -11,11 +11,20 @@ from datetime import datetime
 import bcrypt
 import uuid
 
-from ..models import UserNew, UserCreateNew, UserUpdateNew, Doctor, DoctorCreate, Nurse, NurseCreate
-from ..deps.db import get_database
-from ..auth import verify_admin_role
+# Import from parent directory
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from models import UserNew, UserCreateNew, UserUpdateNew, Doctor, DoctorCreate, Nurse, NurseCreate
+from auth import verify_admin_role
 
 router = APIRouter(prefix="/api/admin/users", tags=["Admin - Users"])
+
+# Database dependency - we'll use the global database from server.py
+def get_database():
+    from server import database
+    return database
 
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt"""
