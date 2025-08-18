@@ -29,8 +29,13 @@ PricingMode = Literal["MRP_INC", "RATE_EX"]
 class Department(BaseModel):
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
-    slug: str
-    active: bool = True
+    slug: Optional[str] = ""
+    active: Optional[bool] = True
+    status: Optional[str] = "active"  # For backward compatibility
+    description: Optional[str] = ""
+    location: Optional[str] = ""
+    phone: Optional[str] = ""
+    email: Optional[str] = ""
     created_at: Optional[datetime] = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = Field(default_factory=datetime.now)
 
