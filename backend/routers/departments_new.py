@@ -11,11 +11,20 @@ from datetime import datetime
 import re
 import uuid
 
-from ..models import Department, DepartmentCreate, DepartmentUpdate
-from ..deps.db import get_database
-from ..auth import verify_admin_role
+# Import from parent directory
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from models import Department, DepartmentCreate, DepartmentUpdate
+from auth import verify_admin_role
 
 router = APIRouter(prefix="/api/admin/departments", tags=["Admin - Departments"])
+
+# Database dependency - we'll use the global database from server.py
+def get_database():
+    from server import database
+    return database
 
 def generate_slug(name: str) -> str:
     """Generate URL-friendly slug from department name"""
@@ -27,11 +36,11 @@ def generate_slug(name: str) -> str:
 @router.get("/", response_model=List[Department])
 async def get_departments(
     active_only: bool = False,
-    db: AsyncIOMotorClient = Depends(get_database),
     current_user: dict = Depends(verify_admin_role)
 ):
     """Get all departments with optional filtering by active status"""
     
+    db = get_database()
     query = {}
     if active_only:
         query["active"] = True
@@ -47,11 +56,11 @@ async def get_departments(
 @router.get("/{department_id}", response_model=Department)
 async def get_department(
     department_id: str,
-    db: AsyncIOMotorClient = Depends(get_database),
     current_user: dict = Depends(verify_admin_role)
 ):
     """Get a specific department by ID"""
     
+    db = get_database()
     if not ObjectId.is_valid(department_id):
         raise HTTPException(status_code=400, detail="Invalid department ID")
     
@@ -66,11 +75,11 @@ async def get_department(
 @router.post("/", response_model=Department)
 async def create_department(
     department_data: DepartmentCreate,
-    db: AsyncIOMotorClient = Depends(get_database),
     current_user: dict = Depends(verify_admin_role)
 ):
     """Create a new department with auto-generated slug"""
     
+    db = get_database()
     # Generate slug from name
     slug = generate_slug(department_data.name)
     
@@ -109,11 +118,11 @@ async def create_department(
 async def update_department(
     department_id: str,
     department_data: DepartmentUpdate,
-    db: AsyncIOMotorClient = Depends(get_database),
     current_user: dict = Depends(verify_admin_role)
 ):
     """Update an existing department"""
     
+    db = get_database()
     if not ObjectId.is_valid(department_id):
         raise HTTPException(status_code=400, detail="Invalid department ID")
     
@@ -165,111 +174,14 @@ async def update_department(
     
     return Department(**updated_dept)
 
-@router.delete("/{department_id}")
-async def delete_department(
-    department_id: str,
-    force: bool = False,
-    db: AsyncIOMotorClient = Depends(get_database),
-    current_user: dict = Depends(verify_admin_role)
-):
-    """Delete or deactivate a department (prevent delete if doctors exist)"""
-    
-    if not ObjectId.is_valid(department_id):
-        raise HTTPException(status_code=400, detail="Invalid department ID")
-    
-    # Check if department exists
-    existing_dept = await db.departments.find_one({"_id": ObjectId(department_id)})
-    if not existing_dept:
-        raise HTTPException(status_code=404, detail="Department not found")
-    
-    # Check if any doctors are assigned to this department
-    doctors_count = await db.doctors.count_documents({
-        "department_id": department_id,
-        "active": True
-    })
-    
-    # Check if any nurses are assigned to this department
-    nurses_count = await db.nurses.count_documents({
-        "department_id": department_id,
-        "active": True
-    })
-    
-    # Check if any users are assigned to this department
-    users_count = await db.users.count_documents({
-        "department_ids": department_id,
-        "active": True
-    })
-    
-    total_staff = doctors_count + nurses_count + users_count
-    
-    if total_staff > 0 and not force:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Cannot delete department. {total_staff} staff members are assigned. Use deactivate instead."
-        )
-    
-    if force:
-        # Force delete - remove department and update all references
-        await db.departments.delete_one({"_id": ObjectId(department_id)})
-        
-        # Remove department from all user department_ids arrays
-        await db.users.update_many(
-            {"department_ids": department_id},
-            {"$pull": {"department_ids": department_id}}
-        )
-        
-        # Deactivate all doctors in this department
-        await db.doctors.update_many(
-            {"department_id": department_id},
-            {"$set": {"active": False, "updated_at": datetime.now()}}
-        )
-        
-        # Deactivate all nurses in this department
-        await db.nurses.update_many(
-            {"department_id": department_id},
-            {"$set": {"active": False, "updated_at": datetime.now()}}
-        )
-        
-        return {"message": "Department deleted successfully", "staff_affected": total_staff}
-    
-    else:
-        # Safe delete - just deactivate
-        await db.departments.update_one(
-            {"_id": ObjectId(department_id)},
-            {"$set": {"active": False, "updated_at": datetime.now()}}
-        )
-        
-        return {"message": "Department deactivated successfully", "staff_count": total_staff}
-
-@router.post("/{department_id}/activate")
-async def activate_department(
-    department_id: str,
-    db: AsyncIOMotorClient = Depends(get_database),
-    current_user: dict = Depends(verify_admin_role)
-):
-    """Activate a deactivated department"""
-    
-    if not ObjectId.is_valid(department_id):
-        raise HTTPException(status_code=400, detail="Invalid department ID")
-    
-    result = await db.departments.update_one(
-        {"_id": ObjectId(department_id)},
-        {"$set": {"active": True, "updated_at": datetime.now()}}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Department not found")
-    
-    return {"message": "Department activated successfully"}
-
 @router.get("/{department_id}/staff")
 async def get_department_staff(
     department_id: str,
-    db: AsyncIOMotorClient = Depends(get_database),
     current_user: dict = Depends(verify_admin_role)
 ):
     """Get all staff members assigned to a department"""
     
+    db = get_database()
     if not ObjectId.is_valid(department_id):
         raise HTTPException(status_code=400, detail="Invalid department ID")
     
@@ -282,7 +194,7 @@ async def get_department_staff(
         "department": {
             "id": str(department["_id"]),
             "name": department["name"],
-            "slug": department["slug"]
+            "slug": department.get("slug", "")
         },
         "doctors": [],
         "nurses": [],
@@ -292,8 +204,8 @@ async def get_department_staff(
     # Get doctors
     doctors_cursor = db.doctors.find({"department_id": department_id, "active": True})
     async for doctor in doctors_cursor:
-        # Get user info for this doctor
-        user = await db.users.find_one({"_id": ObjectId(doctor["user_id"])})
+        # Get user info for this doctor if available
+        user = await db.users.find_one({"_id": ObjectId(doctor.get("user_id", ""))}) if doctor.get("user_id") else None
         if user:
             staff["doctors"].append({
                 "id": str(doctor["_id"]),
@@ -303,33 +215,51 @@ async def get_department_staff(
                 "consultation_fee": doctor.get("consultation_fee", 0),
                 "slots": doctor.get("slots", [])
             })
-    
-    # Get nurses
-    nurses_cursor = db.nurses.find({"department_id": department_id, "active": True})
-    async for nurse in nurses_cursor:
-        # Get user info for this nurse
-        user = await db.users.find_one({"_id": ObjectId(nurse["user_id"])})
-        if user:
-            staff["nurses"].append({
-                "id": str(nurse["_id"]),
-                "user_id": str(user["_id"]),
-                "name": user["full_name"],
-                "designation": user.get("designation", "Nurse"),
-                "shift": nurse.get("shift", "")
+        else:
+            # Use doctor data directly if no user record
+            staff["doctors"].append({
+                "id": str(doctor["_id"]),
+                "user_id": "",
+                "name": doctor.get("name", "Unknown Doctor"),
+                "designation": "Doctor",
+                "consultation_fee": doctor.get("default_fee", 0),
+                "slots": []
             })
     
+    # Get nurses (if nurses collection exists)
+    try:
+        nurses_cursor = db.nurses.find({"department_id": department_id, "active": True})
+        async for nurse in nurses_cursor:
+            # Get user info for this nurse
+            user = await db.users.find_one({"_id": ObjectId(nurse.get("user_id", ""))}) if nurse.get("user_id") else None
+            if user:
+                staff["nurses"].append({
+                    "id": str(nurse["_id"]),
+                    "user_id": str(user["_id"]),
+                    "name": user["full_name"],
+                    "designation": user.get("designation", "Nurse"),
+                    "shift": nurse.get("shift", "")
+                })
+    except:
+        # Nurses collection might not exist yet
+        pass
+    
     # Get other staff (users with this department in their department_ids)
-    other_staff_cursor = db.users.find({
-        "department_ids": department_id,
-        "active": True,
-        "roles": {"$nin": ["doctor", "nursing"]}  # Exclude doctors and nurses (already listed above)
-    })
-    async for user in other_staff_cursor:
-        staff["other_staff"].append({
-            "id": str(user["_id"]),
-            "name": user["full_name"],
-            "roles": user["roles"],
-            "designation": user.get("designation", "")
+    try:
+        other_staff_cursor = db.users.find({
+            "department_ids": department_id,
+            "active": True,
+            "roles": {"$nin": ["doctor", "nursing"]}  # Exclude doctors and nurses (already listed above)
         })
+        async for user in other_staff_cursor:
+            staff["other_staff"].append({
+                "id": str(user["_id"]),
+                "name": user["full_name"],
+                "roles": user["roles"],
+                "designation": user.get("designation", "")
+            })
+    except:
+        # Users collection might not have department_ids field yet
+        pass
     
     return staff
