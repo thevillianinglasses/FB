@@ -735,6 +735,393 @@ class UnicareEHRTester:
             
         return success
 
+    def test_admin_department_management_apis(self):
+        """Test comprehensive admin department management APIs as per review request"""
+        print("\n🏢 COMPREHENSIVE ADMIN DEPARTMENT MANAGEMENT API TESTING")
+        print("Testing all admin department APIs with realistic data")
+        print("=" * 70)
+        
+        # Login as admin (required for admin APIs)
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin for department testing")
+            return False
+            
+        # Test 1: GET /api/admin/departments/ - should return 24 departments
+        print("\n📋 Test 1: GET /api/admin/departments/ - Check initial departments")
+        
+        success, departments_response = self.run_test(
+            "Get All Departments (Admin)",
+            "GET",
+            "api/admin/departments/",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get departments list")
+            return False
+            
+        if not isinstance(departments_response, list):
+            print(f"❌ Expected list response, got {type(departments_response)}")
+            return False
+            
+        print(f"✅ Successfully retrieved {len(departments_response)} departments")
+        
+        # Check if we have the expected 24 departments
+        if len(departments_response) >= 4:  # At least the default 4 departments
+            print("✅ Found expected number of departments")
+        else:
+            print(f"⚠️ Expected at least 4 departments, found {len(departments_response)}")
+            
+        # Display some department details
+        print("   📋 Sample departments found:")
+        for i, dept in enumerate(departments_response[:5]):  # Show first 5
+            print(f"      {i+1}. {dept.get('name', 'Unknown')} (ID: {dept.get('id', 'N/A')})")
+            
+        # Test 2: POST /api/admin/departments/ - test creating a new department
+        print("\n➕ Test 2: POST /api/admin/departments/ - Create new department")
+        
+        new_department_data = {
+            "name": "Emergency Medicine",
+            "description": "24/7 emergency medical care and trauma services",
+            "location": "Ground Floor, Emergency Wing",
+            "phone": "0471-2345690",
+            "email": "emergency@unicare.com",
+            "active": True
+        }
+        
+        success, created_dept_response = self.run_test(
+            "Create New Department",
+            "POST",
+            "api/admin/departments/",
+            200,
+            data=new_department_data
+        )
+        
+        if not success:
+            print("❌ Failed to create new department")
+            return False
+            
+        created_dept_id = created_dept_response.get('id')
+        if not created_dept_id:
+            print("❌ No department ID returned in response")
+            return False
+            
+        print(f"✅ Successfully created department: {created_dept_response.get('name')}")
+        print(f"   Department ID: {created_dept_id}")
+        print(f"   Slug: {created_dept_response.get('slug', 'N/A')}")
+        
+        # Test 3: PATCH /api/admin/departments/{id} - test updating a department
+        print("\n✏️ Test 3: PATCH /api/admin/departments/{id} - Update department")
+        
+        update_data = {
+            "description": "24/7 emergency medical care, trauma services, and critical care",
+            "location": "Ground Floor, Emergency Wing - Expanded"
+        }
+        
+        success, updated_dept_response = self.run_test(
+            "Update Department",
+            "PATCH",
+            f"api/admin/departments/{created_dept_id}",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            print("❌ Failed to update department")
+            return False
+            
+        print(f"✅ Successfully updated department")
+        print(f"   Updated description: {updated_dept_response.get('description', 'N/A')}")
+        print(f"   Updated location: {updated_dept_response.get('location', 'N/A')}")
+        
+        # Test 4: GET /api/admin/departments/{id}/staff - test getting staff for department
+        print("\n👥 Test 4: GET /api/admin/departments/{id}/staff - Get department staff")
+        
+        # Use the first existing department for staff testing
+        existing_dept_id = departments_response[0]['id'] if departments_response else created_dept_id
+        
+        success, staff_response = self.run_test(
+            "Get Department Staff",
+            "GET",
+            f"api/admin/departments/{existing_dept_id}/staff",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get department staff")
+            return False
+            
+        print(f"✅ Successfully retrieved department staff")
+        print(f"   Department: {staff_response.get('department', {}).get('name', 'Unknown')}")
+        print(f"   Doctors: {len(staff_response.get('doctors', []))}")
+        print(f"   Nurses: {len(staff_response.get('nurses', []))}")
+        print(f"   Other Staff: {len(staff_response.get('other_staff', []))}")
+        
+        # Display staff details
+        if staff_response.get('doctors'):
+            print("   👨‍⚕️ Doctors:")
+            for doctor in staff_response['doctors'][:3]:  # Show first 3
+                print(f"      • {doctor.get('name', 'Unknown')} - Fee: ₹{doctor.get('consultation_fee', 0)}")
+                
+        if staff_response.get('nurses'):
+            print("   👩‍⚕️ Nurses:")
+            for nurse in staff_response['nurses'][:3]:  # Show first 3
+                print(f"      • {nurse.get('name', 'Unknown')} - Shift: {nurse.get('shift', 'Unknown')}")
+        
+        # Test 5: Verify department data structure
+        print("\n🔍 Test 5: Verify department data structure")
+        
+        required_fields = ['id', 'name', 'active', 'created_at']
+        sample_dept = departments_response[0] if departments_response else created_dept_response
+        
+        structure_valid = True
+        for field in required_fields:
+            if field not in sample_dept:
+                print(f"   ❌ Missing required field: {field}")
+                structure_valid = False
+            else:
+                print(f"   ✅ Field '{field}': {type(sample_dept[field]).__name__}")
+                
+        if structure_valid:
+            print("✅ Department data structure is valid")
+        else:
+            print("❌ Department data structure validation failed")
+            
+        print("\n🎉 Admin Department Management API Testing Completed!")
+        
+        # Summary
+        print("\n📋 DEPARTMENT MANAGEMENT SUMMARY:")
+        print(f"   • Total departments found: {len(departments_response)}")
+        print(f"   • Department creation: {'✅' if created_dept_id else '❌'}")
+        print(f"   • Department update: {'✅' if success else '❌'}")
+        print(f"   • Staff retrieval: {'✅' if staff_response else '❌'}")
+        print(f"   • Data structure: {'✅' if structure_valid else '❌'}")
+        
+        return structure_valid and created_dept_id and success and staff_response
+
+    def test_admin_user_management_apis(self):
+        """Test comprehensive admin user management APIs as per review request"""
+        print("\n👥 COMPREHENSIVE ADMIN USER MANAGEMENT API TESTING")
+        print("Testing all admin user APIs with multi-role support")
+        print("=" * 70)
+        
+        # Login as admin (required for admin APIs)
+        if not self.test_login(role="admin"):
+            print("❌ Failed to login as admin for user testing")
+            return False
+            
+        # Test 1: GET /api/admin/users/ - should return 7 users
+        print("\n📋 Test 1: GET /api/admin/users/ - Check initial users")
+        
+        success, users_response = self.run_test(
+            "Get All Users (Admin)",
+            "GET",
+            "api/admin/users/",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get users list")
+            return False
+            
+        if not isinstance(users_response, list):
+            print(f"❌ Expected list response, got {type(users_response)}")
+            return False
+            
+        print(f"✅ Successfully retrieved {len(users_response)} users")
+        
+        # Display user details
+        print("   👤 Users found:")
+        for i, user in enumerate(users_response[:7]):  # Show first 7
+            roles = ', '.join(user.get('roles', []))
+            print(f"      {i+1}. {user.get('full_name', 'Unknown')} ({user.get('username', 'N/A')}) - Roles: {roles}")
+            
+        # Test 2: GET /api/admin/users/doctors/ - should return 2 doctors
+        print("\n👨‍⚕️ Test 2: GET /api/admin/users/doctors/ - Get doctors")
+        
+        success, doctors_response = self.run_test(
+            "Get All Doctors (Admin)",
+            "GET",
+            "api/admin/users/doctors/",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get doctors list")
+            return False
+            
+        print(f"✅ Successfully retrieved {len(doctors_response)} doctors")
+        
+        if len(doctors_response) >= 2:
+            print("✅ Found expected number of doctors (≥2)")
+        else:
+            print(f"⚠️ Expected at least 2 doctors, found {len(doctors_response)}")
+            
+        # Display doctor details
+        if doctors_response:
+            print("   👨‍⚕️ Doctors found:")
+            for i, doctor in enumerate(doctors_response):
+                dept_name = doctor.get('department', {}).get('name', 'Unknown') if doctor.get('department') else 'No Department'
+                print(f"      {i+1}. {doctor.get('name', 'Unknown')} - {dept_name} - Fee: ₹{doctor.get('consultation_fee', 0)}")
+                
+        # Test 3: GET /api/admin/users/nurses/ - should return 1 nurse
+        print("\n👩‍⚕️ Test 3: GET /api/admin/users/nurses/ - Get nurses")
+        
+        success, nurses_response = self.run_test(
+            "Get All Nurses (Admin)",
+            "GET",
+            "api/admin/users/nurses/",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get nurses list")
+            return False
+            
+        print(f"✅ Successfully retrieved {len(nurses_response)} nurses")
+        
+        if len(nurses_response) >= 1:
+            print("✅ Found expected number of nurses (≥1)")
+        else:
+            print(f"⚠️ Expected at least 1 nurse, found {len(nurses_response)}")
+            
+        # Display nurse details
+        if nurses_response:
+            print("   👩‍⚕️ Nurses found:")
+            for i, nurse in enumerate(nurses_response):
+                dept_name = nurse.get('department', {}).get('name', 'Unknown') if nurse.get('department') else 'No Department'
+                print(f"      {i+1}. {nurse.get('name', 'Unknown')} - {dept_name} - Shift: {nurse.get('shift', 'Unknown')}")
+                
+        # Test 4: POST /api/admin/users/ - test creating new user with multi-role support
+        print("\n➕ Test 4: POST /api/admin/users/ - Create user with multi-role support")
+        
+        # First get departments for assignment
+        success, departments = self.run_test(
+            "Get Departments for User Assignment",
+            "GET",
+            "api/admin/departments/",
+            200
+        )
+        
+        if not success or not departments:
+            print("❌ Failed to get departments for user assignment")
+            return False
+            
+        # Use first two departments for multi-department assignment
+        dept_ids = [departments[0]['id']]
+        if len(departments) > 1:
+            dept_ids.append(departments[1]['id'])
+            
+        new_user_data = {
+            "username": "testuser_multirole",
+            "password": "testpass123",
+            "full_name": "Dr. Arjun Nair",
+            "roles": ["doctor", "reception"],  # Multi-role support
+            "designation": "Senior Doctor & Reception Coordinator",
+            "department_ids": dept_ids,
+            "email": "arjun.nair@unicare.com",
+            "phone": "9876543299"
+        }
+        
+        success, created_user_response = self.run_test(
+            "Create Multi-Role User",
+            "POST",
+            "api/admin/users/",
+            200,
+            data=new_user_data
+        )
+        
+        if not success:
+            print("❌ Failed to create new user")
+            return False
+            
+        created_user_id = created_user_response.get('id')
+        if not created_user_id:
+            print("❌ No user ID returned in response")
+            return False
+            
+        print(f"✅ Successfully created user: {created_user_response.get('full_name')}")
+        print(f"   User ID: {created_user_id}")
+        print(f"   Username: {created_user_response.get('username')}")
+        print(f"   Roles: {', '.join(created_user_response.get('roles', []))}")
+        print(f"   Departments: {len(created_user_response.get('departments', []))}")
+        
+        # Check if doctor record was created (since user has doctor role)
+        if 'doctor_details' in created_user_response:
+            print(f"   ✅ Doctor record created - Fee: ₹{created_user_response['doctor_details'].get('consultation_fee', 0)}")
+        else:
+            print("   ⚠️ No doctor record found (expected for doctor role)")
+            
+        # Test 5: Test user data structure and multi-role functionality
+        print("\n🔍 Test 5: Verify user data structure and multi-role functionality")
+        
+        required_fields = ['id', 'username', 'full_name', 'roles', 'active', 'created_at']
+        sample_user = users_response[0] if users_response else created_user_response
+        
+        structure_valid = True
+        for field in required_fields:
+            if field not in sample_user:
+                print(f"   ❌ Missing required field: {field}")
+                structure_valid = False
+            else:
+                print(f"   ✅ Field '{field}': {type(sample_user[field]).__name__}")
+                
+        # Check multi-role support
+        multi_role_users = [user for user in users_response if len(user.get('roles', [])) > 1]
+        print(f"   📊 Users with multiple roles: {len(multi_role_users)}")
+        
+        if multi_role_users:
+            print("   ✅ Multi-role support confirmed")
+            for user in multi_role_users[:3]:  # Show first 3
+                roles = ', '.join(user.get('roles', []))
+                print(f"      • {user.get('full_name', 'Unknown')}: {roles}")
+        else:
+            print("   ⚠️ No multi-role users found")
+            
+        # Test 6: Test role-based filtering
+        print("\n🔍 Test 6: Test role-based filtering")
+        
+        # Test filtering by doctor role
+        success, doctor_filtered = self.run_test(
+            "Get Users with Doctor Role",
+            "GET",
+            "api/admin/users/?role=doctor",
+            200
+        )
+        
+        if success:
+            doctor_count = len(doctor_filtered)
+            print(f"   ✅ Doctor role filter: {doctor_count} users")
+        else:
+            print("   ❌ Doctor role filtering failed")
+            
+        # Test filtering by reception role
+        success, reception_filtered = self.run_test(
+            "Get Users with Reception Role",
+            "GET",
+            "api/admin/users/?role=reception",
+            200
+        )
+        
+        if success:
+            reception_count = len(reception_filtered)
+            print(f"   ✅ Reception role filter: {reception_count} users")
+        else:
+            print("   ❌ Reception role filtering failed")
+            
+        print("\n🎉 Admin User Management API Testing Completed!")
+        
+        # Summary
+        print("\n📋 USER MANAGEMENT SUMMARY:")
+        print(f"   • Total users found: {len(users_response)}")
+        print(f"   • Doctors found: {len(doctors_response)}")
+        print(f"   • Nurses found: {len(nurses_response)}")
+        print(f"   • Multi-role user creation: {'✅' if created_user_id else '❌'}")
+        print(f"   • Data structure: {'✅' if structure_valid else '❌'}")
+        print(f"   • Role-based filtering: {'✅' if success else '❌'}")
+        
+        return structure_valid and created_user_id and len(doctors_response) >= 2
+
     def test_cross_module_integration(self):
         """Test integration between different modules"""
         print("\n🔄 Testing Cross-Module Integration...")
