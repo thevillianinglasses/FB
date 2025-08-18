@@ -23,7 +23,241 @@ TxnType = Literal["PURCHASE", "SALE", "RETURN_IN", "RETURN_OUT", "DISPOSAL", "IS
 PackType = Literal["TAB", "ML", "GM", "UNIT"]
 PricingMode = Literal["MRP_INC", "RATE_EX"]
 
-# Core EHR Models (required by existing server.py)
+# ===== CORE EHR MODELS (New Comprehensive System) =====
+
+# Department Model
+class Department(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    slug: str
+    active: bool = True
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = Field(default_factory=datetime.now)
+
+class DepartmentCreate(BaseModel):
+    name: str
+    active: bool = True
+
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = None
+    active: Optional[bool] = None
+
+# Enhanced User Model for Multi-Role Support
+class UserNew(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    password_hash: str = ""
+    full_name: str
+    roles: List[UserRole] = []  # Multi-role support
+    designation: Optional[str] = None
+    department_ids: List[str] = []  # Can belong to multiple departments
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    active: bool = True
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = Field(default_factory=datetime.now)
+    last_login: Optional[datetime] = None
+
+class UserCreateNew(BaseModel):
+    username: str
+    password: str
+    full_name: str
+    roles: List[UserRole]
+    designation: Optional[str] = None
+    department_ids: List[str] = []
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+class UserUpdateNew(BaseModel):
+    full_name: Optional[str] = None
+    roles: Optional[List[UserRole]] = None
+    designation: Optional[str] = None
+    department_ids: Optional[List[str]] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    active: Optional[bool] = None
+
+# Doctor Model (linked to User)
+class Doctor(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    department_id: str
+    slots: List[Dict[str, Any]] = []  # Weekly schedule slots
+    consultation_fee: Optional[float] = 0.0
+    active: bool = True
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = Field(default_factory=datetime.now)
+
+class DoctorCreate(BaseModel):
+    user_id: str
+    department_id: str
+    slots: List[Dict[str, Any]] = []
+    consultation_fee: Optional[float] = 0.0
+
+class DoctorUpdate(BaseModel):
+    department_id: Optional[str] = None
+    slots: Optional[List[Dict[str, Any]]] = None
+    consultation_fee: Optional[float] = None
+    active: Optional[bool] = None
+
+# Nurse Model (linked to User)
+class Nurse(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    department_id: str
+    shift: Optional[str] = None  # morning, evening, night
+    active: bool = True
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = Field(default_factory=datetime.now)
+
+class NurseCreate(BaseModel):
+    user_id: str
+    department_id: str
+    shift: Optional[str] = None
+
+# Patient Model
+class Patient(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    opd_no: str  # Unique, immutable
+    name: str
+    sex: Sex
+    dob: Optional[date] = None
+    age: Optional[int] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    allergies: List[str] = []
+    emergency_contact: Optional[str] = None
+    blood_group: Optional[str] = None
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = Field(default_factory=datetime.now)
+
+class PatientCreate(BaseModel):
+    name: str
+    sex: Sex
+    dob: Optional[date] = None
+    age: Optional[int] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    allergies: List[str] = []
+    emergency_contact: Optional[str] = None
+    blood_group: Optional[str] = None
+
+# Vitals Model
+class Vitals(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    recorded_by: str  # user_id
+    recorded_at: datetime = Field(default_factory=datetime.now)
+    
+    # Basic vitals
+    temperature: Optional[float] = None
+    pulse: Optional[int] = None
+    respiratory_rate: Optional[int] = None
+    oxygen_saturation: Optional[float] = None
+    
+    # Blood pressure with detailed recording
+    systolic_bp: Optional[int] = None
+    diastolic_bp: Optional[int] = None
+    bp_limb: Optional[BPLimb] = None
+    bp_position: Optional[VitalPosition] = None
+    
+    # Additional measurements
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    bmi: Optional[float] = None
+    pain_score: Optional[int] = None  # 0-10
+    
+    notes: Optional[str] = None
+
+class VitalsCreate(BaseModel):
+    patient_id: str
+    temperature: Optional[float] = None
+    pulse: Optional[int] = None
+    respiratory_rate: Optional[int] = None
+    oxygen_saturation: Optional[float] = None
+    systolic_bp: Optional[int] = None
+    diastolic_bp: Optional[int] = None
+    bp_limb: Optional[BPLimb] = None
+    bp_position: Optional[VitalPosition] = None
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    pain_score: Optional[int] = None
+    notes: Optional[str] = None
+
+# Brief Encounter Model
+class BriefEncounter(BaseModel):
+    presenting_complaints: List[str] = []
+    hopc: Optional[str] = None  # History of presenting complaint
+    past_history: List[str] = []
+    examination: Optional[str] = None
+    diagnosis: List[str] = []
+    plan: List[str] = []
+    treatment: List[str] = []
+    follow_up_date: Optional[date] = None
+
+# Detailed Encounter Model (Specialty-specific)
+class DetailedEncounter(BaseModel):
+    cardiology: Dict[str, Any] = {}
+    respiratory: Dict[str, Any] = {}
+    ent: Dict[str, Any] = {}
+    ophthalmology: Dict[str, Any] = {}
+    gastroenterology: Dict[str, Any] = {}
+    general_medicine: Dict[str, Any] = {}
+    psychiatry: Dict[str, Any] = {}
+    gynecology: Dict[str, Any] = {}
+    pediatrics: Dict[str, Any] = {}
+    emergency: Dict[str, Any] = {}
+    surgery: Dict[str, Any] = {}
+    rheumatology: Dict[str, Any] = {}
+    oncology: Dict[str, Any] = {}
+    neurology: Dict[str, Any] = {}
+    orthopedics: Dict[str, Any] = {}
+    dermatology: Dict[str, Any] = {}
+    anesthesiology: Dict[str, Any] = {}
+
+# Encounter Model
+class Encounter(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    department_id: str
+    doctor_id: str
+    mode: EncounterMode = "brief"
+    brief: BriefEncounter = BriefEncounter()
+    detailed: DetailedEncounter = DetailedEncounter()
+    orders: List[Dict[str, Any]] = []
+    disposition: Optional[str] = None
+    audit: List[Dict[str, Any]] = []
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+class EncounterCreate(BaseModel):
+    patient_id: str
+    department_id: str
+    mode: EncounterMode = "brief"
+
+# Consult Request Model
+class ConsultRequest(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    from_department_id: str
+    to_department_id: str
+    priority: Priority = "routine"
+    status: ConsultStatus = "new"
+    reason: str
+    assigned_doctor_id: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
+    audit: List[Dict[str, Any]] = []
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+class ConsultRequestCreate(BaseModel):
+    patient_id: str
+    from_department_id: str
+    to_department_id: str
+    priority: Priority = "routine"
+    reason: str
 class User(BaseModel):
     id: Optional[str] = None
     username: str
