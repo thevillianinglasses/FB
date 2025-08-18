@@ -1,12 +1,19 @@
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Literal, Dict, Any
-from datetime import datetime
+from datetime import datetime, date, time
 from enum import Enum
+import uuid
 
 # Enums and Types
 ScheduleSymbol = Literal["NONE", "H", "H1", "X", "G", "K", "N"]
 UserRole = Literal["admin", "reception", "laboratory", "pharmacy", "nursing", "doctor", "pharmacist", "assistant"]
 UserStatus = Literal["active", "inactive", "suspended"]
+EncounterMode = Literal["brief", "detailed"]
+Priority = Literal["routine", "urgent", "stat"]
+ConsultStatus = Literal["new", "reception_review", "scheduled", "in_progress", "completed", "declined", "cancelled"]
+Sex = Literal["male", "female", "other"]
+VitalPosition = Literal["sitting", "standing", "lying"]
+BPLimb = Literal["right_arm", "left_arm", "right_leg", "left_leg"]
 AppointmentStatus = Literal["scheduled", "confirmed", "checked_in", "completed", "cancelled", "no_show"]
 TestStatus = Literal["ordered", "collected", "in_progress", "reported", "verified"]
 PrescriptionStatus = Literal["pending", "dispensed", "cancelled"]
