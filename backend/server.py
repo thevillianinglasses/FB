@@ -15,7 +15,12 @@ from auth import *
 # Import pharmacy routers
 from routers import pharmacy, purchases, sales, inventory, returns, disposals
 # Import new comprehensive system routers - temporarily disabled due to import issues
-# from routers import departments_new, users_new
+try:
+    from routers import departments_new, users_new
+    ADMIN_ROUTERS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Admin routers not available due to import error: {e}")
+    ADMIN_ROUTERS_AVAILABLE = False
 
 # Load environment variables
 load_dotenv()
