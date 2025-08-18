@@ -17,7 +17,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models import Department, DepartmentCreate, DepartmentUpdate
-from auth import verify_admin_role
+from auth import get_admin_user
+
+# Get the admin dependency function
+verify_admin_role = get_admin_user()
 
 router = APIRouter(prefix="/api/admin/departments", tags=["Admin - Departments"])
 
