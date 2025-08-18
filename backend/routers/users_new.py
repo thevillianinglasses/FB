@@ -35,11 +35,11 @@ async def get_users(
     role: Optional[str] = None,
     department_id: Optional[str] = None,
     active_only: bool = True,
-    db: AsyncIOMotorClient = Depends(get_database),
     current_user: dict = Depends(verify_admin_role)
 ):
     """Get all users with optional filtering"""
     
+    db = get_database()
     query = {}
     if role:
         query["roles"] = role
@@ -74,7 +74,7 @@ async def get_users(
                         departments.append({
                             "id": str(dept["_id"]),
                             "name": dept["name"],
-                            "slug": dept["slug"]
+                            "slug": dept.get("slug", "")
                         })
             user_data["departments"] = departments
         else:
