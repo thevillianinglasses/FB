@@ -74,3 +74,29 @@ def verify_admin_role(token_data: dict):
             detail="Admin access required"
         )
     return token_data
+
+def get_admin_user():
+    """FastAPI dependency to get current admin user"""
+    from fastapi import Depends, HTTPException, status
+    from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+    
+    security = HTTPBearer()
+    
+    def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+        token_data = verify_token(credentials.credentials)
+        if not token_data:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        if token_data.get("role") != UserRole.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin access required"
+            )
+        
+        return token_data
+    
+    return verify_admin_token
