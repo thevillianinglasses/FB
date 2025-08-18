@@ -141,7 +141,8 @@ async def update_department(
         update_data["name"] = department_data.name
         # Regenerate slug if name changed
         new_slug = generate_slug(department_data.name)
-        if new_slug != existing_dept["slug"]:
+        existing_slug = existing_dept.get("slug", "")
+        if new_slug != existing_slug:
             # Check if new slug is available
             slug_conflict = await db.departments.find_one({
                 "slug": new_slug,
