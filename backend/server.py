@@ -46,8 +46,12 @@ app.include_router(returns.router)
 app.include_router(disposals.router)
 
 # Include new comprehensive system routers - temporarily disabled due to import issues
-# app.include_router(departments_new.router)
-# app.include_router(users_new.router)
+if ADMIN_ROUTERS_AVAILABLE:
+    app.include_router(departments_new.router)
+    app.include_router(users_new.router)
+    print("✅ Admin routers loaded successfully")
+else:
+    print("⚠️ Admin routers not loaded due to import issues")
 
 # Database configuration
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/unicare_ehr")
