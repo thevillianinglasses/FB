@@ -91,7 +91,7 @@ def get_admin_user():
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        if token_data.get("role") != UserRole.ADMIN:
+        if token_data.get("role") != "admin":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Admin access required"
