@@ -433,10 +433,23 @@ metadata:
   kerala_localization_tested: true
   production_ready: true
 
+  - task: "Admin System APIs (New Comprehensive System)"
+    implemented: false
+    working: false
+    file: "backend/routers/departments_new.py, backend/routers/users_new.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "ADMIN SYSTEM API TESTING RESULTS (2025-08-18): ❌ NEW ADMIN APIS NOT AVAILABLE: The requested admin APIs at /api/admin/departments/ and /api/admin/users/ are not accessible due to import errors in the router files. The routers have relative import issues that prevent the backend from starting with these modules enabled. ✅ EXISTING APIS WORKING: However, existing APIs are functional - GET /api/departments returns 9 departments, GET /api/doctors returns 7 doctors, authentication with admin/admin_007 works perfectly. ❌ WRITE OPERATIONS FAILING: POST operations to /api/departments and /api/doctors return 500 Internal Server Error. ❌ USERS API BROKEN: GET /api/users returns Internal Server Error. ROOT CAUSE: The new comprehensive admin system routers (departments_new.py, users_new.py) have import path issues preventing them from loading. The existing legacy APIs work for read operations but fail for write operations. RECOMMENDATION: Fix import paths in router files and resolve database write operation issues."
+
 test_plan:
   current_focus:
-    - "Authentication System - TESTING COMPLETED"
-  stuck_tasks: []
+    - "Admin System APIs (New Comprehensive System)"
+  stuck_tasks:
+    - "Admin System APIs (New Comprehensive System)"
   test_all: false
   test_priority: "high_first"
   comprehensive_test_status: "authentication_testing_completed"
