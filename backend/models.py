@@ -25,19 +25,28 @@ PricingMode = Literal["MRP_INC", "RATE_EX"]
 
 # ===== CORE EHR MODELS (New Comprehensive System) =====
 
-# Department Model
+# Department Model (Enhanced for backward compatibility)
 class Department(BaseModel):
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
-    slug: Optional[str] = ""
-    active: Optional[bool] = True
-    status: Optional[str] = "active"  # For backward compatibility
-    description: Optional[str] = ""
-    location: Optional[str] = ""
-    phone: Optional[str] = ""
-    email: Optional[str] = ""
+    slug: Optional[str] = None  # Make optional for legacy compatibility
+    active: bool = True
+    # Legacy fields for backward compatibility
+    status: Optional[str] = "active"  # Map to active field
+    description: Optional[str] = None
+    location: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
     created_at: Optional[datetime] = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = Field(default_factory=datetime.now)
+    
+    def __init__(self, **data):
+        # Handle legacy status field mapping
+        if 'status' in data and 'active' not in data:
+            data['active'] = data['status'] == 'active'
+        elif 'active' in data and 'status' not in data:
+            data['status'] = 'active' if data['active'] else 'inactive'
+        super().__init__(**data)
 
 class DepartmentCreate(BaseModel):
     name: str
