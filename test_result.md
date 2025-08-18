@@ -434,16 +434,19 @@ metadata:
   production_ready: true
 
   - task: "Admin System APIs (New Comprehensive System)"
-    implemented: false
+    implemented: true
     working: false
     file: "backend/routers/departments_new.py, backend/routers/users_new.py"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "ADMIN SYSTEM API TESTING RESULTS (2025-08-18): ❌ NEW ADMIN APIS NOT AVAILABLE: The requested admin APIs at /api/admin/departments/ and /api/admin/users/ are not accessible due to import errors in the router files. The routers have relative import issues that prevent the backend from starting with these modules enabled. ✅ EXISTING APIS WORKING: However, existing APIs are functional - GET /api/departments returns 9 departments, GET /api/doctors returns 7 doctors, authentication with admin/admin_007 works perfectly. ❌ WRITE OPERATIONS FAILING: POST operations to /api/departments and /api/doctors return 500 Internal Server Error. ❌ USERS API BROKEN: GET /api/users returns Internal Server Error. ROOT CAUSE: The new comprehensive admin system routers (departments_new.py, users_new.py) have import path issues preventing them from loading. The existing legacy APIs work for read operations but fail for write operations. RECOMMENDATION: Fix import paths in router files and resolve database write operation issues."
+      - working: false
+        agent: "testing"
+        comment: "COMPREHENSIVE EHR SYSTEM TESTING COMPLETED (2025-08-18): ✅ PARTIAL SUCCESS - NEW ADMIN APIS PARTIALLY WORKING: The comprehensive admin system routers are now loading successfully! GET /api/admin/departments/ returns 9 departments with proper structure, GET /api/admin/users/ returns 1 user with multi-role support (['doctor', 'reception']). ❌ CRITICAL ISSUES IDENTIFIED: 1) Legacy APIs broken - GET /api/doctors returns 500 error due to KeyError: 'slug' in departments_new.py line 437, 2) GET /api/users returns 500 error due to Pydantic validation errors (missing 'role' and 'department' fields), 3) POST operations still failing with 500 errors, 4) GET /api/admin/users/doctors/ returns 500 error. ✅ AUTHENTICATION WORKING: All 6 user roles (admin/admin_007, doctor1/doctor123, pharmacy1/pharmacy123, reception1/reception123, lab1/lab123, nurse1/nurse123) authenticate successfully with proper JWT tokens. ✅ INTEGRATION VERIFIED: Pharmacy APIs working (2 medications found), department structure proper. SUCCESS RATE: 70.8% (17/24 tests passed). ROOT CAUSE: Model conflicts between legacy and new comprehensive system causing validation errors and missing field issues."
 
 test_plan:
   current_focus:
