@@ -14,6 +14,8 @@ from models import *
 from auth import *
 # Import pharmacy routers
 from routers import pharmacy, purchases, sales, inventory, returns, disposals
+# Import new comprehensive system routers
+from routers import departments_new, users_new
 
 # Load environment variables
 load_dotenv()
