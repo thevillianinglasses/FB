@@ -2912,6 +2912,47 @@ class UnicareEHRTester:
         print("\n✅ All departments have valid data structure")
         return all_departments_valid
 
+    def run_admin_system_tests_only(self):
+        """Run only the admin system tests as per review request"""
+        print("🚀 Starting Admin System API Testing (Review Request)...")
+        print("=" * 80)
+        
+        test_results = {}
+        
+        # Basic connectivity and health
+        test_results["health_check"] = self.test_health_check()
+        
+        # Authentication test (required for admin APIs)
+        test_results["admin_login"] = self.test_login(role="admin")
+        
+        # Admin System API Tests (as per review request)
+        test_results["admin_department_management"] = self.test_admin_department_management_apis()
+        test_results["admin_user_management"] = self.test_admin_user_management_apis()
+        
+        # Print summary
+        print("\n" + "=" * 80)
+        print("📊 ADMIN SYSTEM TEST RESULTS SUMMARY")
+        print("=" * 80)
+        
+        passed_tests = sum(test_results.values())
+        total_tests = len(test_results)
+        
+        for test_name, result in test_results.items():
+            status = "✅ PASSED" if result else "❌ FAILED"
+            print(f"{test_name.replace('_', ' ').title():<40} {status}")
+        
+        print(f"\n🎯 Overall Results: {passed_tests}/{total_tests} tests passed")
+        print(f"📈 Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+        
+        if passed_tests == total_tests:
+            print("🎉 ALL ADMIN SYSTEM TESTS PASSED! Admin APIs are fully functional.")
+        elif passed_tests >= total_tests * 0.8:
+            print("✅ Most admin tests passed. Admin system is largely functional.")
+        else:
+            print("⚠️ Several admin tests failed. Admin system needs attention.")
+            
+        return test_results
+
 def main():
     # Setup with public URL from frontend/.env
     tester = UnicareEHRTester("https://5746526f-8dae-47bb-a2d2-c49d4068bf9b.preview.emergentagent.com")
