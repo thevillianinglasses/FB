@@ -64,3 +64,13 @@ def has_nursing_access(user_role: str):
 
 def has_doctor_access(user_role: str):
     return user_role in [UserRole.ADMIN, UserRole.DOCTOR]
+
+def verify_admin_role(token_data: dict):
+    """Dependency function to verify admin role for FastAPI endpoints"""
+    if not token_data or token_data.get("role") != UserRole.ADMIN:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return token_data
