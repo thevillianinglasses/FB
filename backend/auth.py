@@ -43,27 +43,27 @@ def verify_token(token: str):
 # Role-based access control
 def check_permission(user_role: str, required_roles: list):
     """Check if user role has permission to access resource"""
-    if UserRole.ADMIN in required_roles and user_role == UserRole.ADMIN:
+    if "admin" in required_roles and user_role == "admin":
         return True
     return user_role in required_roles
 
 def has_admin_access(user_role: str):
-    return user_role == UserRole.ADMIN
+    return user_role == "admin"
 
 def has_reception_access(user_role: str):
-    return user_role in [UserRole.ADMIN, UserRole.RECEPTION]
+    return user_role in ["admin", "reception"]
 
 def has_lab_access(user_role: str):
-    return user_role in [UserRole.ADMIN, UserRole.LABORATORY]
+    return user_role in ["admin", "laboratory"]
 
 def has_pharmacy_access(user_role: str):
-    return user_role in [UserRole.ADMIN, UserRole.PHARMACY]
+    return user_role in ["admin", "pharmacy"]
 
 def has_nursing_access(user_role: str):
-    return user_role in [UserRole.ADMIN, UserRole.NURSING]
+    return user_role in ["admin", "nursing"]
 
 def has_doctor_access(user_role: str):
-    return user_role in [UserRole.ADMIN, UserRole.DOCTOR]
+    return user_role in ["admin", "doctor"]
 
 def verify_admin_role(token_data: dict):
     """Dependency function to verify admin role for FastAPI endpoints"""
