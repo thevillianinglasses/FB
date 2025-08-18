@@ -2913,32 +2913,15 @@ class UnicareEHRTester:
         return all_departments_valid
 
 def main():
-    # Setup with public URL
-    tester = UnicareEHRTester("https://unicare-login-fix.preview.emergentagent.com")
+    # Setup with public URL from frontend/.env
+    tester = UnicareEHRTester("https://5746526f-8dae-47bb-a2d2-c49d4068bf9b.preview.emergentagent.com")
     
-    print("🚀 UNICARE EHR BACKEND API TESTING")
-    print("Testing Phase 3: Admin & Reception Integration - Shared Resources")
+    print("🚀 UNICARE EHR BACKEND API TESTING - ADMIN SYSTEM REVIEW")
+    print("Testing comprehensive admin system APIs as per review request")
     print("=" * 80)
     
-    # Test basic connectivity first
-    if not tester.test_health_check():
-        print("❌ Health check failed, stopping tests")
-        return 1
-        
-    # Test shared resources functionality (main focus)
-    if not tester.test_shared_resources_functionality():
-        print("❌ Shared resources functionality test failed")
-        return 1
-        
-    # Test departments API comprehensively
-    if not tester.test_departments_api_comprehensive():
-        print("❌ Departments API comprehensive test failed")
-        return 1
-        
-    # Test doctors API comprehensively
-    if not tester.test_doctors_api_comprehensive():
-        print("❌ Doctors API comprehensive test failed")
-        return 1
+    # Run admin system tests only (as per review request)
+    test_results = tester.run_admin_system_tests_only()
     
     # Print final results
     print(f"\n📊 FINAL RESULTS:")
@@ -2946,8 +2929,8 @@ def main():
     print(f"   Success rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
     
     if tester.tests_passed == tester.tests_run:
-        print("\n🎉 ALL BACKEND TESTS PASSED!")
-        print("✅ Backend is ready for frontend shared resources testing")
+        print("\n🎉 ALL ADMIN SYSTEM TESTS PASSED!")
+        print("✅ Admin system APIs are fully functional")
         return 0
     else:
         print(f"\n❌ {tester.tests_run - tester.tests_passed} tests failed")
