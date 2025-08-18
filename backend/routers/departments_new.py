@@ -52,6 +52,14 @@ async def get_departments(
     async for dept in db.departments.find(query).sort("name", 1):
         dept["id"] = str(dept["_id"])
         del dept["_id"]
+        
+        # Handle missing fields for backward compatibility
+        if "slug" not in dept:
+            dept["slug"] = generate_slug(dept.get("name", ""))
+        if "active" not in dept:
+            # Map status to active for backward compatibility
+            dept["active"] = dept.get("status") == "active"
+            
         departments.append(Department(**dept))
     
     return departments
