@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { useAppContext } from './AppContext';
+import { patientsAPI, doctorsAPI, departmentsAPI, appointmentsAPI } from './api';
+import DepartmentDoctorSelector from './components/shared/DepartmentDoctorSelector';
 
 function AppointmentSchedulingEnhanced() {
   const { 

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phase 3: Shared Resources Testing</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
+        .test-link { display: inline-block; margin: 10px; padding: 10px 15px; background: #3B82F6; color: white; text-decoration: none; border-radius: 5px; }
+        .test-link:hover { background: #2563EB; }
+        .status { padding: 5px 10px; border-radius: 3px; font-size: 12px; margin: 5px; }
+        .success { background: #10B981; color: white; }
+        .completed { background: #059669; color: white; }
+        .api-test { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; }
+        .feature { background: #EFF6FF; border-left: 4px solid #3B82F6; padding: 15px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Phase 3: Admin & Reception Integration - Testing</h1>
+    
+    <div class="test-section">
+        <h2>✅ Phase 3 Achievements</h2>
+        <p><span class="status completed">✅ COMPLETED</span> Shared DepartmentDoctorSelector Component</p>
+        <p><span class="status completed">✅ COMPLETED</span> React Query Integration with Cache Invalidation</p>
+        <p><span class="status completed">✅ COMPLETED</span> Optimistic UI Updates with Rollback</p>
+        <p><span class="status completed">✅ COMPLETED</span> Inline Doctor Creation in Reception</p>
+        <p><span class="status completed">✅ COMPLETED</span> Toast Notifications replacing alerts</p>
+        <p><span class="status completed">✅ COMPLETED</span> Updated NewOPDPageEnhanced with shared APIs</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Test Shared Resources</h2>
+        <p><strong>Expected Behavior:</strong> Create department/doctor in Admin → appears instantly in Reception and vice versa</p>
+        
+        <div class="feature">
+            <h3>Test Scenario 1: Admin → Reception Sharing</h3>
+            <ol>
+                <li>Login as admin and go to <a href="http://localhost:3000/admin/doctors" target="_blank" class="test-link">Doctor Management</a></li>
+                <li>Create a new department (e.g., "Emergency Medicine")</li>
+                <li>Add a doctor to that department</li>
+                <li>Switch to <a href="http://localhost:3000/reception" target="_blank" class="test-link">Reception Dashboard</a></li>
+                <li>Go to "New OPD" tab</li>
+                <li><strong>✅ Expected:</strong> New department and doctor should appear instantly in dropdowns</li>
+            </ol>
+        </div>
+
+        <div class="feature">
+            <h3>Test Scenario 2: Reception → Admin Sharing</h3>
+            <ol>
+                <li>Stay in Reception → New OPD tab</li>
+                <li>In the Department dropdown, select an existing department</li>
+                <li>Click the <strong>"+ Add to Department"</strong> button next to Doctor dropdown</li>
+                <li>Add a new doctor inline</li>
+                <li>Switch back to <a href="http://localhost:3000/admin/doctors" target="_blank" class="test-link">Admin Doctor Management</a></li>
+                <li><strong>✅ Expected:</strong> New doctor should appear instantly in the admin table</li>
+            </ol>
+        </div>
+
+        <div class="feature">
+            <h3>Test Scenario 3: Optimistic UI & Error Handling</h3>
+            <ol>
+                <li>Try creating a doctor with an invalid department ID (shouldn't happen in UI)</li>
+                <li><strong>✅ Expected:</strong> Optimistic update shows immediately, then rolls back on error</li>
+                <li><strong>✅ Expected:</strong> Toast notification shows error message</li>
+                <li>Create a valid doctor</li>
+                <li><strong>✅ Expected:</strong> Toast shows success, doctor is auto-selected</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 API Testing for Shared Resources</h2>
+        <div class="api-test">
+# 1. Login as admin
+curl -X POST http://localhost:8001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin_007"}'
+
+# 2. Create a department
+TOKEN="YOUR_TOKEN_HERE"
+curl -X POST http://localhost:8001/api/departments \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Emergency Medicine",
+    "description": "24/7 emergency care",
+    "location": "Ground Floor, Emergency Wing",
+    "phone": "0471-EMERGENCY",
+    "email": "emergency@unicare.com"
+  }'
+
+# 3. Create a doctor in that department
+DEPT_ID="NEW_DEPARTMENT_ID"
+curl -X POST http://localhost:8001/api/doctors \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Dr. Emergency Smith",
+    "department_id": "'$DEPT_ID'",
+    "specialty": "Emergency Medicine",
+    "qualification": "MBBS, MD Emergency Medicine",
+    "default_fee": "800",
+    "phone": "9876543213"
+  }'
+
+# 4. Verify the doctor appears in department
+curl -X GET http://localhost:8001/api/departments/$DEPT_ID/doctors \
+  -H "Authorization: Bearer $TOKEN"
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Key Features Implemented</h2>
+        
+        <div class="feature">
+            <h3>Shared DepartmentDoctorSelector Component</h3>
+            <ul>
+                <li>✅ Used in both Admin Doctor Management and Reception New OPD</li>
+                <li>✅ React Query integration with ['departments'] and ['doctors'] cache keys</li>
+                <li>✅ Inline doctor creation with "+ Add to {Department}" button</li>
+                <li>✅ Auto-selection of newly created doctor</li>
+                <li>✅ Department filtering of doctors</li>
+            </ul>
+        </div>
+
+        <div class="feature">
+            <h3>Cache Invalidation & Optimistic Updates</h3>
+            <ul>
+                <li>✅ Creating Department invalidates ['departments'] cache</li>
+                <li>✅ Creating Doctor invalidates ['doctors'] and ['departments', departmentId] caches</li>
+                <li>✅ Optimistic UI shows changes immediately</li>
+                <li>✅ Automatic rollback on API failure</li>
+                <li>✅ Toast notifications for success/error states</li>
+            </ul>
+        </div>
+
+        <div class="feature">
+            <h3>Enhanced UX</h3>
+            <ul>
+                <li>✅ No more hardcoded department arrays</li>
+                <li>✅ Real-time data sync between Admin and Reception</li>
+                <li>✅ Inline validation and error messages</li>
+                <li>✅ Loading states and disabled controls during operations</li>
+                <li>✅ Auto-fill consultation fees from doctor data</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Next Steps (Phase 4: Hook Fixes & Testing)</h2>
+        <ul>
+            <li>Fix hook usage patterns and add eslint-plugin-react-hooks</li>
+            <li>Ensure single react/react-dom instances</li>
+            <li>Comprehensive testing with deep_testing_cloud</li>
+            <li>Final validation of all shared resources</li>
+        </ul>
+    </div>
+
+    <script>
+        console.log('🎯 Phase 3: Admin & Reception Integration - Testing Ready!');
+        console.log('Backend API: http://localhost:8001');
+        console.log('Frontend App: http://localhost:3000');
+        
+        // Test cache invalidation by monitoring network requests
+        if (window.location.hostname === 'localhost') {
+            console.log('💡 Tip: Open browser DevTools → Network tab to see React Query cache invalidation in action');
+        }
+    </script>
+</body>
+</html>

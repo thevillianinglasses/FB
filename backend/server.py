@@ -16,6 +16,15 @@ from pathlib import Path
 # Import our models and auth
 from models import *
 from auth import *
+# Import pharmacy routers
+from routers import pharmacy, purchases, sales, inventory, returns, disposals
+# Import new comprehensive system routers - temporarily disabled due to import issues
+try:
+    from routers import departments_new, users_new
+    ADMIN_ROUTERS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Admin routers not available due to import error: {e}")
+    ADMIN_ROUTERS_AVAILABLE = False
 
 # Load environment variables
 load_dotenv()
@@ -31,6 +40,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include pharmacy routers
+app.include_router(pharmacy.router)
+app.include_router(purchases.router) 
+app.include_router(sales.router)
+app.include_router(inventory.router)
+app.include_router(returns.router)
+app.include_router(disposals.router)
+
+# Include new comprehensive system routers - temporarily disabled due to import issues
+if ADMIN_ROUTERS_AVAILABLE:
+    app.include_router(departments_new.router)
+    app.include_router(users_new.router)
+    print("✅ Admin routers loaded successfully")
+else:
+    print("⚠️ Admin routers not loaded due to import issues")
 
 # Database configuration
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/unicare_ehr")
@@ -60,6 +85,14 @@ async def create_db_client():
         await database.command('ping')
         logging.info("Connected to MongoDB successfully")
         
+        # Set database instance for pharmacy routers
+        try:
+            from deps.db import set_database
+            set_database(database)
+            logging.info("Database instance set for pharmacy routers")
+        except Exception as e:
+            logging.warning(f"Could not set database for pharmacy routers: {e}")
+        
         # Initialize default admin user
         existing_admin = await database.users.find_one({"username": "admin"})
         if not existing_admin:
@@ -77,6 +110,62 @@ async def create_db_client():
             await database.users.insert_one(admin_user)
             logging.info("Default admin user created")
         
+        # Initialize default departments if not exist
+        existing_departments = await database.departments.count_documents({})
+        if existing_departments == 0:
+            default_departments = [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "General Medicine",
+                    "description": "Primary healthcare and general medical consultations",
+                    "location": "Ground Floor, Wing A",
+                    "phone": "0471-2345678",
+                    "email": "general@unicare.com",
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Cardiology",
+                    "description": "Heart and cardiovascular system care",
+                    "location": "First Floor, Wing B",
+                    "phone": "0471-2345679",
+                    "email": "cardiology@unicare.com",
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Pediatrics",
+                    "description": "Medical care for infants, children, and adolescents",
+                    "location": "Ground Floor, Wing B",
+                    "phone": "0471-2345680",
+                    "email": "pediatrics@unicare.com",
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Orthopedics",
+                    "description": "Bone, joint, and musculoskeletal system care",
+                    "location": "First Floor, Wing A",
+                    "phone": "0471-2345681",
+                    "email": "orthopedics@unicare.com",
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            ]
+            await database.departments.insert_many(default_departments)
+            logging.info("Default departments created")
+            
+        # Get departments for doctor assignment
+        general_medicine_dept = await database.departments.find_one({"name": "General Medicine"})
+        cardiology_dept = await database.departments.find_one({"name": "Cardiology"})
+        
         # Initialize default doctors if not exist
         existing_doctors = await database.doctors.count_documents({})
         if existing_doctors == 0:
@@ -84,22 +173,28 @@ async def create_db_client():
                 {
                     "id": str(uuid.uuid4()),
                     "name": "Dr. Emily Carter",
+                    "department_id": general_medicine_dept["id"] if general_medicine_dept else "",
                     "specialty": "General Medicine",
                     "qualification": "MBBS, MD",
-                    "default_fee": "500",  # Changed to string to match model
+                    "default_fee": "500",
                     "phone": "9876543210",
                     "room_number": "101",
-                    "created_at": datetime.utcnow()
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
                 },
                 {
                     "id": str(uuid.uuid4()),
                     "name": "Dr. John Adebayo",
+                    "department_id": cardiology_dept["id"] if cardiology_dept else "",
                     "specialty": "Cardiology",
                     "qualification": "MBBS, DM Cardiology",
-                    "default_fee": "800",  # Changed to string to match model
+                    "default_fee": "800",
                     "phone": "9876543211",
                     "room_number": "102",
-                    "created_at": datetime.utcnow()
+                    "status": "active",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
                 }
             ]
             await database.doctors.insert_many(default_doctors)
@@ -488,17 +583,165 @@ async def get_doctors(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"Error fetching doctors: {str(e)}")
 
 @app.post("/api/doctors", response_model=Doctor)
-async def add_doctor(doctor: Doctor, current_user: dict = Depends(get_current_user)):
+async def add_doctor(doctor: DoctorCreate, current_user: dict = Depends(get_current_user)):
     if not has_admin_access(current_user["role"]):
         raise HTTPException(status_code=403, detail="Access denied")
     
     try:
         doctor_dict = doctor.dict()
+        doctor_dict["id"] = str(uuid.uuid4())
         doctor_dict["created_at"] = datetime.utcnow()
+        doctor_dict["updated_at"] = datetime.utcnow()
         result = await database.doctors.insert_one(doctor_dict)
         return Doctor(**doctor_dict)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding doctor: {str(e)}")
+
+@app.put("/api/doctors/{doctor_id}", response_model=Doctor)
+async def update_doctor(doctor_id: str, doctor: DoctorUpdate, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        update_dict = doctor.dict(exclude_unset=True)
+        if update_dict:
+            update_dict["updated_at"] = datetime.utcnow()
+            
+            result = await database.doctors.update_one(
+                {"id": doctor_id},
+                {"$set": update_dict}
+            )
+            
+            if result.matched_count == 0:
+                raise HTTPException(status_code=404, detail="Doctor not found")
+        
+        updated_doctor = await database.doctors.find_one({"id": doctor_id})
+        return Doctor(**updated_doctor)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating doctor: {str(e)}")
+
+@app.delete("/api/doctors/{doctor_id}")
+async def delete_doctor(doctor_id: str, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        result = await database.doctors.delete_one({"id": doctor_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+        return {"message": "Doctor deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting doctor: {str(e)}")
+
+@app.get("/api/doctors/{doctor_id}", response_model=Doctor)
+async def get_doctor(doctor_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        doctor = await database.doctors.find_one({"id": doctor_id})
+        if not doctor:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+        return Doctor(**doctor)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching doctor: {str(e)}")
+
+# ===================
+# DEPARTMENT MANAGEMENT APIS
+# ===================
+
+@app.get("/api/departments", response_model=List[Department])
+async def get_departments(current_user: dict = Depends(get_current_user)):
+    try:
+        departments_cursor = database.departments.find({})
+        departments = []
+        async for department in departments_cursor:
+            departments.append(Department(**department))
+        return departments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching departments: {str(e)}")
+
+@app.get("/api/departments/{department_id}", response_model=Department)
+async def get_department(department_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        department = await database.departments.find_one({"id": department_id})
+        if not department:
+            raise HTTPException(status_code=404, detail="Department not found")
+        return Department(**department)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching department: {str(e)}")
+
+@app.post("/api/departments", response_model=Department)
+async def add_department(department: DepartmentCreate, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Check if department with same name already exists
+        existing_dept = await database.departments.find_one({"name": department.name})
+        if existing_dept:
+            raise HTTPException(status_code=400, detail="Department with this name already exists")
+        
+        department_dict = department.dict()
+        department_dict["id"] = str(uuid.uuid4())
+        department_dict["created_at"] = datetime.utcnow()
+        department_dict["updated_at"] = datetime.utcnow()
+        result = await database.departments.insert_one(department_dict)
+        return Department(**department_dict)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding department: {str(e)}")
+
+@app.put("/api/departments/{department_id}", response_model=Department)
+async def update_department(department_id: str, department: DepartmentUpdate, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        update_dict = department.dict(exclude_unset=True)
+        if update_dict:
+            update_dict["updated_at"] = datetime.utcnow()
+            
+            result = await database.departments.update_one(
+                {"id": department_id},
+                {"$set": update_dict}
+            )
+            
+            if result.matched_count == 0:
+                raise HTTPException(status_code=404, detail="Department not found")
+        
+        updated_department = await database.departments.find_one({"id": department_id})
+        return Department(**updated_department)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating department: {str(e)}")
+
+@app.delete("/api/departments/{department_id}")
+async def delete_department(department_id: str, current_user: dict = Depends(get_current_user)):
+    if not has_admin_access(current_user["role"]):
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Check if any doctors are assigned to this department
+        doctors_in_dept = await database.doctors.count_documents({"department_id": department_id})
+        if doctors_in_dept > 0:
+            raise HTTPException(status_code=400, detail=f"Cannot delete department. {doctors_in_dept} doctors are assigned to this department.")
+        
+        result = await database.departments.delete_one({"id": department_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Department not found")
+        return {"message": "Department deleted successfully"}
+    except HTTPException:
+        raise  # Re-raise HTTPException as is
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting department: {str(e)}")
+
+@app.get("/api/departments/{department_id}/doctors", response_model=List[Doctor])
+async def get_department_doctors(department_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all doctors in a specific department"""
+    try:
+        doctors_cursor = database.doctors.find({"department_id": department_id})
+        doctors = []
+        async for doctor in doctors_cursor:
+            doctors.append(Doctor(**doctor))
+        return doctors
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching department doctors: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

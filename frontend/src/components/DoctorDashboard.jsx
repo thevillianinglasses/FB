@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { emrAPI, pharmacyAPI, patientsAPI, labAPI } from '../api';
+import { emrAPI, pharmacyAPI, patientsAPI, labTestsAPI as labAPI } from '../api';
 
 function DoctorDashboard({ onLogout, userName }) {
   const [activeTab, setActiveTab] = useState('consultations');
