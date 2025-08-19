@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "server:app",
+                "--reload",
+                "--port",
+                "8000",
+                "--log-level",
+                "debug"
+            ],
+            "cwd": "${workspaceFolder}/backend",
+            "jinja": true,
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/backend",
+                "MONGO_URL": "mongodb://localhost:27017/unicare_ehr",
+                "DEBUG": "1"
+            }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "React: Chrome",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/frontend",
+            "sourceMaps": true
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Full Stack: Frontend + Backend",
+            "configurations": ["Python: FastAPI", "React: Chrome"]
+        }
+    ]
+}

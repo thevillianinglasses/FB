@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Unified API endpoints
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL,
+  baseURL: 'http://localhost:8000',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -12,7 +12,7 @@ export const api = axios.create({
 // Add request interceptor to include JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,8 +28,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
       window.location.href = '/';
     }
     return Promise.reject(error);
@@ -39,11 +40,16 @@ api.interceptors.response.use(
 // Authentication API
 export const authAPI = {
   login: async (username, password) => {
-    const response = await api.post('/api/auth/login', { username, password });
-    if (response.data.access_token) {
-      localStorage.setItem('authToken', response.data.access_token);
+    try {
+      const response = await api.post('/api/auth/login', { username, password });
+      if (response.data.access_token) {
+        localStorage.setItem('authToken', response.data.access_token);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    return response.data;
   },
   
   logout: () => {

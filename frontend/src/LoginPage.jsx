@@ -13,17 +13,29 @@ function LoginPage({ onLoginSuccess }) {
     setError('');
     
     try {
+      console.log('Attempting login...');
       const response = await authAPI.login(username, password);
-      console.log('Login successful', response);
+      console.log('Login response:', response);
+      
+      if (!response.access_token) {
+        throw new Error('No access token received');
+      }
+      
+      localStorage.setItem('authToken', response.access_token);
+      localStorage.setItem('userRole', response.user_role);
+      localStorage.setItem('userName', response.user_name);
+      console.log('Stored credentials, calling onLoginSuccess');
       onLoginSuccess(response.user_role, response.user_name);
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error details:', error);
       if (error.response?.status === 401) {
-        setError('Invalid username or password');
+        setError('Invalid username or password. Please try again.');
       } else if (error.response?.data?.detail) {
-        setError(error.response.data.detail);
+        setError(`Server error: ${error.response.data.detail}`);
+      } else if (!navigator.onLine) {
+        setError('No internet connection. Please check your network.');
       } else {
-        setError('Login failed. Please try again.');
+        setError(`Login failed: ${error.message || 'Unknown error'}`);
       }
     } finally {
       setIsLoading(false);

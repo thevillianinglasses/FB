@@ -2,37 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Safeguards for bulletproof rendering */
-html, body {
-  background: #FFFFFF !important;
-  color: #36454F !important;
-  height: auto !important;
-  display: block !important;
-  pointer-events: auto !important;
+:root {
+  --cornflower-blue: #6495ED;
+  --charcoal-grey: #36454F;
+  --coral-red: #FF6B6B;
 }
 
-#root {
-  min-height: 100vh;
-  display: block !important;
-  pointer-events: auto !important;
+@layer base {
+  html {
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  
+  body {
+    @apply bg-white text-charcoal-grey min-h-screen;
+  }
 }
 
-/* Ensure no full-screen blockers */
-* {
-  pointer-events: auto;
+@layer components {
+  .btn-primary {
+    @apply bg-cornflower-blue hover:bg-opacity-90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-cornflower-blue transition-colors;
+  }
+
+  .error-message {
+    @apply bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg;
+  }
 }
 
-/* Override any problematic z-index issues */
-.z-overlay {
-  z-index: 9998 !important;
-}
-
-/* Ensure text is always visible */
-body * {
-  color: inherit;
-}
-
-/* Loading spinner animation */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -42,12 +41,6 @@ body * {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
-
-/* Skeleton loading animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
   50% {
     opacity: 0.5;
   }

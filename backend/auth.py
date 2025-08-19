@@ -34,9 +34,10 @@ def verify_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         role: str = payload.get("role")
+        user_id: str = payload.get("user_id")
         if username is None:
             return None
-        return {"username": username, "role": role}
+        return {"username": username, "role": role, "user_id": user_id}
     except JWTError:
         return None
 
@@ -64,3 +65,12 @@ def has_nursing_access(user_role: str):
 
 def has_doctor_access(user_role: str):
     return user_role in [UserRole.ADMIN, UserRole.DOCTOR]
+
+def can_access_doctor_profile(user_role: str, user_id: str, doctor_id: str):
+    """Check if user can access a specific doctor's profile"""
+    if user_role == UserRole.ADMIN:
+        return True
+    # For doctors, we allow them to see any doctor's profile
+    if user_role == UserRole.DOCTOR:
+        return True
+    return False

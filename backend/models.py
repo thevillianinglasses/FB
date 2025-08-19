@@ -79,6 +79,7 @@ class Patient(BaseModel):
     age: str
     dob: str = ""
     sex: str
+    status: str = "registered"  # registered, vitals_recorded, with_doctor, lab_ordered, pharmacy_pending, completed
     address: str = ""
     phone_number: str
     email: str = ""
@@ -108,14 +109,14 @@ class DoctorCertificate(BaseModel):
 class DoctorProfile(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     doctor_id: str  # Links to Doctor.id
-    degree: str = ""
+    qualification: str = ""  # Changed from degree to match doctor model
     registration_number: str = ""
     address: str = ""
     phone: str = ""
     email: str = ""
     certificates: List[DoctorCertificate] = []
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: Optional[datetime] = None  # Made optional to handle missing values
+    updated_at: Optional[datetime] = None  # Made optional to handle missing values
 
 # Doctor Models
 class Doctor(BaseModel):

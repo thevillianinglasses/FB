@@ -1094,7 +1094,7 @@ async def get_departments_with_doctors(current_user: dict = Depends(get_current_
 @app.get("/api/admin/doctors/{doctor_id}/profile", response_model=DoctorProfile)
 async def get_doctor_profile(doctor_id: str, current_user: dict = Depends(get_current_user)):
     """Get detailed doctor profile with certificates"""
-    if not has_admin_access(current_user["role"]):
+    if not can_access_doctor_profile(current_user["role"], current_user["user_id"], doctor_id):
         raise HTTPException(status_code=403, detail="Access denied")
     
     try:
@@ -1110,7 +1110,7 @@ async def get_doctor_profile(doctor_id: str, current_user: dict = Depends(get_cu
             profile_data = {
                 "id": str(uuid.uuid4()),
                 "doctor_id": doctor_id,
-                "degree": doctor.get("qualification", ""),
+                "qualification": doctor.get("qualification", ""),  # Changed from degree to qualification
                 "registration_number": doctor.get("registration_number", ""),
                 "address": doctor.get("address", ""),
                 "phone": doctor.get("phone", ""),
@@ -1125,7 +1125,8 @@ async def get_doctor_profile(doctor_id: str, current_user: dict = Depends(get_cu
         
         return DoctorProfile(**profile)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching doctor profile: {str(e)}")
+        import traceback
+        raise HTTPException(status_code=500, detail=f"Error fetching doctor profile: {str(e)}\n{traceback.format_exc()}")
 
 @app.put("/api/admin/doctors/{doctor_id}/profile")
 async def update_doctor_profile(doctor_id: str, profile_update: DoctorProfile, current_user: dict = Depends(get_current_user)):
@@ -1432,7 +1433,7 @@ async def delete_department(dept_id: str, current_user: dict = Depends(get_curre
 # DOCTORS API (RESTful)
 # ===================
 
-@app.get("/api/doctors", response_model=List[dict])
+@app.get("/api/doctors")
 async def get_doctors(departmentId: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     """Get all doctors or doctors by department"""
     try:
@@ -1443,11 +1444,16 @@ async def get_doctors(departmentId: Optional[str] = None, current_user: dict = D
         doctors_cursor = database.doctors.find(filter_query)
         doctors = []
         async for doctor in doctors_cursor:
+            # Ensure default_fee is string
+            fee = doctor.get("default_fee")
+            if isinstance(fee, int):
+                fee = str(fee)
             doctors.append({
                 "id": doctor.get("id"),
                 "name": doctor.get("name"),
                 "degree": doctor.get("qualification", ""),
                 "departmentId": doctor.get("department_id"),
+                "default_fee": fee or "500",
                 "phone": doctor.get("phone", ""),
                 "email": doctor.get("email", ""),
                 "fee": doctor.get("default_fee", "500"),
